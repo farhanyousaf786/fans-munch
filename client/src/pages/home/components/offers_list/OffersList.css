@@ -1,0 +1,162 @@
+.offers-list {
+  margin-bottom: 32px;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.offers-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.offers-container::-webkit-scrollbar {
+  display: none;
+}
+
+.offer-card {
+  min-width: 320px;
+  border-radius: 16px;
+  padding: 20px;
+  color: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.offer-card:hover {
+  transform: translateY(-2px);
+}
+
+.offer-content {
+  flex: 1;
+}
+
+.offer-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+  border-radius: 20px;
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.offer-icon {
+  font-size: 18px;
+}
+
+.discount-text {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.offer-details {
+  margin-bottom: 20px;
+}
+
+.offer-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.offer-description {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.offer-restaurant {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  opacity: 0.8;
+}
+
+.offer-validity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.8;
+}
+
+.time-icon {
+  font-size: 16px;
+}
+
+.validity-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.claim-offer-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.claim-offer-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 20px;
+  }
+  
+  .section-subtitle {
+    font-size: 14px;
+  }
+  
+  .offer-card {
+    min-width: 280px;
+    padding: 16px;
+  }
+  
+  .offer-title {
+    font-size: 18px;
+  }
+  
+  .offer-description {
+    font-size: 13px;
+  }
+  
+  .claim-offer-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
