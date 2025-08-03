@@ -1,49 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { MdAdd, MdAccessTime } from 'react-icons/md';
-import foodRepository from '../../../../repositories/foodRepository';
-import { stadiumStorage } from '../../../../utils/storage';
+import React from 'react';
+import { MdAccessTime, MdAdd } from 'react-icons/md';
 import './MenuList.css';
 
-const MenuList = () => {
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
-  const fetchMenuItems = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Get selected stadium to filter menu items
-      const selectedStadium = stadiumStorage.getSelectedStadium();
-      
-      let result;
-      if (selectedStadium && selectedStadium.id) {
-        // Fetch menu items for specific stadium (matching Flutter app)
-        result = await foodRepository.getStadiumMenu(selectedStadium.id, 10);
-      } else {
-        // Fallback to all menu items
-        result = await foodRepository.getAllMenuItems();
-      }
-      
-      if (result.success) {
-        setMenuItems(result.foods);
-      } else {
-        setError(result.error || 'Failed to load menu items');
-        setMenuItems([]);
-      }
-    } catch (err) {
-      console.error('Error fetching menu items:', err);
-      setError('Failed to load menu items');
-      setMenuItems([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
 
   const handleFoodClick = (food) => {
     // In real app, this would navigate to food detail page
@@ -55,12 +14,20 @@ const MenuList = () => {
     console.log('Added to cart:', food);
   };
 
+  // Get section title based on search state
+  const getSectionTitle = () => {
+    if (searchTerm.trim()) {
+      return `Search Results (${menuItems.length})`;
+    }
+    return 'Popular Menu';
+  };
+
   // Loading state
   if (loading) {
     return (
       <div className="menu-list">
         <div className="section-header">
-          <h2 className="section-title">Popular Menu</h2>
+          <h2 className="section-title">{getSectionTitle()}</h2>
         </div>
         <div className="menu-loading">
           <div className="menu-shimmer-container">
@@ -81,13 +48,17 @@ const MenuList = () => {
 
   // Empty state
   if (!loading && menuItems.length === 0) {
+    const emptyMessage = searchTerm.trim() 
+      ? `No results found for "${searchTerm}"`
+      : 'No menu items available';
+    
     return (
       <div className="menu-list">
         <div className="section-header">
-          <h2 className="section-title">Popular Menu</h2>
+          <h2 className="section-title">{getSectionTitle()}</h2>
         </div>
         <div className="menu-empty">
-          <p>No menu items available</p>
+          <p>{emptyMessage}</p>
         </div>
       </div>
     );
@@ -96,10 +67,10 @@ const MenuList = () => {
   return (
     <div className="menu-list">
       <div className="section-header">
-        <h2 className="section-title">Popular Menu</h2>
+        <h2 className="section-title">{getSectionTitle()}</h2>
         {error && (
           <p className="section-subtitle error-text">
-            {error} - Showing demo data
+            {error}
           </p>
         )}
       </div>

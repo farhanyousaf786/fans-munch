@@ -7,9 +7,8 @@
   align-items: center;
   gap: 20px;
   padding: 16px 20px;
+  margin-top: 16px;
   background-color: #F5F5F5;
-  border-bottom: 1px solid #E0E0E0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Stadium Section */
@@ -189,6 +188,19 @@
   .dropdown-arrow {
     font-size: 16px;
   }
+}
+
+.stadium.top-section {
+  background-color: var(--bg-color);
+  padding: 16px 20px;
+  margin-top: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
 }
 
 .stadium-selector {
