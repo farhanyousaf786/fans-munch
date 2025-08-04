@@ -1,43 +1,276 @@
+/* Shop List Styles - Matching Flutter App */
 .shop-list {
+  padding: 0;
   margin-bottom: 32px;
 }
 
+/* Section header with title and See All button (matching Flutter) */
 .section-header {
-  margin-bottom: 20px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .section-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 8px 0;
-}
-
-.section-subtitle {
   font-size: 16px;
+  font-weight: 600;
   color: #666;
   margin: 0;
 }
 
-.shops-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.shop-card {
-  background-color: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+.see-all-button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #3D70FF;
+  font-size: 14px;
   cursor: pointer;
-  position: relative;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
-.shop-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.see-all-button:hover:not(:disabled) {
+  background-color: rgba(61, 112, 255, 0.1);
+}
+
+.see-all-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chevron-icon {
+  font-size: 20px;
+}
+
+/* Vertical list container (matching Flutter ListView.builder) */
+.shops-vertical-list {
+  padding: 0 16px;
+}
+
+/* Vertical shop card with image (matching Flutter card design) */
+.shop-card-vertical {
+  width: 100%;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  overflow: hidden;
+}
+
+.shop-card-vertical:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Shop card without image (matching Flutter Shop model - no image field) */
+.shop-card-no-image {
+  width: 100%;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.shop-card-no-image:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Shop image in vertical card */
+.shop-card-vertical .shop-image {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.shop-card-vertical .shop-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Shop content in vertical card */
+.shop-card-vertical .shop-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.shop-card-vertical .shop-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.shop-card-vertical .shop-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Shop content in no-image card */
+.shop-card-no-image .shop-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shop-card-no-image .shop-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.shop-card-no-image .shop-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Info rows with icons (matching Flutter design) */
+.shop-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shop-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  color: #3D70FF;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  font-size: 16px;
+  color: #555;
+  margin-right: 24px;
+}
+
+/* Shimmer loading states */
+.shop-shimmer {
+  padding: 0 16px;
+}
+
+.shop-card-shimmer {
+  width: 100%;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  padding: 16px;
+  gap: 16px;
+  animation: shimmer 1.5s ease-in-out infinite alternate;
+}
+
+.shop-image-shimmer {
+  width: 120px;
+  height: 88px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.shop-content-shimmer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shop-name-shimmer {
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  width: 60%;
+}
+
+.shop-description-shimmer {
+  height: 16px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  width: 80%;
+}
+
+.shop-details-shimmer {
+  height: 14px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  width: 40%;
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Error and empty states */
+.error-container,
+.empty-container {
+  text-align: center;
+  padding: 40px 16px;
+}
+
+.error-text,
+.empty-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.retry-button {
+  background: #3D70FF;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background: #3161EA;
 }
 
 .shop-card.closed {

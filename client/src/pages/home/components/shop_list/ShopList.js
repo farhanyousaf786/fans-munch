@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MdStar, MdAccessTime, MdDeliveryDining, MdLocationOn } from 'react-icons/md';
-import restaurantRepository from '../../../../repositories/restaurantRepository';
+import { MdLocationOn, MdStadium, MdStairs, MdDoorFront, MdChevronRight } from 'react-icons/md';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../../../config/firebase';
 import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
 
@@ -10,121 +11,125 @@ const ShopList = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchRestaurants();
+    loadStadiumIdAndFetchShops();
   }, []);
 
-  const fetchRestaurants = async () => {
+  // Match Flutter app logic exactly - fetchShopsByStadium
+  const loadStadiumIdAndFetchShops = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Get selected stadium to filter restaurants if needed
+      // Get selected stadium ID from storage (same as Flutter SharedPreferences)
       const selectedStadium = stadiumStorage.getSelectedStadium();
+      console.log('🏟️ Loading shops for stadium:', selectedStadium);
       
-      let result;
       if (selectedStadium && selectedStadium.id) {
-        // Fetch restaurants for specific stadium
-        result = await restaurantRepository.getRestaurantsByStadium(selectedStadium.id);
+        console.log('🔍 Fetching shops for stadium ID:', selectedStadium.id);
+        
+        // Match Flutter ShopRepository.fetchShopsByStadium exactly
+        const shopsRef = collection(db, 'shops');
+        const q = query(
+          shopsRef,
+          where('stadiumId', '==', selectedStadium.id)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        console.log('📦 Found shops in Firebase:', querySnapshot.size);
+        
+        const shops = [];
+        querySnapshot.forEach((doc) => {
+          try {
+            console.log('📄 Processing shop document:', doc.id);
+            const data = doc.data();
+            console.log('📋 Shop data:', data);
+            
+            // Create shop object from Firebase data (matching Flutter Shop.fromMap exactly)
+            const shop = {
+              id: doc.id,
+              name: data.name || '',
+              description: data.description || '',
+              location: data.location || '',
+              floor: data.floor || '',
+              gate: data.gate || '',
+              stadiumId: data.stadiumId || '',
+              stadiumName: data.stadiumName || '',
+              shopUserFcmToken: data.shopUserFcmToken || '',
+              admins: data.admins || [],
+              createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
+              updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date()
+            };
+            
+            shops.push(shop);
+            console.log('✅ Created shop object:', shop.name);
+          } catch (error) {
+            console.error('❌ Error processing shop document', doc.id, ':', error);
+          }
+        });
+        
+        setShops(shops);
+        console.log('✅ Loaded', shops.length, 'shops');
       } else {
-        // Fetch all restaurants
-        result = await restaurantRepository.getAllRestaurants();
-      }
-      
-      if (result.success) {
-        setShops(result.restaurants);
-      } else {
-        setError(result.error || 'Failed to load restaurants');
-        // Fallback to mock data if Firebase fails
-        setShops(getMockRestaurants());
+        console.log('⚠️ No stadium selected');
+        setShops([]);
       }
     } catch (err) {
-      console.error('Error fetching restaurants:', err);
-      setError('Failed to load restaurants');
-      // Fallback to mock data
-      setShops(getMockRestaurants());
+      console.error('❌ Error loading shops:', err);
+      setError('Failed to fetch restaurants');
+      setShops([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fallback mock data for development/demo
-  const getMockRestaurants = () => [
-    {
-      id: '1',
-      name: "Tony's Pizza Corner",
-      description: "Authentic Italian pizza made with fresh ingredients",
-      rating: 4.8,
-      reviewCount: 245,
-      deliveryTime: "15-25 min",
-      deliveryFee: 2.99,
-      minOrder: 15,
-      image: "/api/placeholder/300/200",
-      cuisine: ["Italian", "Pizza"],
-      isOpen: true,
-      location: "Section A, Level 2"
-    },
-    {
-      id: '2',
-      name: "Stadium Burgers",
-      description: "Juicy burgers and crispy fries for the perfect game day meal",
-      rating: 4.6,
-      reviewCount: 189,
-      deliveryTime: "10-20 min",
-      deliveryFee: 1.99,
-      minOrder: 12,
-      image: "/api/placeholder/300/200",
-      cuisine: ["American", "Burgers"],
-      isOpen: true,
-      location: "Section B, Level 1"
-    },
-    {
-      id: '3',
-      name: "Wings & Things",
-      description: "Spicy wings and comfort food favorites",
-      rating: 4.7,
-      reviewCount: 156,
-      deliveryTime: "12-22 min",
-      deliveryFee: 2.49,
-      minOrder: 18,
-      image: "/api/placeholder/300/200",
-      cuisine: ["American", "Wings"],
-      isOpen: false,
-      location: "Section C, Level 1"
-    }
-  ];
+
 
   const handleShopClick = (shop) => {
     // In real app, this would navigate to shop details page
     console.log('Navigate to shop:', shop);
   };
 
-  // Loading state
+  // Loading state (matching Flutter ShopShimmer)
   if (loading) {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Restaurants & Shops</h2>
-          <p className="section-subtitle">Loading restaurants...</p>
+          <h2 className="section-title">Open Restaurants</h2>
+          <button className="see-all-button" disabled>
+            <span>See All</span>
+            <MdChevronRight className="chevron-icon" />
+          </button>
         </div>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Fetching restaurants from Firebase...</p>
+        <div className="shop-shimmer">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="shop-card-shimmer">
+              <div className="shop-image-shimmer"></div>
+              <div className="shop-content-shimmer">
+                <div className="shop-name-shimmer"></div>
+                <div className="shop-description-shimmer"></div>
+                <div className="shop-details-shimmer"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
   // Error state
-  if (error && shops.length === 0) {
+  if (error) {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Restaurants & Shops</h2>
-          <p className="section-subtitle">Unable to load restaurants</p>
+          <h2 className="section-title">Open Restaurants</h2>
+          <button className="see-all-button" disabled>
+            <span>See All</span>
+            <MdChevronRight className="chevron-icon" />
+          </button>
         </div>
         <div className="error-container">
           <p className="error-text">{error}</p>
-          <button className="retry-button" onClick={fetchRestaurants}>
+          <button className="retry-button" onClick={loadStadiumIdAndFetchShops}>
             Try Again
           </button>
         </div>
@@ -132,74 +137,65 @@ const ShopList = () => {
     );
   }
 
+  // Empty state (matching Flutter 'noShopsAvailable')
+  if (shops.length === 0) {
+    return (
+      <div className="shop-list">
+        <div className="section-header">
+          <h2 className="section-title">Open Restaurants</h2>
+          <button className="see-all-button" disabled>
+            <span>See All</span>
+            <MdChevronRight className="chevron-icon" />
+          </button>
+        </div>
+        <div className="empty-container">
+          <p className="empty-text">No shops available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="shop-list">
+      {/* Section header matching Flutter app exactly */}
       <div className="section-header">
-        <h2 className="section-title">Restaurants & Shops</h2>
-        <p className="section-subtitle">
-          {error ? 'Showing demo data (Firebase connection failed)' : 'Discover all available food vendors'}
-        </p>
+        <h2 className="section-title">Open Restaurants</h2>
+        <button className="see-all-button" onClick={() => console.log('Navigate to all shops')}>
+          <span>See All</span>
+          <MdChevronRight className="chevron-icon" />
+        </button>
       </div>
       
-      <div className="shops-grid">
+      {/* Vertical list matching Flutter ListView.builder */}
+      <div className="shops-vertical-list">
         {shops.map((shop) => (
           <div 
             key={shop.id} 
-            className={`shop-card ${!shop.isOpen ? 'closed' : ''}`}
+            className="shop-card-no-image"
             onClick={() => handleShopClick(shop)}
           >
-            <div className="shop-image">
-              <img src={shop.image} alt={shop.name} />
-              {!shop.isOpen && (
-                <div className="closed-overlay">
-                  <span className="closed-text">Currently Closed</span>
-                </div>
-              )}
-            </div>
-            
+            {/* Shop content matching Flutter card design (no image) */}
             <div className="shop-content">
-              <div className="shop-header">
-                <h3 className="shop-name">{shop.name}</h3>
-                <div className="rating-section">
-                  <MdStar className="rating-star" />
-                  <span className="rating-value">{shop.rating}</span>
-                  <span className="review-count">({shop.reviewCount})</span>
-                </div>
-              </div>
+              <h3 className="shop-name">{shop.name}</h3>
               
               <p className="shop-description">{shop.description}</p>
               
-              <div className="cuisine-tags">
-                {shop.cuisine.map((cuisine, index) => (
-                  <span key={index} className="cuisine-tag">
-                    {cuisine}
-                  </span>
-                ))}
-              </div>
-              
-              <div className="shop-location">
-                <MdLocationOn className="location-icon" />
-                <span>{shop.location}</span>
-              </div>
-              
-              <div className="shop-meta">
-                <div className="delivery-info">
-                  <div className="delivery-time">
-                    <MdAccessTime className="time-icon" />
-                    <span>{shop.deliveryTime}</span>
-                  </div>
-                  
-                  <div className="delivery-fee">
-                    <MdDeliveryDining className="delivery-icon" />
-                    <span>
-                      {shop.deliveryFee === 0 ? 'Free delivery' : `$${shop.deliveryFee.toFixed(2)} delivery`}
-                    </span>
-                  </div>
-                </div>
+              {/* Stadium info with icon (matching Flutter) */}
+              <div className="shop-info-row">
+                <MdStadium className="info-icon" />
+                <span className="info-text">{shop.stadiumName}</span>
                 
-                <div className="min-order">
-                  Min. order: ${shop.minOrder}
-                </div>
+                <MdLocationOn className="info-icon" />
+                <span className="info-text">{shop.location}</span>
+              </div>
+              
+              {/* Floor and Gate info (matching Flutter) */}
+              <div className="shop-info-row">
+                <MdStairs className="info-icon" />
+                <span className="info-text">Floor {shop.floor}</span>
+                
+                <MdDoorFront className="info-icon" />
+                <span className="info-text">Gate {shop.gate}</span>
               </div>
             </div>
           </div>
