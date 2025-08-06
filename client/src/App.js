@@ -12,7 +12,11 @@ import Home from './pages/home/Home';
 import OrdersScreen from './pages/orders/OrdersScreen';
 import CartScreen from './pages/cart/CartScreen';
 import ProfileScreen from './pages/profile/ProfileScreen';
+import FoodDetailScreen from './pages/food_detail/FoodDetailScreen';
+import TipScreen from './pages/tip/TipScreen';
+import OrderConfirmScreen from './pages/order_confirm/OrderConfirmScreen';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
+import ToastContainer from './components/toast/ToastContainer';
 
 function App() {
   return (
@@ -41,12 +45,22 @@ function App() {
             <Route path="/cart" element={<CartScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
             
+            {/* Food Detail Route */}
+            <Route path="/food/:foodId" element={<FoodDetailScreen />} />
+            
+            {/* Order Flow Routes */}
+            <Route path="/tip" element={<TipScreen />} />
+            <Route path="/order/confirm" element={<OrderConfirmScreen />} />
+            
             {/* Redirect any unknown routes to splash */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           
           {/* Bottom Navigation - Shows on main app screens */}
           <BottomNavigation />
+          
+          {/* Toast Container - Shows cart notifications */}
+          <ToastContainer />
         </div>
       </Router>
     </ThemeProvider>

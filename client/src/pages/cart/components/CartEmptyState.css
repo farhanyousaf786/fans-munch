@@ -1,0 +1,21 @@
+/* Cart Empty State Component */
+.empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 40vh;
+  text-align: center;
+}
+
+.empty-cart-icon {
+  color: #E0E0E0;
+  margin-bottom: 16px;
+}
+
+.empty-cart-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}

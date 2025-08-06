@@ -53,18 +53,18 @@
 }
 
 .category-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   transition: all 0.2s ease;
 }
 
 .category-icon {
-  font-size: 28px;
+  font-size: 18px;
   transition: all 0.2s ease;
 }
 
@@ -105,13 +105,13 @@
   }
   
   .category-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 10px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 6px;
   }
   
   .category-icon {
-    font-size: 24px;
+    font-size: 16px;
   }
   
   .category-name {

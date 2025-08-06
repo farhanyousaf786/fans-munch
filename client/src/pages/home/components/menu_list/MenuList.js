@@ -1,12 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MdAccessTime, MdAdd } from 'react-icons/md';
 import './MenuList.css';
 
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
+  const navigate = useNavigate();
 
   const handleFoodClick = (food) => {
-    // In real app, this would navigate to food detail page
-    console.log('Navigate to food detail:', food);
+    // Navigate to food detail page (matching Flutter app behavior)
+    console.log('🍽️ Navigating to food detail:', food.name);
+    navigate(`/food/${food.id}`);
   };
 
   const handleAddToCart = (food) => {

@@ -1,0 +1,90 @@
+/* Food Bottom Bar Component */
+.food-detail-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 10px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1100;
+}
+
+.favorite-button {
+  background: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.favorite-button:hover {
+  border-color: #3D70FF;
+  transform: scale(1.05);
+}
+
+.favorite-button.liked {
+  background: #3D70FF;
+  border-color: #3D70FF;
+}
+
+.favorite-button svg {
+  font-size: 20px;
+  color: #666;
+}
+
+.favorite-button.liked svg {
+  color: white;
+}
+
+.add-to-cart-button {
+  flex: 1;
+  background: #3D70FF;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-to-cart-button:hover {
+  background: #3161EA;
+  transform: translateY(-1px);
+}
+
+.cart-icon {
+  font-size: 18px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .food-detail-bottom-bar {
+    padding: 8px 12px 12px;
+    gap: 12px;
+  }
+  
+  .favorite-button {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .add-to-cart-button {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}

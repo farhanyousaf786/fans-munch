@@ -137,6 +137,8 @@ function Home() {
           onChanged={handleSearch}
           onFilterTap={handleFilter}
         />
+                <CategoryList />
+
            <OffersList 
           offers={filteredOffers}
           loading={offersLoading}
@@ -152,7 +154,6 @@ function Home() {
         />
 
      
-        <CategoryList />
         
         <ShopList />
       </div>

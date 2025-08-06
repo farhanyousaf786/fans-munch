@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MdAccessTime, MdAdd } from 'react-icons/md';
 import './OffersList.css';
 
 function OffersList({ offers = [], loading = false, error = null, searchTerm = '' }) {
+  const navigate = useNavigate();
+  
   // Get section title based on search state
   const getSectionTitle = () => {
     if (searchTerm.trim()) {
@@ -11,9 +14,41 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
     return 'Special Offers';
   };
 
-  // Handle offer click
+  // Handle offer click (matching Flutter app logic exactly)
   const handleOfferClick = (offer) => {
-    console.log('Navigate to offer detail:', offer);
+    console.log('🎯 Offer clicked:', offer.name);
+    
+    // Calculate discounted price (matching Flutter logic)
+    const discountedPrice = offer.price - (offer.price * (offer.discountPercentage / 100));
+    
+    // Convert Offer to Food model (matching Flutter conversion)
+    const food = {
+      id: offer.id,
+      allergens: offer.allergens || [],
+      category: offer.category || '',
+      createdAt: offer.createdAt,
+      customization: offer.customization || [],
+      description: offer.description || '',
+      extras: offer.extras || [],
+      images: offer.images || [],
+      isAvailable: offer.isAvailable !== false,
+      name: offer.name,
+      nutritionalInfo: offer.nutritionalInfo || {},
+      preparationTime: offer.preparationTime || 15,
+      price: discountedPrice, // Use calculated discounted price
+      sauces: offer.sauces || [],
+      shopId: offer.shopId,
+      stadiumId: offer.stadiumId,
+      sizes: offer.sizes || [],
+      toppings: offer.toppings || [],
+      updatedAt: offer.updatedAt,
+      foodType: offer.foodType || 'regular'
+    };
+    
+    console.log('💰 Discounted price calculated:', discountedPrice.toFixed(2));
+    
+    // Navigate to food detail screen (matching Flutter navigation)
+    navigate(`/food/${offer.id}`);
   };
 
   // Handle add to cart

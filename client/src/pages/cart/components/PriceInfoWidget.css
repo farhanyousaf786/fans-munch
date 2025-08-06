@@ -1,0 +1,75 @@
+/* Price Info Widget Component (matches Flutter PriceInfoWidget) */
+.price-info-widget {
+  margin: 20px;
+  background: linear-gradient(135deg, #3D70FF, #5A84F8);
+  border-radius: 16px;
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.price-info-content {
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Price Rows */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: white;
+}
+
+.price-row:last-of-type {
+  margin-bottom: 20px;
+}
+
+.price-row.total {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Place Order Button (matches Flutter SecondaryButton) */
+.place-order-button {
+  background: white;
+  color: #3D70FF;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.place-order-button:hover {
+  background: #F8F9FA;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .price-info-widget {
+    margin: 16px;
+  }
+  
+  .price-info-content {
+    padding: 16px;
+  }
+  
+  .price-row {
+    font-size: 14px;
+  }
+  
+  .price-row.total {
+    font-size: 18px;
+  }
+}

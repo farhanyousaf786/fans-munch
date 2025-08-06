@@ -1,242 +1,161 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { cartUtils } from '../../utils/cartUtils';
+import { showToast } from '../../components/toast/ToastContainer';
+import CartHeader from './components/CartHeader';
+import CartLoadingState from './components/CartLoadingState';
+import CartEmptyState from './components/CartEmptyState';
+import CartItemsList from './components/CartItemsList';
+import PriceInfoWidget from './components/PriceInfoWidget';
 import './CartScreen.css';
 
-const CartScreen = () => {
+const CartScreen = ({ isFromHome = false }) => {
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Load cart data from cartUtils (matches Flutter OrderRepository.cart)
   useEffect(() => {
-    // TODO: Load cart from localStorage/Firebase
-    // For now, using mock data
-    setCartItems([
-      {
-        id: '1',
-        name: 'Classic Burger',
-        restaurant: 'Stadium Burgers',
-        price: 12.99,
-        quantity: 2,
-        image: '🍔',
-        customizations: ['No pickles', 'Extra cheese']
-      },
-      {
-        id: '2',
-        name: 'Large Fries',
-        restaurant: 'Stadium Burgers',
-        price: 4.99,
-        quantity: 1,
-        image: '🍟',
-        customizations: []
-      },
-      {
-        id: '3',
-        name: 'Pepperoni Pizza Slice',
-        restaurant: 'Pizza Corner',
-        price: 6.50,
-        quantity: 3,
-        image: '🍕',
-        customizations: ['Extra pepperoni']
-      }
-    ]);
+    loadCartData();
+    
+    // Listen for cart updates
+    const handleCartUpdate = () => {
+      loadCartData();
+    };
+    
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
   }, []);
 
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity === 0) {
-      removeItem(id);
-      return;
+  const loadCartData = () => {
+    setLoading(true);
+    try {
+      // Load cart from storage (matches Flutter loadCart())
+      const cart = cartUtils.getCartItems();
+      console.log('📦 Loaded cart from storage:', cart);
+      setCartItems(cart);
+    } catch (error) {
+      console.error('❌ Error loading cart:', error);
+      setCartItems([]);
+    } finally {
+      setLoading(false);
     }
-    setCartItems(items => 
-      items.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
   };
 
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
+  // Update quantity with confirmation dialog for removal (matches Flutter logic exactly)
+  const updateQuantity = (foodId, newQuantity) => {
+    const item = cartItems.find(item => item.id === foodId);
+    if (!item) return;
 
-  const applyPromoCode = () => {
-    // Mock promo code validation
-    if (promoCode.toLowerCase() === 'stadium10') {
-      setAppliedPromo({ code: 'STADIUM10', discount: 0.1, type: 'percentage' });
-      setPromoCode('');
-    } else if (promoCode.toLowerCase() === 'free5') {
-      setAppliedPromo({ code: 'FREE5', discount: 5, type: 'fixed' });
-      setPromoCode('');
+    // Flutter logic: If current quantity is 1 and trying to decrease, show confirmation
+    if (item.quantity === 1 && newQuantity < item.quantity) {
+      // Show confirmation dialog before removing (matches Flutter)
+      if (window.confirm(`Remove ${item.name} from cart?`)) {
+        removeCompletelyFromCart(foodId);
+      }
+      // If user cancels, do nothing (don't decrease quantity)
     } else {
-      alert('Invalid promo code');
+      // Normal quantity update (matches Flutter RemoveFromCart for quantity > 1)
+      try {
+        cartUtils.updateQuantity(foodId, newQuantity);
+        showToast('success', 'Cart updated');
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+        showToast('error', 'Failed to update cart');
+      }
     }
   };
 
-  const removePromo = () => {
-    setAppliedPromo(null);
+  // Add to cart (increase quantity)
+  const addToCart = (foodId) => {
+    const item = cartItems.find(item => item.id === foodId);
+    if (item) {
+      updateQuantity(foodId, item.quantity + 1);
+    }
   };
 
+  // Remove completely from cart (matches Flutter RemoveCompletelyFromCart)
+  const removeCompletelyFromCart = (foodId) => {
+    try {
+      cartUtils.removeFromCart(foodId);
+      showToast('success', 'Item removed from cart');
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      showToast('error', 'Failed to remove item');
+    }
+  };
+
+  // Calculate price totals (matches Flutter OrderRepository calculations)
   const calculateSubtotal = () => {
     return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
-  const calculateDiscount = () => {
-    if (!appliedPromo) return 0;
-    const subtotal = calculateSubtotal();
-    if (appliedPromo.type === 'percentage') {
-      return subtotal * appliedPromo.discount;
-    }
-    return appliedPromo.discount;
+  const calculateDeliveryFee = () => {
+    return 2.99; // Fixed delivery fee (matches Flutter)
   };
 
-  const calculateTax = () => {
-    const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
-    return (subtotal - discount) * 0.08; // 8% tax
+  const calculateTip = () => {
+    return 0; // No tip by default (matches Flutter)
+  };
+
+  const calculateDiscount = () => {
+    return 0; // No discount by default (matches Flutter)
   };
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
+    const deliveryFee = calculateDeliveryFee();
+    const tip = calculateTip();
     const discount = calculateDiscount();
-    const tax = calculateTax();
-    return subtotal - discount + tax;
+    return subtotal + deliveryFee + tip - discount;
   };
 
-  const groupedItems = cartItems.reduce((groups, item) => {
-    const restaurant = item.restaurant;
-    if (!groups[restaurant]) {
-      groups[restaurant] = [];
+  // Handle place order (matches Flutter navigation to tip screen)
+  const handlePlaceOrder = () => {
+    if (cartItems.length === 0) {
+      showToast('error', 'Cart is empty');
+      return;
     }
-    groups[restaurant].push(item);
-    return groups;
-  }, {});
+    // Navigate to tip/checkout screen (matches Flutter)
+    navigate('/tip');
+  };
+
+  if (loading) {
+    return <CartLoadingState isFromHome={isFromHome} />;
+  }
 
   return (
     <div className="cart-screen">
       <div className="cart-container">
-        {/* Header */}
-        <div className="cart-header">
-          <h1 className="cart-title">My Cart</h1>
-          <p className="cart-subtitle">{cartItems.length} items in your cart</p>
-        </div>
+        {/* Header Component */}
+        <CartHeader isFromHome={isFromHome} />
 
+        {/* Empty cart state or Cart Items List */}
         {cartItems.length === 0 ? (
-          <div className="empty-cart">
-            <div className="empty-icon">🛒</div>
-            <h3>Your cart is empty</h3>
-            <p>Add some delicious food to get started!</p>
-            <button className="browse-button">Browse Menu</button>
-          </div>
+          <CartEmptyState />
         ) : (
-          <>
-            {/* Cart Items by Restaurant */}
-            <div className="cart-items">
-              {Object.entries(groupedItems).map(([restaurant, items]) => (
-                <div key={restaurant} className="restaurant-group">
-                  <h3 className="restaurant-name">{restaurant}</h3>
-                  {items.map(item => (
-                    <div key={item.id} className="cart-item">
-                      <div className="item-image">{item.image}</div>
-                      <div className="item-details">
-                        <h4 className="item-name">{item.name}</h4>
-                        {item.customizations.length > 0 && (
-                          <div className="item-customizations">
-                            {item.customizations.map((custom, index) => (
-                              <span key={index} className="customization">
-                                {custom}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <p className="item-price">${item.price.toFixed(2)}</p>
-                      </div>
-                      <div className="item-controls">
-                        <div className="quantity-controls">
-                          <button 
-                            className="quantity-btn"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          >
-                            -
-                          </button>
-                          <span className="quantity">{item.quantity}</span>
-                          <button 
-                            className="quantity-btn"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
-                            +
-                          </button>
-                        </div>
-                        <button 
-                          className="remove-btn"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-
-            {/* Promo Code */}
-            <div className="promo-section">
-              <h3>Promo Code</h3>
-              {appliedPromo ? (
-                <div className="applied-promo">
-                  <span className="promo-code">{appliedPromo.code}</span>
-                  <span className="promo-discount">
-                    -{appliedPromo.type === 'percentage' 
-                      ? `${(appliedPromo.discount * 100)}%` 
-                      : `$${appliedPromo.discount.toFixed(2)}`}
-                  </span>
-                  <button className="remove-promo" onClick={removePromo}>×</button>
-                </div>
-              ) : (
-                <div className="promo-input">
-                  <input
-                    type="text"
-                    placeholder="Enter promo code"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                  />
-                  <button onClick={applyPromoCode}>Apply</button>
-                </div>
-              )}
-            </div>
-
-            {/* Order Summary */}
-            <div className="order-summary">
-              <h3>Order Summary</h3>
-              <div className="summary-line">
-                <span>Subtotal</span>
-                <span>${calculateSubtotal().toFixed(2)}</span>
-              </div>
-              {appliedPromo && (
-                <div className="summary-line discount">
-                  <span>Discount ({appliedPromo.code})</span>
-                  <span>-${calculateDiscount().toFixed(2)}</span>
-                </div>
-              )}
-              <div className="summary-line">
-                <span>Tax</span>
-                <span>${calculateTax().toFixed(2)}</span>
-              </div>
-              <div className="summary-line total">
-                <span>Total</span>
-                <span>${calculateTotal().toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Checkout Button */}
-            <div className="checkout-section">
-              <button className="checkout-button">
-                Proceed to Checkout • ${calculateTotal().toFixed(2)}
-              </button>
-              <p className="pickup-info">
-                🕐 Estimated pickup time: 15-20 minutes
-              </p>
-            </div>
-          </>
+          <CartItemsList 
+            cartItems={cartItems}
+            onUpdateQuantity={updateQuantity}
+            onAddToCart={addToCart}
+            onRemoveFromCart={removeCompletelyFromCart}
+          />
         )}
       </div>
+
+      {/* Price Info Widget Component */}
+      <PriceInfoWidget 
+        cartItems={cartItems}
+        calculateSubtotal={calculateSubtotal}
+        calculateDeliveryFee={calculateDeliveryFee}
+        calculateTip={calculateTip}
+        calculateDiscount={calculateDiscount}
+        calculateTotal={calculateTotal}
+        onPlaceOrder={handlePlaceOrder}
+      />
     </div>
   );
 };

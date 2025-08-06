@@ -1,0 +1,85 @@
+/* Loading State Component */
+.food-detail-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #F5F5F5;
+  position: relative;
+}
+
+.food-detail-header {
+  position: relative;
+  height: 40vh;
+  background: linear-gradient(135deg, #3D70FF 0%, #5A84F8 100%);
+  overflow: hidden;
+}
+
+.back-button {
+  position: absolute;
+  top: 50px;
+  left: 16px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+  background: white;
+  transform: scale(1.05);
+}
+
+.back-button svg {
+  font-size: 20px;
+  color: #333;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  min-height: 50vh;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #E0E0E0;
+  border-top: 3px solid #3D70FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .food-detail-header {
+    height: 35vh;
+  }
+  
+  .back-button {
+    top: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .food-detail-header {
+    height: 30vh;
+  }
+}

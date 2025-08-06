@@ -1,0 +1,47 @@
+/* Allergens List Component */
+.section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.allergens-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.allergen-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.bullet-point {
+  color: #3D70FF;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.no-data-text {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .section-title {
+    font-size: 16px;
+  }
+}

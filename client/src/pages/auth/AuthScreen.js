@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
-import { userStorage } from '../../utils/storage';
+import { userStorage, storageManager } from '../../utils/storage';
 import './AuthScreen.css';
 
 const AuthScreen = () => {
@@ -32,11 +32,18 @@ const AuthScreen = () => {
 
     try {
       if (isLogin) {
+        console.log('🔑 User signing in...');
+        
+        // Clear all previous storage data for fresh session
+        storageManager.initializeFreshSession();
+        
         // Sign in user
         const user = await userRepository.signInUser(formData.email, formData.password);
         
         // Save user data to localStorage
         userStorage.setUserData(user.toMap());
+        
+        console.log('✅ Sign in completed, navigating to onboarding');
         
         // Navigate to onboarding
         navigate('/onboarding');
@@ -53,12 +60,19 @@ const AuthScreen = () => {
           return;
         }
         
+        console.log('📝 User registering...');
+        
+        // Clear all previous storage data for fresh session
+        storageManager.initializeFreshSession();
+        
         // Register new user
         const result = await userRepository.registerUser(formData);
         
         if (result.success) {
           // Save user data to localStorage
           userStorage.setUserData(result.user.toMap());
+          
+          console.log('✅ Registration completed, navigating to onboarding');
           
           // Navigate to onboarding
           navigate('/onboarding');

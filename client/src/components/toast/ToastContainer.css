@@ -1,0 +1,21 @@
+/* Toast Container - Manages multiple toast notifications */
+.toast-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast-container > * {
+  pointer-events: auto;
+  margin-bottom: 12px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .toast-container {
+    left: 0;
+    right: 0;
+  }
+}

@@ -1,15 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { storageManager } from '../../utils/storage';
 import './ProfileScreen.css';
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
 
   const handleSignOut = () => {
-    // Clear all localStorage data
-    localStorage.clear();
+    console.log('🚪 User signing out...');
+    
+    // Clear all storage data using the storage manager
+    storageManager.clearAllStorage();
+    
     // Navigate back to auth screen
     navigate('/auth');
+    
+    console.log('✅ Sign out completed');
   };
 
   return (

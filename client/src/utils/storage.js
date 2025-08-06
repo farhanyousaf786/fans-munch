@@ -180,6 +180,96 @@ export const cartStorage = {
   }
 };
 
+// ============================================================================
+// STORAGE MANAGEMENT UTILITY
+// ============================================================================
+
+/**
+ * Utility to clear all app storage data
+ * Used during login/logout to ensure clean state
+ */
+export const storageManager = {
+  /**
+   * Clear all localStorage data for the app
+   * This includes user data, cart, stadium selection, onboarding status, etc.
+   */
+  clearAllStorage: () => {
+    try {
+      console.log('🧹 Clearing all localStorage data...');
+      
+      // Clear all localStorage
+      localStorage.clear();
+      
+      // Dispatch cart updated event to update UI with proper detail
+      window.dispatchEvent(new CustomEvent('cartUpdated', {
+        detail: {
+          cartItems: [],
+          totalItems: 0,
+          totalPrice: 0
+        }
+      }));
+      
+      console.log('✅ All localStorage data cleared successfully');
+    } catch (error) {
+      console.error('❌ Error clearing localStorage:', error);
+    }
+  },
+
+  /**
+   * Clear only user-specific data (keep app settings like theme, etc.)
+   * Alternative to clearAllStorage if you want to preserve some data
+   */
+  clearUserData: () => {
+    try {
+      console.log('🧹 Clearing user-specific data...');
+      
+      // Remove specific user-related keys
+      const userKeys = [
+        STORAGE_KEYS.USER_DATA,
+        STORAGE_KEYS.SELECTED_STADIUM,
+        STORAGE_KEYS.ONBOARDING_COMPLETED,
+        STORAGE_KEYS.CART
+      ];
+      
+      userKeys.forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      // Dispatch cart updated event to update UI with proper detail
+      window.dispatchEvent(new CustomEvent('cartUpdated', {
+        detail: {
+          cartItems: [],
+          totalItems: 0,
+          totalPrice: 0
+        }
+      }));
+      
+      console.log('✅ User-specific data cleared successfully');
+    } catch (error) {
+      console.error('❌ Error clearing user data:', error);
+    }
+  },
+
+  /**
+   * Initialize fresh storage state for a new user session
+   */
+  initializeFreshSession: () => {
+    try {
+      console.log('🔄 Initializing fresh user session...');
+      
+      // Clear all existing data
+      storageManager.clearAllStorage();
+      
+      // Initialize empty cart
+      cartStorage.setCart({ items: [], total: 0, shopId: null });
+      
+      console.log('✅ Fresh session initialized');
+    } catch (error) {
+      console.error('❌ Error initializing fresh session:', error);
+    }
+  }
+};
+
 // Favorites
 export const favoritesStorage = {
   setFavoriteFoods: (foods) => storage.setItem(STORAGE_KEYS.FAVORITE_FOODS, foods),
