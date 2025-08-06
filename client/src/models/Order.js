@@ -103,11 +103,36 @@ export class Order {
    */
   toMap() {
     return {
-      cart: this.cart.map(item => ({
-        ...item,
-        quantity: item.quantity || 1,
-        addedAt: item.addedAt instanceof Date ? item.addedAt : (item.addedAt ? new Date(item.addedAt) : null)
-      })),
+      cart: this.cart.map(item => {
+        // Store complete food data like Flutter does
+        const foodData = {
+          id: item.id,
+          allergens: item.allergens || [],
+          category: item.category || 'Food',
+          createdAt: item.createdAt instanceof Date ? item.createdAt : (item.createdAt && item.createdAt.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date())),
+          customization: item.customization || {},
+          description: item.description || '',
+          extras: item.extras || [],
+          images: item.images || [],
+          isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+          name: item.name || '',
+          nutritionalInfo: item.nutritionalInfo || {},
+          preparationTime: item.preparationTime || 15,
+          price: parseFloat((item.price || 0).toFixed(2)),
+          sauces: item.sauces || [],
+          shopId: item.shopId || '',
+          stadiumId: item.stadiumId || '',
+          sizes: item.sizes || [],
+          toppings: item.toppings || [],
+          updatedAt: item.updatedAt instanceof Date ? item.updatedAt : (item.updatedAt && item.updatedAt.toDate ? item.updatedAt.toDate() : (item.updatedAt ? new Date(item.updatedAt) : new Date())),
+          foodType: item.foodType || { halal: false, kosher: false, vegan: false },
+          quantity: item.quantity || 1,
+          // Additional cart-specific fields
+          originalPrice: item.originalPrice || item.price || 0,
+          discountedPrice: item.discountedPrice || null
+        };
+        return foodData;
+      }),
       subtotal: parseFloat(this.subtotal.toFixed(2)),
       deliveryFee: parseFloat(this.deliveryFee.toFixed(2)),
       discount: parseFloat(this.discount.toFixed(2)),
