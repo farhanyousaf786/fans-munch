@@ -46,6 +46,8 @@ export class Order {
     stadiumId = '',
     shopId = '',
     orderId = '',
+    orderCode = '',
+    deliveryUserId = null,
     status = OrderStatus.PENDING,
     createdAt = null,
     deliveryTime = null,
@@ -62,6 +64,8 @@ export class Order {
     this.stadiumId = stadiumId;
     this.shopId = shopId;
     this.orderId = orderId;
+    this.orderCode = orderCode;
+    this.deliveryUserId = deliveryUserId;
     this.status = status;
     this.createdAt = createdAt;
     this.deliveryTime = deliveryTime;
@@ -85,6 +89,8 @@ export class Order {
       stadiumId: data.stadiumId || '',
       shopId: data.shopId || '',
       orderId: data.orderId || '',
+      orderCode: data.orderCode || '',
+      deliveryUserId: data.deliveryUserId || null,
       status: data.status || OrderStatus.PENDING,
       createdAt: data.createdAt,
       deliveryTime: data.deliveryTime,
@@ -99,20 +105,23 @@ export class Order {
     return {
       cart: this.cart.map(item => ({
         ...item,
-        quantity: item.quantity || 1
+        quantity: item.quantity || 1,
+        addedAt: item.addedAt instanceof Date ? item.addedAt : (item.addedAt ? new Date(item.addedAt) : null)
       })),
-      subtotal: this.subtotal,
-      deliveryFee: this.deliveryFee,
-      discount: this.discount,
-      total: this.total,
-      tipAmount: this.tipAmount,
+      subtotal: parseFloat(this.subtotal.toFixed(2)),
+      deliveryFee: parseFloat(this.deliveryFee.toFixed(2)),
+      discount: parseFloat(this.discount.toFixed(2)),
+      total: parseFloat(this.total.toFixed(2)), // Ensure 2 decimal places
+      tipAmount: parseFloat(this.tipAmount.toFixed(2)),
       userInfo: this.userInfo,
       stadiumId: this.stadiumId,
       shopId: this.shopId,
       orderId: this.orderId,
+      orderCode: this.orderCode,
+      deliveryUserId: this.deliveryUserId,
       status: this.status,
-      createdAt: this.createdAt,
-      deliveryTime: this.deliveryTime,
+      createdAt: this.createdAt instanceof Date ? this.createdAt : (this.createdAt ? new Date(this.createdAt) : null),
+      deliveryTime: this.deliveryTime instanceof Date ? this.deliveryTime : (this.deliveryTime ? new Date(this.deliveryTime) : null),
       seatInfo: this.seatInfo
     };
   }
@@ -134,6 +143,9 @@ export class Order {
     const total = subtotal + deliveryFee + tipAmount - discount;
     const orderId = Date.now().toString();
     const createdAt = new Date();
+    
+    // Generate 6-digit random order code
+    const orderCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     return new Order({
       cart: [...cartItems],
@@ -151,6 +163,8 @@ export class Order {
       stadiumId,
       shopId,
       orderId,
+      orderCode,
+      deliveryUserId: null,
       status: OrderStatus.PENDING,
       createdAt,
       deliveryTime: null, // Can be calculated later

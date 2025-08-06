@@ -8,17 +8,23 @@ import {
 } from 'react-icons/md';
 import { userStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
+import orderRepository from '../../repositories/orderRepository';
+import { OrderStatus } from '../../models/Order';
 import './BottomNavigation.css';
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
 
-  // Update cart count on component mount and when cart changes
+  // Update cart count and active orders on component mount and when they change
   useEffect(() => {
     // Initial cart count
     updateCartCount();
+    
+    // Initial active orders count
+    updateActiveOrdersCount();
 
     // Listen for cart updates
     const handleCartUpdate = (event) => {
@@ -26,17 +32,55 @@ const BottomNavigation = () => {
       const totalItems = event.detail?.totalItems || 0;
       setCartItemCount(totalItems);
     };
+    
+    // Listen for order updates
+    const handleOrderUpdate = () => {
+      console.log('🔔 Order update event received, refreshing badge...');
+      updateActiveOrdersCount();
+    };
+
+    // Set up periodic refresh for orders badge (every 30 seconds)
+    const orderRefreshInterval = setInterval(() => {
+      updateActiveOrdersCount();
+    }, 30000);
 
     window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('orderUpdated', handleOrderUpdate);
 
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('orderUpdated', handleOrderUpdate);
+      clearInterval(orderRefreshInterval);
     };
   }, []);
 
   const updateCartCount = () => {
     const totalItems = cartUtils.getTotalItems();
     setCartItemCount(totalItems);
+  };
+  
+  const updateActiveOrdersCount = async () => {
+    try {
+      const userData = userStorage.getUserData();
+      if (!userData || !userData.id) {
+        setActiveOrdersCount(0);
+        return;
+      }
+      
+      // Fetch user orders
+      const orders = await orderRepository.fetchOrdersForUser(userData.id);
+      
+      // Count active orders (pending, preparing, delivering)
+      const activeOrders = orders.filter(order => 
+        [OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.DELIVERING].includes(order.status)
+      );
+      
+      setActiveOrdersCount(activeOrders.length);
+      console.log('🔔 Active orders count updated:', activeOrders.length);
+    } catch (error) {
+      console.error('❌ Error fetching active orders count:', error);
+      setActiveOrdersCount(0);
+    }
   };
 
   const navItems = [
@@ -107,6 +151,10 @@ const BottomNavigation = () => {
               {/* Show cart badge for cart item */}
               {item.id === 'cart' && cartItemCount > 0 && (
                 <span className="cart-badge">{cartItemCount > 99 ? '99+' : cartItemCount}</span>
+              )}
+              {/* Show orders badge for active orders */}
+              {item.id === 'orders' && activeOrdersCount > 0 && (
+                <span className="orders-badge">{activeOrdersCount > 99 ? '99+' : activeOrdersCount}</span>
               )}
             </div>
             <span className="nav-label">{item.label}</span>

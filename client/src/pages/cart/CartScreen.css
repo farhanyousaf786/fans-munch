@@ -3,7 +3,7 @@
 .cart-screen {
   min-height: 100vh;
   background: #F5F5F5;
-  padding-bottom: 0; /* No bottom nav on cart screen */
+  padding-bottom: 20vh; /* 20% bottom margin for content visibility */
 }
 
 .cart-container {

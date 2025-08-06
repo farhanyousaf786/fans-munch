@@ -52,10 +52,42 @@
   flex-wrap: wrap;
 }
 
+.food-price-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .food-price {
   font-size: 20px;
   font-weight: 700;
   color: #3D70FF;
+}
+
+.discounted-price {
+  font-size: 22px;
+  font-weight: 700;
+  color: #3D70FF;
+}
+
+.original-price {
+  font-size: 16px;
+  font-weight: 500;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.discount-badge {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
 
 .food-prep-time {
@@ -98,10 +130,40 @@
   .food-price {
     font-size: 18px;
   }
+  
+  .discounted-price {
+    font-size: 20px;
+  }
+  
+  .original-price {
+    font-size: 14px;
+  }
+  
+  .discount-badge {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
 }
 
 @media (max-width: 480px) {
   .food-name {
     font-size: 18px;
+  }
+  
+  .food-price-container {
+    gap: 8px;
+  }
+  
+  .discounted-price {
+    font-size: 18px;
+  }
+  
+  .original-price {
+    font-size: 13px;
+  }
+  
+  .discount-badge {
+    font-size: 10px;
+    padding: 2px 5px;
   }
 }

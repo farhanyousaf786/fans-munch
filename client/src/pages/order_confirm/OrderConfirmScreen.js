@@ -184,6 +184,16 @@ const OrderConfirmScreen = () => {
         4000
       );
       
+      // Dispatch order update event for bottom navigation badge
+      window.dispatchEvent(new CustomEvent('orderUpdated', {
+        detail: {
+          orderId: createdOrder.orderId,
+          status: 'PENDING',
+          action: 'created'
+        }
+      }));
+      console.log('🔔 Order update event dispatched for badge update');
+      
       // Navigate to home after delay (matches Flutter navigation)
       setTimeout(() => {
         navigate('/home', { replace: true });

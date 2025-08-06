@@ -85,10 +85,16 @@ export const cartUtils = {
         console.log('📈 Updated existing item quantity:', existingCart[existingItemIndex].quantity);
       } else {
         // Add new item to cart (matches Flutter logic)
+        // Calculate the actual price to use (discounted if it's an offer)
+        const hasDiscount = food.discountPercentage && food.discountPercentage > 0;
+        const actualPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food.price;
+        
         const cartItem = {
           id: food.id,
           name: food.name,
-          price: food.price,
+          price: actualPrice, // Use discounted price if available
+          originalPrice: food.price, // Keep original price for reference
+          discountPercentage: food.discountPercentage || 0, // Store discount info
           images: food.images || [],
           quantity: quantity,
           shopId: food.shopId,
