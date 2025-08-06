@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdAccessTime, MdAdd } from 'react-icons/md';
+import { MdAccessTime } from 'react-icons/md';
 import './OffersList.css';
 
 function OffersList({ offers = [], loading = false, error = null, searchTerm = '' }) {
@@ -51,10 +51,7 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
     navigate(`/food/${offer.id}`);
   };
 
-  // Handle add to cart
-  const handleAddToCart = (offer) => {
-    console.log('Added offer to cart:', offer);
-  };
+
 
   // Loading state
   if (loading) {
@@ -165,17 +162,6 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
                   <span>{offer.preparationTime} min</span>
                 </div>
               </div>
-              
-              {/* Add to Cart Button */}
-              <button 
-                className="add-to-cart-btn-horizontal"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(offer);
-                }}
-              >
-                <MdAdd className="add-icon-small" />
-              </button>
             </div>
           ))}
         </div>

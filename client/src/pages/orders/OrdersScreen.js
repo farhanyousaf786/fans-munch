@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { userStorage } from '../../utils/storage';
 import orderRepository from '../../repositories/orderRepository';
 import { OrderStatus } from '../../models/Order';
+import { collection, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import './OrdersScreen.css';
 
 const OrdersScreen = () => {
@@ -9,10 +11,47 @@ const OrdersScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('active'); // active, completed, cancelled
+  const [shopDetails, setShopDetails] = useState({}); // Cache for shop details
 
   useEffect(() => {
     fetchUserOrders();
   }, []);
+
+  // Helper function to fetch shop details by ID
+  const fetchShopById = async (shopId) => {
+    try {
+      const shopRef = doc(db, 'shops', shopId);
+      const shopSnap = await getDoc(shopRef);
+      
+      if (shopSnap.exists()) {
+        const data = shopSnap.data();
+        
+        // Create shop object from Firebase data (matching ShopList logic)
+        const shop = {
+          id: shopSnap.id,
+          name: data.name || 'Unknown Shop',
+          description: data.description || '',
+          location: data.location || '',
+          floor: data.floor || '',
+          gate: data.gate || '',
+          stadiumId: data.stadiumId || '',
+          stadiumName: data.stadiumName || '',
+          shopUserFcmToken: data.shopUserFcmToken || '',
+          admins: data.admins || [],
+          createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date()
+        };
+        
+        return shop;
+      } else {
+        console.log('❌ Shop not found:', shopId);
+        return { name: 'Unknown Shop', id: shopId };
+      }
+    } catch (error) {
+      console.error('❌ Error fetching shop:', shopId, error);
+      return { name: 'Unknown Shop', id: shopId };
+    }
+  };
 
   const fetchUserOrders = async () => {
     try {
@@ -35,6 +74,20 @@ const OrdersScreen = () => {
       const userOrders = await orderRepository.fetchOrdersForUser(userData.id);
       
       console.log('✅ Loaded orders:', userOrders.length);
+      
+      // Fetch shop details for each unique shop ID
+      const uniqueShopIds = [...new Set(userOrders.map(order => order.shopId).filter(Boolean))];
+      const shopDetailsMap = {};
+      
+      console.log('🏪 Fetching shop details for:', uniqueShopIds.length, 'shops');
+      
+      for (const shopId of uniqueShopIds) {
+        const shopData = await fetchShopById(shopId);
+        shopDetailsMap[shopId] = shopData;
+        console.log('✅ Loaded shop:', shopData.name);
+      }
+      
+      setShopDetails(shopDetailsMap);
       setOrders(userOrders);
       
     } catch (error) {
@@ -140,7 +193,10 @@ const OrdersScreen = () => {
                 <div className="order-header">
                   <div className="order-info">
                     <h3 className="restaurant-name">
-                      {order.shopId ? `Shop ${order.shopId.slice(0, 8)}...` : 'Stadium Food'}
+                      {order.shopId && shopDetails[order.shopId] 
+                        ? shopDetails[order.shopId].name 
+                        : 'Stadium Food'
+                      }
                     </h3>
                     <p className="order-number">#{order.orderId}</p>
                   </div>

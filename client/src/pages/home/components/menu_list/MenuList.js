@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdAccessTime, MdAdd } from 'react-icons/md';
+import { MdAccessTime } from 'react-icons/md';
 import './MenuList.css';
 
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
@@ -12,10 +12,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     navigate(`/food/${food.id}`);
   };
 
-  const handleAddToCart = (food) => {
-    // In real app, this would add food to cart
-    console.log('Added to cart:', food);
-  };
+
 
   // Get section title based on search state
   const getSectionTitle = () => {
@@ -120,17 +117,6 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                   <span>{food.getPreparationTimeText()}</span>
                 </div>
               </div>
-              
-              {/* Add to cart button */}
-              <button 
-                className="add-to-cart-btn-horizontal"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(food);
-                }}
-              >
-                <MdAdd className="add-icon-small" />
-              </button>
             </div>
           ))}
         </div>

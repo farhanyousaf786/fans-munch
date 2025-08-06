@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { userStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
@@ -65,25 +65,49 @@ const FoodDetailScreen = () => {
     try {
       console.log('🔍 Fetching food details for ID:', foodId);
       
-      // Query menuItems collection (same as Flutter foods collection)
-      const foodsRef = collection(db, 'menuItems');
-      const q = query(foodsRef, where('__name__', '==', foodId));
-      const querySnapshot = await getDocs(q);
+      let foodData = null;
       
-      if (!querySnapshot.empty) {
-        const foodDoc = querySnapshot.docs[0];
-        const foodData = {
-          id: foodDoc.id,
-          ...foodDoc.data()
-        };
+      // First try to fetch from menuItems collection (regular foods)
+      try {
+        const foodDocRef = doc(db, 'menuItems', foodId);
+        const foodDoc = await getDoc(foodDocRef);
         
-        console.log('✅ Food details loaded:', foodData.name);
+        if (foodDoc.exists()) {
+          foodData = {
+            id: foodDoc.id,
+            ...foodDoc.data()
+          };
+          console.log('✅ Food details loaded from menuItems:', foodData.name);
+        }
+      } catch (err) {
+        console.log('ℹ️ Not found in menuItems, trying offers...');
+      }
+      
+      // If not found in menuItems, try offers collection (special offers)
+      if (!foodData) {
+        try {
+          const offerDocRef = doc(db, 'offers', foodId);
+          const offerDoc = await getDoc(offerDocRef);
+          
+          if (offerDoc.exists()) {
+            foodData = {
+              id: offerDoc.id,
+              ...offerDoc.data()
+            };
+            console.log('✅ Food details loaded from offers:', foodData.name);
+          }
+        } catch (err) {
+          console.log('ℹ️ Not found in offers either');
+        }
+      }
+      
+      if (foodData) {
         setFood(foodData);
         
         // Check if food is in user's favorites
         checkFavoriteStatus(foodData.id);
       } else {
-        throw new Error('Food not found');
+        throw new Error('Food not found in menuItems or offers');
       }
     } catch (error) {
       console.error('❌ Error fetching food details:', error);
