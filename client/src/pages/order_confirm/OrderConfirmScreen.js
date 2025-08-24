@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoArrowBack, IoCamera, IoImage, IoCard, IoWallet } from 'react-icons/io5';
 import { cartUtils } from '../../utils/cartUtils';
 import { userStorage, stadiumStorage } from '../../utils/storage';
 import { Order } from '../../models/Order';
 import orderRepository from '../../repositories/orderRepository';
 import stripeService from '../../services/stripeService';
 import { showToast } from '../../components/toast/ToastContainer';
+import ConfirmHeader from './components/ConfirmHeader';
+import SeatForm from './components/SeatForm';
+import TicketUpload from './components/TicketUpload';
+import PaymentMethods from './components/PaymentMethods';
+import OrderSummary from './components/OrderSummary';
+import PlaceOrderBar from './components/PlaceOrderBar';
 import './OrderConfirmScreen.css';
 
 const OrderConfirmScreen = () => {
@@ -225,152 +230,22 @@ const OrderConfirmScreen = () => {
     <div className="order-confirm-screen">
       <div className="order-confirm-container">
         {/* Header */}
-        <div className="order-confirm-header">
-          <button className="back-button" onClick={handleBack}>
-            <IoArrowBack size={24} />
-          </button>
-          <h1 className="order-confirm-title">Confirm Order</h1>
-        </div>
+        <ConfirmHeader onBack={handleBack} />
 
         {/* Seat Information Form */}
-        <div className="seat-info-section">
-          <h2 className="section-title">Seat Information</h2>
-          
-          <div className="form-row">
-            <div className="form-field">
-              <label className="field-label">Row *</label>
-              <input
-                type="text"
-                className={`field-input ${errors.row ? 'error' : ''}`}
-                placeholder="Enter row number"
-                value={formData.row}
-                onChange={(e) => handleInputChange('row', e.target.value)}
-              />
-              {errors.row && <span className="error-text">{errors.row}</span>}
-            </div>
-            
-            <div className="form-field">
-              <label className="field-label">Seat Number *</label>
-              <input
-                type="text"
-                className={`field-input ${errors.seatNo ? 'error' : ''}`}
-                placeholder="Enter seat number"
-                value={formData.seatNo}
-                onChange={(e) => handleInputChange('seatNo', e.target.value)}
-              />
-              {errors.seatNo && <span className="error-text">{errors.seatNo}</span>}
-            </div>
-          </div>
-
-          <div className="form-field">
-            <label className="field-label">Section *</label>
-            <input
-              type="text"
-              className={`field-input ${errors.section ? 'error' : ''}`}
-              placeholder="Enter section"
-              value={formData.section}
-              onChange={(e) => handleInputChange('section', e.target.value)}
-            />
-            {errors.section && <span className="error-text">{errors.section}</span>}
-          </div>
-
-          <div className="form-field">
-            <label className="field-label">Seat Details (Optional)</label>
-            <textarea
-              className="field-input textarea"
-              placeholder="Additional seat information"
-              value={formData.seatDetails}
-              onChange={(e) => handleInputChange('seatDetails', e.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
+        <SeatForm formData={formData} errors={errors} onChange={handleInputChange} />
 
         {/* Ticket Image Upload */}
-        <div className="ticket-upload-section">
-          <h2 className="section-title">Ticket Image (Optional)</h2>
-          <p className="section-description">
-            Upload your ticket image to auto-fill seat information
-          </p>
-          
-          <div className="upload-options">
-            <label className="upload-option">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ display: 'none' }}
-              />
-              <IoImage size={24} />
-              <span>Gallery</span>
-            </label>
-            
-            <button className="upload-option" onClick={handleCameraCapture}>
-              <IoCamera size={24} />
-              <span>Camera</span>
-            </button>
-          </div>
-          
-          {ticketImage && (
-            <div className="uploaded-image">
-              <img src={ticketImage} alt="Ticket" className="ticket-preview" />
-            </div>
-          )}
-        </div>
+        <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 
         {/* Payment Method */}
-        <div className="payment-method-section">
-          <h2 className="section-title">Payment Method</h2>
-          
-          <div className="payment-options">
-            <button
-              className={`payment-option ${selectedPaymentMethod === 'visa' ? 'selected' : ''}`}
-              onClick={() => setSelectedPaymentMethod('visa')}
-            >
-              <IoCard size={24} />
-              <span>Visa</span>
-            </button>
-            
-            <button
-              className={`payment-option ${selectedPaymentMethod === 'paypal' ? 'selected' : ''}`}
-              onClick={() => setSelectedPaymentMethod('paypal')}
-            >
-              <IoWallet size={24} />
-              <span>PayPal</span>
-            </button>
-          </div>
-        </div>
+        <PaymentMethods selected={selectedPaymentMethod} onSelect={setSelectedPaymentMethod} />
 
         {/* Order Summary */}
-        <div className="order-summary-section">
-          <h2 className="section-title">Order Summary</h2>
-          
-          <div className="summary-row">
-            <span className="summary-label">Subtotal</span>
-            <span className="summary-value">${orderTotal.toFixed(2)}</span>
-          </div>
-          
-          <div className="summary-row">
-            <span className="summary-label">Tip ({tipData.percentage}%)</span>
-            <span className="summary-value">${tipData.amount.toFixed(2)}</span>
-          </div>
-          
-          <div className="summary-row total">
-            <span className="summary-label">Total</span>
-            <span className="summary-value">${finalTotal.toFixed(2)}</span>
-          </div>
-        </div>
+        <OrderSummary orderTotal={orderTotal} tipData={tipData} finalTotal={finalTotal} />
 
         {/* Place Order Button */}
-        <div className="place-order-section">
-          <button
-            className="place-order-button"
-            onClick={handlePayment}
-            disabled={loading}
-          >
-            {loading ? 'Processing...' : `Place Order - $${finalTotal.toFixed(2)}`}
-          </button>
-        </div>
+        <PlaceOrderBar loading={loading} finalTotal={finalTotal} onPlaceOrder={handlePayment} />
       </div>
     </div>
   );

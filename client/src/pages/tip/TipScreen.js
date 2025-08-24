@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoArrowBack } from 'react-icons/io5';
 import { cartUtils } from '../../utils/cartUtils';
+import TipHeader from './components/TipHeader';
+import TipPresets from './components/TipPresets';
+import TipCustomInput from './components/TipCustomInput';
+import TipSummary from './components/TipSummary';
+import TipActions from './components/TipActions';
 import './TipScreen.css';
 
 const TipScreen = () => {
@@ -67,79 +71,32 @@ const TipScreen = () => {
     navigate('/order/confirm');
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   return (
     <div className="tip-screen">
       <div className="tip-container">
-        {/* Header with Back Button */}
-        <div className="tip-header">
-          <button className="back-button" onClick={handleBack}>
-            <IoArrowBack size={24} />
-          </button>
-        </div>
+        {/* Header */}
+        <TipHeader onBack={handleBack} />
 
         {/* Title */}
         <h1 className="tip-title">Add Tip</h1>
-
-        {/* Description */}
         <p className="tip-description">
-          The entire tip will go to your delivery partner. Order total is{' '}
-          <span className="order-total">${orderTotal.toFixed(2)}</span> before discounts.
+          Your entire tip supports the runner. Order total is{' '}
+          <span className="order-total">${orderTotal.toFixed(2)}</span>.
         </p>
 
-        {/* Delivery Illustration */}
-        <div className="delivery-illustration">
-          <div className="delivery-icon">🚚</div>
-          <p className="delivery-text">Support your delivery partner</p>
-        </div>
+        {/* Tip amount summary */}
+        <TipSummary tipAmount={tipAmount} />
 
-        {/* Tip Amount Display */}
-        <div className="tip-amount-section">
-          <div className="tip-amount-row">
-            <span className="tip-label">Tip Amount</span>
-            <span className="tip-amount">${tipAmount.toFixed(2)}</span>
-          </div>
-        </div>
+        {/* Presets */}
+        <TipPresets options={tipPercentages} selected={selectedTipPercentage} onChange={updateTip} />
 
-        {/* Tip Percentage Options */}
-        <div className="tip-options">
-          {tipPercentages.map((percentage) => (
-            <button
-              key={percentage}
-              className={`tip-option ${selectedTipPercentage === percentage ? 'selected' : ''}`}
-              onClick={() => updateTip(percentage)}
-            >
-              {percentage}%
-            </button>
-          ))}
-        </div>
+        {/* Custom input */}
+        <TipCustomInput value={customTipController} onChange={handleCustomTipChange} />
 
-        {/* Custom Tip Input */}
-        <div className="custom-tip-section">
-          <label className="custom-tip-label">Custom tip (%)</label>
-          <input
-            type="number"
-            className="custom-tip-input"
-            placeholder="Enter custom percentage"
-            value={customTipController}
-            onChange={(e) => handleCustomTipChange(e.target.value)}
-            min="0"
-            max="100"
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="tip-actions">
-          <button className="add-tip-button" onClick={handleAddTip}>
-            Add Tip (${tipAmount.toFixed(2)})
-          </button>
-          <button className="skip-tip-button" onClick={handleSkipTip}>
-            Skip
-          </button>
-        </div>
+        {/* Actions */}
+        <TipActions onAddTip={handleAddTip} onSkipTip={handleSkipTip} tipAmount={tipAmount} />
       </div>
     </div>
   );

@@ -226,10 +226,10 @@ const FoodDetailScreen = () => {
         
         console.log('✅ Added to cart successfully:', result.message);
         
-        // Navigate back one step after a short delay to show the toast
+        // Navigate to Cart to match Stadium Food flow
         setTimeout(() => {
-          navigate(-1);
-        }, 1500);
+          navigate('/cart');
+        }, 800);
       } else {
         // Show error popup
         showToast(result.message, 'error', 4000);
