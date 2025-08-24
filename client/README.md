@@ -71,7 +71,6 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 
 
 
-
 > have to Add phone number
 > have to Add bank logic
-> have to Add item details 
+> have to Add item details

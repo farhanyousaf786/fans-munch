@@ -57,8 +57,13 @@ class UserRepository {
         type: 'customer'
       });
 
-      // Save to Firestore
-      await setDoc(doc(db, this.collectionName, firebaseUser.uid), newUser.toMap());
+      // Save to Firestore with server timestamps (to mirror Flutter Timestamp fields)
+      const dataForFirestore = {
+        ...newUser.toMap(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(doc(db, this.collectionName, firebaseUser.uid), dataForFirestore);
 
       return { success: true, user: newUser };
     } catch (error) {
@@ -234,9 +239,10 @@ class UserRepository {
     try {
       const user = await this.getUserById(userId);
       if (user) {
-        user.addToFavoriteRestaurants(restaurantId);
+        // Fix: call the correct method defined in models/User.js
+        const updated = user.addFavoriteRestaurant(restaurantId);
         await updateDoc(doc(db, this.collectionName, userId), {
-          favoriteRestaurants: user.favoriteRestaurants,
+          favoriteRestaurants: updated.favoriteRestaurants,
           updatedAt: serverTimestamp()
         });
       }

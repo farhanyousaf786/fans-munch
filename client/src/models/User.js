@@ -41,6 +41,25 @@ export class User {
    * @returns {User}
    */
   static fromMap(id, data) {
+    const normalizeTimestamp = (value) => {
+      // Firestore Timestamp (has toDate())
+      if (value && typeof value.toDate === 'function') return value.toDate();
+      // JS Date
+      if (value instanceof Date) return value;
+      // Number (epoch ms or seconds)
+      if (typeof value === 'number') {
+        // Heuristic: treat 13+ digits as ms
+        return new Date(value < 1e12 ? value * 1000 : value);
+      }
+      // String (ISO or parseable date)
+      if (typeof value === 'string') {
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) return d;
+      }
+      // Fallback: now
+      return new Date();
+    };
+
     return new User({
       id,
       email: data.email || '',
@@ -51,8 +70,8 @@ export class User {
       fcmToken: data.fcmToken || '',
       favoriteFoods: data.favoriteFoods || [],
       favoriteRestaurants: data.favoriteRestaurants || [],
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
+      createdAt: normalizeTimestamp(data.createdAt),
+      updatedAt: normalizeTimestamp(data.updatedAt),
       isActive: data.isActive !== undefined ? data.isActive : true,
       type: data.type || 'customer'
     });
