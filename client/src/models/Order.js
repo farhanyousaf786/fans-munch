@@ -52,7 +52,12 @@ export class Order {
     createdAt = null,
     deliveryTime = null,
     seatInfo = {},
-    id = null
+    id = null,
+    tipPercentage = 0,
+    isTipAdded = false,
+    customerLocation = null,
+    location = null,
+    updatedAt = null
   }) {
     this.cart = cart;
     this.subtotal = subtotal;
@@ -71,6 +76,11 @@ export class Order {
     this.deliveryTime = deliveryTime;
     this.seatInfo = seatInfo;
     this.id = id;
+    this.tipPercentage = tipPercentage;
+    this.isTipAdded = isTipAdded;
+    this.customerLocation = customerLocation; // { latitude, longitude } or array
+    this.location = location; // optional secondary location
+    this.updatedAt = updatedAt;
   }
 
   /**
@@ -85,6 +95,8 @@ export class Order {
       discount: parseFloat(data.discount || 0),
       total: parseFloat(data.total || 0),
       tipAmount: parseFloat(data.tipAmount || 0),
+      tipPercentage: parseFloat(data.tipPercentage || 0),
+      isTipAdded: !!data.isTipAdded,
       userInfo: data.userInfo || {},
       stadiumId: data.stadiumId || '',
       shopId: data.shopId || '',
@@ -93,8 +105,11 @@ export class Order {
       deliveryUserId: data.deliveryUserId || null,
       status: data.status || OrderStatus.PENDING,
       createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
       deliveryTime: data.deliveryTime,
-      seatInfo: data.seatInfo || {}
+      seatInfo: data.seatInfo || {},
+      customerLocation: data.customerLocation || null,
+      location: data.location || null
     });
   }
 
@@ -138,6 +153,8 @@ export class Order {
       discount: parseFloat(this.discount.toFixed(2)),
       total: parseFloat(this.total.toFixed(2)), // Ensure 2 decimal places
       tipAmount: parseFloat(this.tipAmount.toFixed(2)),
+      tipPercentage: parseFloat((this.tipPercentage || 0).toFixed(2)),
+      isTipAdded: !!this.isTipAdded,
       userInfo: this.userInfo,
       stadiumId: this.stadiumId,
       shopId: this.shopId,
@@ -146,8 +163,11 @@ export class Order {
       deliveryUserId: this.deliveryUserId,
       status: this.status,
       createdAt: this.createdAt instanceof Date ? this.createdAt : (this.createdAt ? new Date(this.createdAt) : null),
+      updatedAt: this.updatedAt instanceof Date ? this.updatedAt : (this.updatedAt ? new Date(this.updatedAt) : new Date()),
       deliveryTime: this.deliveryTime instanceof Date ? this.deliveryTime : (this.deliveryTime ? new Date(this.deliveryTime) : null),
-      seatInfo: this.seatInfo
+      seatInfo: this.seatInfo,
+      customerLocation: this.customerLocation,
+      location: this.location
     };
   }
 
@@ -160,10 +180,13 @@ export class Order {
     deliveryFee,
     discount,
     tipAmount,
+    tipPercentage = 0,
     userData,
     seatInfo,
     stadiumId,
-    shopId
+    shopId,
+    customerLocation = null,
+    location = null
   }) {
     const total = subtotal + deliveryFee + tipAmount - discount;
     const orderId = Date.now().toString();
@@ -179,6 +202,8 @@ export class Order {
       discount,
       total,
       tipAmount,
+      tipPercentage,
+      isTipAdded: tipAmount > 0,
       userInfo: {
         userEmail: userData.email || '',
         userName: userData.firstName || '',
@@ -192,13 +217,20 @@ export class Order {
       deliveryUserId: null,
       status: OrderStatus.PENDING,
       createdAt,
+      updatedAt: new Date(),
       deliveryTime: null, // Can be calculated later
       seatInfo: {
         row: seatInfo.row || '',
         seatNo: seatInfo.seatNo || '',
         section: seatInfo.section || '',
-        seatDetails: seatInfo.seatDetails || ''
-      }
+        seatDetails: seatInfo.seatDetails || '',
+        area: seatInfo.area || '',
+        entrance: seatInfo.entrance || '',
+        stand: seatInfo.stand || '',
+        ticketImage: seatInfo.ticketImage || ''
+      },
+      customerLocation,
+      location: location || customerLocation
     });
   }
 

@@ -22,7 +22,10 @@ const OrderConfirmScreen = () => {
     row: '',
     seatNo: '',
     section: '',
-    seatDetails: ''
+    seatDetails: '',
+    area: '',
+    entrance: '',
+    stand: ''
   });
   
   // Order state
@@ -35,6 +38,7 @@ const OrderConfirmScreen = () => {
   const [errors, setErrors] = useState({});
   const [ticketImage, setTicketImage] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('visa');
+  const [customerLocation, setCustomerLocation] = useState(null);
 
   useEffect(() => {
     // Initialize order data (matches Flutter initState)
@@ -49,6 +53,22 @@ const OrderConfirmScreen = () => {
       setFinalTotal(cartTotal + tip.amount);
     } else {
       setFinalTotal(cartTotal);
+    }
+
+    // Try to capture customer geolocation (optional)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCustomerLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          });
+        },
+        (err) => {
+          console.log('ℹ️ Geolocation permission denied or unavailable:', err?.message);
+        },
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
+      );
     }
   }, []);
 
@@ -128,13 +148,17 @@ const OrderConfirmScreen = () => {
         row: formData.row,
         seatNo: formData.seatNo,
         section: formData.section,
-        seatDetails: formData.seatDetails
+        seatDetails: formData.seatDetails,
+        area: formData.area,
+        entrance: formData.entrance,
+        stand: formData.stand,
+        ticketImage: ticketImage || ''
       };
       
       // Calculate order totals (matches Flutter OrderRepository calculations)
       const totals = orderRepository.calculateOrderTotals(
         cartItems,
-        2.99, // deliveryFee
+        2, // deliveryFee aligned to Flutter example
         tipData.amount, // tipAmount
         0 // discount
       );
@@ -168,10 +192,13 @@ const OrderConfirmScreen = () => {
         deliveryFee: totals.deliveryFee,
         discount: totals.discount,
         tipAmount: totals.tipAmount,
+        tipPercentage: tipData.percentage || 0,
         userData,
         seatInfo,
         stadiumId: stadiumData.id,
-        shopId: cartItems[0].shopId || ''
+        shopId: cartItems[0].shopId || '',
+        customerLocation,
+        location: customerLocation
       });
       
       // Save order to Firebase

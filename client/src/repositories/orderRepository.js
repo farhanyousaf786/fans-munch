@@ -11,7 +11,8 @@ import {
   where, 
   orderBy, 
   onSnapshot,
-  Timestamp 
+  Timestamp,
+  GeoPoint
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Order } from '../models/Order';
@@ -30,9 +31,20 @@ class OrderRepository {
       console.log('📦 Creating order in Firebase...', orderData);
 
       // Convert JavaScript Date to Firestore Timestamp
+      const base = orderData.toMap();
+      const withGeo = { ...base };
+      // Normalize location fields to Firestore GeoPoint if possible
+      if (base.customerLocation && typeof base.customerLocation === 'object' && base.customerLocation.latitude != null && base.customerLocation.longitude != null) {
+        withGeo.customerLocation = new GeoPoint(base.customerLocation.latitude, base.customerLocation.longitude);
+      }
+      if (base.location && typeof base.location === 'object' && base.location.latitude != null && base.location.longitude != null) {
+        withGeo.location = new GeoPoint(base.location.latitude, base.location.longitude);
+      }
+
       const orderWithTimestamp = {
-        ...orderData.toMap(),
+        ...withGeo,
         createdAt: Timestamp.fromDate(orderData.createdAt),
+        updatedAt: Timestamp.fromDate(orderData.updatedAt || new Date()),
         deliveryTime: orderData.deliveryTime ? Timestamp.fromDate(orderData.deliveryTime) : null
       };
 
@@ -223,7 +235,7 @@ class OrderRepository {
    * Calculate order totals (helper method)
    * Matches Flutter OrderRepository calculation logic
    */
-  calculateOrderTotals(cartItems, deliveryFee = 2.99, tipAmount = 0, discount = 0) {
+  calculateOrderTotals(cartItems, deliveryFee = 2, tipAmount = 0, discount = 0) {
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const total = subtotal + deliveryFee + tipAmount - discount;
 

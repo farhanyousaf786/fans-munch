@@ -43,6 +43,41 @@ const SeatForm = ({ formData, errors, onChange }) => {
         {errors.section && <span className="error-text">{errors.section}</span>}
       </div>
 
+      <div className="form-row">
+        <div className="form-field">
+          <label className="field-label">Area (Optional)</label>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="Enter area"
+            value={formData.area || ''}
+            onChange={(e) => onChange('area', e.target.value)}
+          />
+        </div>
+
+        <div className="form-field">
+          <label className="field-label">Entrance (Optional)</label>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="Enter entrance"
+            value={formData.entrance || ''}
+            onChange={(e) => onChange('entrance', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="form-field">
+        <label className="field-label">Stand (Optional)</label>
+        <input
+          type="text"
+          className="field-input"
+          placeholder="Enter stand"
+          value={formData.stand || ''}
+          onChange={(e) => onChange('stand', e.target.value)}
+        />
+      </div>
+
       <div className="form-field">
         <label className="field-label">Seat Details (Optional)</label>
         <textarea
