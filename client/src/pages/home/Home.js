@@ -16,6 +16,7 @@ function Home() {
   const [allOffers, setAllOffers] = useState([]);
   const [filteredOffers, setFilteredOffers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedShopId, setSelectedShopId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,11 +28,11 @@ function Home() {
     loadOffers();
   }, []);
 
-  // Filter menu items and offers when search term changes
+  // Filter menu items and offers when search term or selections change
   useEffect(() => {
     filterMenuItems();
     filterOffers();
-  }, [searchTerm, allMenuItems, allOffers]);
+  }, [searchTerm, allMenuItems, allOffers, selectedShopId]);
 
   const loadMenuItems = async () => {
     try {
@@ -95,16 +96,24 @@ function Home() {
   };
 
   const filterMenuItems = () => {
-    if (!searchTerm.trim()) {
-      setFilteredMenuItems(allMenuItems);
-    } else {
-      const filtered = allMenuItems.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredMenuItems(filtered);
+    let items = allMenuItems;
+
+    // If a shop is selected, filter by shopIds containing the shop
+    if (selectedShopId) {
+      items = items.filter(item => Array.isArray(item.shopIds) && item.shopIds.includes(selectedShopId));
     }
+
+    // Apply search filtering if present
+    if (searchTerm.trim()) {
+      const lower = searchTerm.toLowerCase();
+      items = items.filter(item =>
+        item.name?.toLowerCase().includes(lower) ||
+        item.description?.toLowerCase().includes(lower) ||
+        item.category?.toLowerCase().includes(lower)
+      );
+    }
+
+    setFilteredMenuItems(items);
   };
 
   const filterOffers = () => {
@@ -128,6 +137,10 @@ function Home() {
     console.log('Filter clicked');
   };
 
+  const handleShopSelect = (shop) => {
+    setSelectedShopId(shop?.id || null);
+  };
+
   return (
     <div className="home-page">
       <TopSection />
@@ -139,13 +152,7 @@ function Home() {
         />
                 <CategoryList />
 
-           <OffersList 
-          offers={filteredOffers}
-          loading={offersLoading}
-          error={offersError}
-          searchTerm={searchTerm}
-        />
-        
+         
         <MenuList 
           menuItems={filteredMenuItems}
           loading={loading}
@@ -154,8 +161,15 @@ function Home() {
         />
 
      
+       <OffersList 
+          offers={filteredOffers}
+          loading={offersLoading}
+          error={offersError}
+          searchTerm={searchTerm}
+        />
         
-        <ShopList />
+        <ShopList onShopSelect={handleShopSelect} />
+        
       </div>
     </div>
   );

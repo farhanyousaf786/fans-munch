@@ -14,6 +14,7 @@ import CartScreen from './pages/cart/CartScreen';
 import ProfileScreen from './pages/profile/ProfileScreen';
 import FoodDetailScreen from './pages/food_detail/FoodDetailScreen';
 import TipScreen from './pages/tip/TipScreen';
+import ShopMenuScreen from './pages/shop_menu/ShopMenuScreen';
 import OrderConfirmScreen from './pages/order_confirm/OrderConfirmScreen';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
 import ToastContainer from './components/toast/ToastContainer';
@@ -47,6 +48,8 @@ function App() {
             
             {/* Food Detail Route */}
             <Route path="/food/:foodId" element={<FoodDetailScreen />} />
+            {/* Shop Menu Route */}
+            <Route path="/shop-menu/:shopId" element={<ShopMenuScreen />} />
             
             {/* Order Flow Routes */}
             <Route path="/tip" element={<TipScreen />} />

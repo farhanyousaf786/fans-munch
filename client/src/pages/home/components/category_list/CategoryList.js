@@ -114,7 +114,6 @@ const CategoryList = () => {
               
               <div className="category-info">
                 <h3 className="category-name">{category.name}</h3>
-                <p className="category-count">{category.count} items</p>
               </div>
             </button>
           );

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MdLocationOn, MdStadium, MdStairs, MdDoorFront, MdChevronRight } from 'react-icons/md';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
 import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
 
-const ShopList = () => {
+const ShopList = ({ onShopSelect }) => {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadStadiumIdAndFetchShops();
@@ -85,8 +87,8 @@ const ShopList = () => {
 
 
   const handleShopClick = (shop) => {
-    // In real app, this would navigate to shop details page
-    console.log('Navigate to shop:', shop);
+    // Navigate to dedicated Shop Menu page
+    navigate(`/shop-menu/${shop.id}`);
   };
 
   // Loading state (matching Flutter ShopShimmer)
@@ -166,39 +168,27 @@ const ShopList = () => {
         </button>
       </div>
       
-      {/* Vertical list matching Flutter ListView.builder */}
-      <div className="shops-vertical-list">
+      {/* Horizontal, square-ish tiles row */}
+      <div className="shops-horizontal-row">
         {shops.map((shop) => (
-          <div 
-            key={shop.id} 
-            className="shop-card-no-image"
+          <button
+            key={shop.id}
+            className="shop-tile"
             onClick={() => handleShopClick(shop)}
+            title={`${shop.name} • Gate ${shop.gate || '-'} • Floor ${shop.floor || '-'}`}
           >
-            {/* Shop content matching Flutter card design (no image) */}
-            <div className="shop-content">
-              <h3 className="shop-name">{shop.name}</h3>
-              
-              <p className="shop-description">{shop.description}</p>
-              
-              {/* Stadium info with icon (matching Flutter) */}
-              <div className="shop-info-row">
-                <MdStadium className="info-icon" />
-                <span className="info-text">{shop.stadiumName}</span>
-                
-                <MdLocationOn className="info-icon" />
-                <span className="info-text">{shop.location}</span>
-              </div>
-              
-              {/* Floor and Gate info (matching Flutter) */}
-              <div className="shop-info-row">
-                <MdStairs className="info-icon" />
-                <span className="info-text">Floor {shop.floor}</span>
-                
-                <MdDoorFront className="info-icon" />
-                <span className="info-text">Gate {shop.gate}</span>
-              </div>
+            <span className="shop-tile-name">{shop?.name?.trim() ? shop.name : `Gate ${shop.gate || '-'}`}</span>
+            <div className="shop-tile-meta">
+              <span className="meta-badge">
+                <MdDoorFront className="shop-tile-icon" />
+                <span className="shop-tile-text">{shop.gate ? `Gate ${shop.gate}` : 'Gate -'}</span>
+              </span>
+              <span className="meta-badge">
+                <MdStairs className="shop-tile-icon" />
+                <span className="shop-tile-text">{shop.floor ? `Floor ${shop.floor}` : 'Floor -'}</span>
+              </span>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

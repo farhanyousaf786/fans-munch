@@ -7,6 +7,34 @@ class FoodRepository {
     this.collectionName = 'menuItems';
   }
 
+  // Get menu items by shop ID (menuItems.shopIds contains shopId)
+  async getMenuItemsByShop(shopId, limitCount = 30) {
+    try {
+      if (!shopId) {
+        return { success: false, error: 'Invalid shopId' };
+      }
+      const menuItemsRef = collection(db, 'menuItems');
+      const q = query(
+        menuItemsRef,
+        where('shopIds', 'array-contains', shopId),
+        limit(limitCount)
+      );
+      const snap = await getDocs(q);
+      const items = [];
+      snap.forEach((d) => {
+        try {
+          items.push(Food.fromMap(d.id, d.data()));
+        } catch (e) {
+          console.error('Error mapping food', d.id, e);
+        }
+      });
+      return { success: true, foods: items };
+    } catch (error) {
+      console.error('Error fetching shop menu:', error);
+      return { success: false, error: 'Failed to fetch shop menu' };
+    }
+  }
+
   // Get menu items by stadium ID (matching Flutter app exactly)
   async getStadiumMenu(stadiumId, limitCount = 10) {
     try {
