@@ -84,7 +84,6 @@ const CategoryList = () => {
     <div className="category-list">
       <div className="section-header">
         <h2 className="section-title">Categories</h2>
-        <p className="section-subtitle">Browse food by category</p>
       </div>
       
       <div className="categories-container">
