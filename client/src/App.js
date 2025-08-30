@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { ThemeProvider } from './context/ThemeContext';
+import { seatStorage } from './utils/storage';
 
 // Import all screens
 import SplashScreen from './pages/splash/SplashScreen';
@@ -20,6 +21,32 @@ import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
 import ToastContainer from './components/toast/ToastContainer';
 
 function App() {
+  // Parse QR parameters on first load and store seat info
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params && Array.from(params.keys()).length > 0) {
+        const seatInfo = {
+          row: params.get('row') || '',
+          seatNo: params.get('seat') || params.get('seatNo') || '',
+          section: params.get('section') || '',
+          seatDetails: params.get('details') || params.get('seatDetails') || '',
+          area: params.get('area') || '',
+          entrance: params.get('entrance') || params.get('gate') || '',
+          stand: params.get('stand') || '',
+          ticketImage: params.get('ticketImage') || ''
+        };
+        // If at least one meaningful value present, save
+        const hasValue = Object.values(seatInfo).some(v => v && String(v).trim() !== '');
+        if (hasValue) {
+          seatStorage.setSeatInfo(seatInfo);
+        }
+      }
+    } catch (e) {
+      console.log('QR param parse skipped:', e?.message);
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>

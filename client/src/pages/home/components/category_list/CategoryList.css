@@ -1,5 +1,7 @@
 .category-list {
   margin-bottom: 32px;
+  padding-top: 16px; /* Added top padding */
+  background-color: #fff; /* Ensure background is white for consistency */
 }
 
 .section-header {

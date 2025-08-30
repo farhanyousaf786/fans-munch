@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdKeyboardArrowRight, MdShoppingCart } from 'react-icons/md';
-import { stadiumStorage, userStorage } from '../../../../utils/storage';
+import { MdShoppingCart, MdKeyboardArrowRight } from 'react-icons/md';
+import { stadiumStorage } from '../../../../utils/storage';
+import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
 
-const TopSection = () => {
+const TopSection = (props) => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedStadium, setSelectedStadium] = useState(null);
-  const [userName, setUserName] = useState('User');
-  const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
     // Load selected stadium using storage utility
@@ -16,64 +16,61 @@ const TopSection = () => {
     if (stadium) {
       setSelectedStadium(stadium);
     }
-
-    // Load user name using storage utility
-    const userData = userStorage.getUserData();
-    if (userData) {
-      setUserName(userData.firstName || 'User');
-    }
-
-    // Set greeting based on current time
-    const currentTime = new Date();
-    const currentHour = currentTime.getHours();
-    
-    if (currentHour < 12) {
-      setGreeting('Good Morning');
-    } else if (currentHour < 17) {
-      setGreeting('Good Afternoon');
-    } else {
-      setGreeting('Good Evening');
-    }
   }, []);
 
   const handleCartClick = () => {
     navigate('/cart');
   };
 
+  const handleStadiumClick = () => {
+    navigate('/stadium-selection');
+  };
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    // The search is now handled by the parent component
+    if (props.onSearch) {
+      props.onSearch(query);
+    }
+  };
+
+  const handleFilterClick = () => {
+    // Handle filter button click if needed
+    console.log('Filter button clicked');
+  };
+
   return (
-    <div className="top-section">
-      {/* Stadium Selector */}
-      <div className="stadium-section">
-        <button 
-          className="stadium-selector"
-          onClick={() => navigate('/stadium-selection')}
-        >
+    <div className="home-top-section">
+      {/* Header with location and cart */}
+      <div className="home-header">
+        <div className="stadium-selector" onClick={handleStadiumClick}>
+          <img src="/assets/icons/location.png" alt="Location" className="location-icon" />
           <div className="stadium-info">
-            <h2 className="stadium-name">
-              {selectedStadium ? selectedStadium.name : 'Select Stadium'}
-            </h2>
-            <p className="stadium-location">
-              {selectedStadium ? selectedStadium.location : 'Choose your location'}
-            </p>
+            <div className="stadium-name-container">
+              <span className="stadium-name">
+                {selectedStadium ? selectedStadium.name : 'Stadium Selection'}
+              </span>
+              <MdKeyboardArrowRight size={20} className="dropdown-arrow" />
+            </div>
           </div>
-          <MdKeyboardArrowRight className="dropdown-arrow" />
+        </div>
+        <button className="cart-button" onClick={handleCartClick}>
+          <MdShoppingCart size={24} />
         </button>
       </div>
-      
-      {/* User Greeting */}
-      <div className="greeting-section">
-        <span className="greeting-text">{greeting}, {userName}!</span>
+
+      {/* Welcome Message */}
+      <div className="welcome-message">
+        <h1>Good Morning,</h1>
+        <h2>Ibn e Yousaf!</h2>
       </div>
-      
-      {/* Cart Icon */}
-      <div className="cart-section">
-        <button 
-          className="cart-button"
-          onClick={() => navigate('/cart')}
-        >
-          <MdShoppingCart className="cart-icon" />
-          <span className="cart-badge">0</span>
-        </button>
+
+      {/* Search Bar */}
+      <div className="search-container">
+        <SearchFilterWidget 
+          onChanged={handleSearchChange}
+          onFilterTap={handleFilterClick}
+        />
       </div>
     </div>
   );

@@ -101,27 +101,20 @@ const AuthScreen = () => {
 
   return (
     <div className="auth-screen">
-      <div className="auth-container">
-        {/* Header */}
+      {/* Upper Section */}
+      <div className="auth-upper-section">
         <div className="auth-header">
-          <div className="auth-logo">
-            <img 
-              src="/app_icon.png" 
-              alt="Food Munch Logo" 
-              className="app-icon"
-            />
-          </div>
-          <h1 className="auth-title">
-            {isLogin ? 'Welcome Back!' : 'Join Food Munch'}
-          </h1>
-          <p className="auth-motto">Delicious food delivered fresh</p>
-          <p className="auth-subtitle">
-            {isLogin 
-              ? 'Sign in to continue ordering delicious food' 
-              : 'Create an account to start ordering'
-            }
-          </p>
+          <img 
+            src="/app_icon.png" 
+            alt="Fan Munch Logo" 
+            className="app-logo"
+          />
+          <h1 className="auth-title">Log in</h1>
         </div>
+      </div>
+      
+      {/* Lower Section */}
+      <div className="auth-container">
 
         {/* Form */}
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -181,6 +174,9 @@ const AuthScreen = () => {
               placeholder="Enter your password"
               required
             />
+            <a href="#forgot-password" className="forgot-password">
+              Forgot Password?
+            </a>
           </div>
 
           {!isLogin && (
@@ -215,19 +211,17 @@ const AuthScreen = () => {
 
         {/* Toggle */}
         <div className="auth-toggle">
-          <p>
+          <p className="toggle-text">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button 
               type="button" 
               className="toggle-button" 
               onClick={toggleAuthMode}
             >
-              {isLogin ? 'Sign Up' : 'Sign In'}
+              {isLogin ? 'Register Now' : 'Sign In'}
             </button>
           </p>
         </div>
-
-
       </div>
     </div>
   );

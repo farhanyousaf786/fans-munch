@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { MdSearch, MdFilterList } from 'react-icons/md';
+import { MdSearch } from 'react-icons/md';
 import './SearchFilterWidget.css';
 
-const SearchFilterWidget = ({ searchController, onChanged, onFilterTap }) => {
+const SearchFilterWidget = ({ onChanged }) => {
   const [searchValue, setSearchValue] = useState('');
 
   const handleSearchChange = (e) => {
@@ -10,12 +10,6 @@ const SearchFilterWidget = ({ searchController, onChanged, onFilterTap }) => {
     setSearchValue(value);
     if (onChanged) {
       onChanged(value);
-    }
-  };
-
-  const handleFilterClick = () => {
-    if (onFilterTap) {
-      onFilterTap();
     }
   };
 
@@ -32,9 +26,6 @@ const SearchFilterWidget = ({ searchController, onChanged, onFilterTap }) => {
             onChange={handleSearchChange}
           />
         </div>
-        <button className="filter-button" onClick={handleFilterClick}>
-          <MdFilterList className="filter-icon" />
-        </button>
       </div>
     </div>
   );

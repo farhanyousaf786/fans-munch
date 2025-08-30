@@ -30,7 +30,17 @@ export const STORAGE_KEYS = {
   
   // Notifications
   NOTIFICATION_PREFERENCES: 'food_munch_notifications',
-  PUSH_TOKEN: 'food_munch_push_token'
+  PUSH_TOKEN: 'food_munch_push_token',
+
+  // Seat Info (QR prefill)
+  SEAT_INFO: 'food_munch_seat_info'
+};
+
+// Seat Info (from QR or manual input)
+export const seatStorage = {
+  setSeatInfo: (info) => storage.setItem(STORAGE_KEYS.SEAT_INFO, info),
+  getSeatInfo: () => storage.getItem(STORAGE_KEYS.SEAT_INFO, null),
+  clearSeatInfo: () => storage.removeItem(STORAGE_KEYS.SEAT_INFO)
 };
 
 /**
@@ -328,6 +338,7 @@ export default {
   userStorage,
   onboardingStorage,
   stadiumStorage,
+  seatStorage,
   cartStorage,
   favoritesStorage,
   settingsStorage,

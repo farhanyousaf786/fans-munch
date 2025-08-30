@@ -146,10 +146,11 @@ function Home() {
       <TopSection />
       
       <div className="home-content">
-        <SearchFilterWidget 
-          onChanged={handleSearch}
-          onFilterTap={handleFilter}
-        />
+
+
+      
+
+
                 <CategoryList />
 
          

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
-import { userStorage, stadiumStorage } from '../../utils/storage';
+import { userStorage, stadiumStorage, seatStorage } from '../../utils/storage';
 import { Order } from '../../models/Order';
 import orderRepository from '../../repositories/orderRepository';
 import stripeService from '../../services/stripeService';
@@ -53,6 +53,15 @@ const OrderConfirmScreen = () => {
       setFinalTotal(cartTotal + tip.amount);
     } else {
       setFinalTotal(cartTotal);
+    }
+
+    // Prefill seat info from storage (QR landing)
+    const savedSeat = seatStorage.getSeatInfo();
+    if (savedSeat) {
+      setFormData(prev => ({
+        ...prev,
+        ...savedSeat
+      }));
     }
 
     // Try to capture customer geolocation (optional)
