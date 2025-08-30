@@ -1,10 +1,11 @@
 .menu-list {
   margin-bottom: 32px;
+  background-color: #fff;
 }
 
 .section-header {
-  padding: 0 16px;
-  margin-bottom: 16px;
+  padding: 0 0px;
+  margin-bottom: 0px;
 }
 
 .section-title {
@@ -17,7 +18,6 @@
 .section-subtitle {
   font-size: 14px;
   color: #666;
-  margin: 4px 0 0 0;
 }
 
 .error-text {
@@ -47,8 +47,9 @@
 .menu-card-horizontal {
   min-width: 160px;
   width: 160px;
-  background-color: white;
+  background-color: rgb(255, 255, 255);
   border-radius: 16px;
+  border: 1px solid #E8E8E8;
   overflow: hidden;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;

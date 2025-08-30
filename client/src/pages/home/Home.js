@@ -162,13 +162,13 @@ function Home() {
         />
 
      
-       <OffersList 
+       {/* <OffersList 
           offers={filteredOffers}
           loading={offersLoading}
           error={offersError}
           searchTerm={searchTerm}
         />
-        
+         */}
         <ShopList onShopSelect={handleShopSelect} />
         
       </div>
