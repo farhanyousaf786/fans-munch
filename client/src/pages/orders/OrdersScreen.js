@@ -15,9 +15,43 @@ const OrdersScreen = () => {
   const [shopDetails, setShopDetails] = useState({}); // Cache for shop details
   const navigate = useNavigate();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Real-time subscription to user's orders
   useEffect(() => {
-    fetchUserOrders();
+    const userData = userStorage.getUserData();
+    if (!userData || !userData.id) {
+      setOrders([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = orderRepository.streamOrdersForUser(userData.id, async (liveOrders, err) => {
+      if (err) {
+        setError('Failed to load orders. Please try again.');
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch shop details for unique shopIds
+        const uniqueShopIds = [...new Set(liveOrders.map(o => o.shopId).filter(Boolean))];
+        const shopDetailsMap = {};
+        for (const shopId of uniqueShopIds) {
+          shopDetailsMap[shopId] = await fetchShopById(shopId);
+        }
+        setShopDetails(shopDetailsMap);
+        setOrders(liveOrders);
+      } catch (e) {
+        console.log('Shop details fetch error:', e);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   // Helper function to fetch shop details by ID
@@ -56,51 +90,7 @@ const OrdersScreen = () => {
     }
   };
 
-  const fetchUserOrders = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('📋 Fetching user orders...');
-      
-      // Get current user data
-      const userData = userStorage.getUserData();
-      if (!userData || !userData.id) {
-        console.log('❌ No user data found');
-        setOrders([]);
-        return;
-      }
-      
-      console.log('👤 Fetching orders for user:', userData.id);
-      
-      // Fetch orders from Firebase
-      const userOrders = await orderRepository.fetchOrdersForUser(userData.id);
-      
-      console.log('✅ Loaded orders:', userOrders.length);
-      
-      // Fetch shop details for each unique shop ID
-      const uniqueShopIds = [...new Set(userOrders.map(order => order.shopId).filter(Boolean))];
-      const shopDetailsMap = {};
-      
-      console.log('🏪 Fetching shop details for:', uniqueShopIds.length, 'shops');
-      
-      for (const shopId of uniqueShopIds) {
-        const shopData = await fetchShopById(shopId);
-        shopDetailsMap[shopId] = shopData;
-        console.log('✅ Loaded shop:', shopData.name);
-      }
-      
-      setShopDetails(shopDetailsMap);
-      setOrders(userOrders);
-      
-    } catch (error) {
-      console.error('❌ Error fetching orders:', error);
-      setError('Failed to load orders. Please try again.');
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // fetchUserOrders no longer needed; live stream handles updates
 
   // getStatusColor removed (unused)
 
@@ -179,7 +169,7 @@ const OrdersScreen = () => {
               <div className="error-icon">⚠️</div>
               <h3>Error Loading Orders</h3>
               <p>{error}</p>
-              <button className="retry-button" onClick={fetchUserOrders}>
+              <button className="retry-button" onClick={() => window.location.reload()}>
                 Try Again
               </button>
             </div>

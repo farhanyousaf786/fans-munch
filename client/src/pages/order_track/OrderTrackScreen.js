@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { OrderStatus } from '../../models/Order';
 import QRCode from 'react-qr-code';
@@ -21,24 +21,24 @@ export default function OrderTrackScreen() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const ref = doc(db, 'orders', orderId);
-        const snap = await getDoc(ref);
-        if (!snap.exists()) {
-          setError('Order not found');
-          return;
-        }
-        const data = snap.data();
-        setOrder({ id: snap.id, ...data });
-      } catch (e) {
-        setError(e?.message || 'Failed to load order');
-      } finally {
+    if (!orderId) return;
+    setLoading(true);
+    const ref = doc(db, 'orders', orderId);
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        setError('Order not found');
+        setOrder(null);
         setLoading(false);
+        return;
       }
-    };
-    if (orderId) load();
+      setError('');
+      setOrder({ id: snap.id, ...snap.data() });
+      setLoading(false);
+    }, (e) => {
+      setError(e?.message || 'Failed to load order');
+      setLoading(false);
+    });
+    return () => unsub();
   }, [orderId]);
 
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
