@@ -3,18 +3,19 @@
 .cart-screen {
   min-height: 100vh;
   background: #F5F5F5;
-  padding-bottom: 20vh; /* 20% bottom margin for content visibility */
+  /* Reserve space for fixed bottom nav + device safe area */
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
 }
 
 .cart-container {
-  padding: 20px 20px 0 20px;
+  padding: 0;
   max-width: 100%;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .cart-container {
-    padding: 16px 16px 0 16px;
+    padding: 0;
   }
   
   .cart-title {

@@ -69,7 +69,7 @@ class RestaurantRepository {
     }
   }
 
-  // Get open restaurants only
+  // Get Shops only
   async getOpenRestaurants() {
     try {
       const restaurantsRef = collection(db, this.collectionName);
@@ -88,8 +88,8 @@ class RestaurantRepository {
       
       return { success: true, restaurants };
     } catch (error) {
-      console.error('Error fetching open restaurants:', error);
-      return { success: false, error: 'Failed to fetch open restaurants' };
+      console.error('Error fetching Shops:', error);
+      return { success: false, error: 'Failed to fetch Shops' };
     }
   }
 

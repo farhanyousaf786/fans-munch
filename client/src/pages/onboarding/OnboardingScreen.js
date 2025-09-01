@@ -89,8 +89,18 @@ const OnboardingScreen = () => {
 
           {/* Navigation Buttons */}
           <div className="navigation-buttons">
-            <button className="nav-button next-button" onClick={handleNext}>
-              <img src="/assets/icons/right-icon.png" alt="Next" className="nav-icon" />
+            <button className="nav-button next-button" onClick={handleNext} aria-label="Next">
+              <svg
+                className="nav-icon"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M13 5l7 7-7 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
           </div>
         </div>

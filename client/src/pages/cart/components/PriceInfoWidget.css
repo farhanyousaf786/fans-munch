@@ -1,11 +1,12 @@
-/* Price Info Widget Component (matches Flutter PriceInfoWidget) */
+/* Price Info Widget - White card summary */
 .price-info-widget {
   margin: 20px;
-  background: linear-gradient(135deg, #3D70FF, #5A84F8);
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
+  border: 1px solid #F0F0F0;
 }
 
 .price-info-content {
@@ -21,7 +22,7 @@
   align-items: center;
   margin-bottom: 8px;
   font-size: 16px;
-  color: white;
+  color: #222;
 }
 
 .price-row:last-of-type {
@@ -33,27 +34,24 @@
   font-weight: 600;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #ECECEC;
 }
 
-/* Place Order Button (matches Flutter SecondaryButton) */
+/* Primary CTA */
 .place-order-button {
-  background: white;
-  color: #3D70FF;
+  background: #3D70FF;
+  color: #fff;
   border: none;
   border-radius: 12px;
   padding: 14px 24px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   width: 100%;
-  transition: all 0.2s;
+  transition: none;
 }
 
-.place-order-button:hover {
-  background: #F8F9FA;
-  transform: translateY(-1px);
-}
+.place-order-button:hover { background: #3161EA; }
 
 /* Responsive Design */
 @media (max-width: 768px) {

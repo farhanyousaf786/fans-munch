@@ -47,6 +47,9 @@
   margin: 0 auto 15px;
   display: block;
   object-fit: contain;
+  background: #ffffff;
+  border-radius: 30px;
+  padding: 10px;
 }
 
 .auth-title {
@@ -191,10 +194,10 @@
 }
 
 .auth-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Akaya Telivigala', cursive;
   font-size: 1.8rem;
   font-weight: 700;
-  color: #333;
+  color: #ffffff;
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
 }
@@ -375,14 +378,15 @@
 }
 
 @media (max-width: 480px) {
+  /* Remove side padding to avoid white gutters on small screens */
   .auth-screen {
-    padding: 10px;
+    padding: 0;
   }
-  
+
   .auth-container {
     padding: 25px 15px;
   }
-  
+
   .auth-title {
     font-size: 1.4rem;
   }

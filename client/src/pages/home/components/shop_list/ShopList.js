@@ -1,10 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdLocationOn, MdStadium, MdStairs, MdDoorFront, MdChevronRight } from 'react-icons/md';
+import { MdLocationOn, MdAccessTime } from 'react-icons/md';
+import { FaStar } from 'react-icons/fa';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
 import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
+
+// Local asset images to use as random placeholders
+const assetPlaceholders = [
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png',
+];
+
+// Deterministic hash to pick a placeholder based on a key (e.g., shop id or name)
+function getPlaceholderByKey(key) {
+  const str = String(key || 'placeholder');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // Convert to 32bit int
+  }
+  const idx = Math.abs(hash) % assetPlaceholders.length;
+  return assetPlaceholders[idx];
+}
+
+// Sample data for shops with food items
+const sampleShops = [
+  {
+    id: '1',
+    name: 'Burger King',
+    description: 'American • Burger • Fast Food',
+    rating: 4.5,
+    reviewCount: 124,
+    deliveryTime: '15-20 min',
+    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
+    items: ['Burgers', 'Fries', 'Chicken', 'Drinks']
+  },
+  {
+    id: '2',
+    name: 'Pizza Hut',
+    description: 'Italian • Pizza • Pasta',
+    rating: 4.2,
+    reviewCount: 89,
+    deliveryTime: '20-25 min',
+    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
+    items: ['Pizza', 'Pasta', 'Garlic Bread', 'Desserts']
+  },
+  {
+    id: '3',
+    name: 'Subway',
+    description: 'American • Sandwich • Healthy',
+    rating: 4.0,
+    reviewCount: 67,
+    deliveryTime: '10-15 min',
+    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png',
+    items: ['Subs', 'Salads', 'Cookies', 'Drinks']
+  }
+];
 
 const ShopList = ({ onShopSelect }) => {
   const [shops, setShops] = useState([]);
@@ -96,11 +150,8 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Open Restaurants</h2>
-          <button className="see-all-button" disabled>
-            <span>See All</span>
-            <MdChevronRight className="chevron-icon" />
-          </button>
+          <h2 className="section-title">Shops</h2>
+         
         </div>
         <div className="shop-shimmer">
           {[1, 2, 3].map((i) => (
@@ -123,11 +174,8 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Open Restaurants</h2>
-          <button className="see-all-button" disabled>
-            <span>See All</span>
-            <MdChevronRight className="chevron-icon" />
-          </button>
+          <h2 className="section-title">Shops</h2>
+          
         </div>
         <div className="error-container">
           <p className="error-text">{error}</p>
@@ -144,11 +192,8 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Open Restaurants</h2>
-          <button className="see-all-button" disabled>
-            <span>See All</span>
-            <MdChevronRight className="chevron-icon" />
-          </button>
+          <h2 className="section-title">Shops</h2>
+         
         </div>
         <div className="empty-container">
           <p className="empty-text">No shops available</p>
@@ -157,38 +202,64 @@ const ShopList = ({ onShopSelect }) => {
     );
   }
 
+  // Use sample data for now
+  const displayShops = shops.length > 0 ? shops : sampleShops;
+  
+  // Ensure items array exists for each shop
+  const safeShops = displayShops.map(shop => ({
+    ...shop,
+    items: Array.isArray(shop.items) ? shop.items : []
+  }));
+
   return (
     <div className="shop-list">
-      {/* Section header matching Flutter app exactly */}
       <div className="section-header">
-        <h2 className="section-title">Open Restaurants</h2>
-        <button className="see-all-button" onClick={() => console.log('Navigate to all shops')}>
-          <span>See All</span>
-          <MdChevronRight className="chevron-icon" />
-        </button>
+        <h2 className="section-title">Shops</h2>
+        
       </div>
       
-      {/* Horizontal, square-ish tiles row */}
-      <div className="shops-horizontal-row">
-        {shops.map((shop) => (
-          <button
-            key={shop.id}
-            className="shop-tile"
+      <div className="restaurant-list">
+        {safeShops.map((shop) => (
+          <div 
+            key={shop.id} 
+            className="restaurant-card"
             onClick={() => handleShopClick(shop)}
-            title={`${shop.name} • Gate ${shop.gate || '-'} • Floor ${shop.floor || '-'}`}
           >
-            <span className="shop-tile-name">{shop?.name?.trim() ? shop.name : `Gate ${shop.gate || '-'}`}</span>
-            <div className="shop-tile-meta">
-              <span className="meta-badge">
-                <MdDoorFront className="shop-tile-icon" />
-                <span className="shop-tile-text">{shop.gate ? `Gate ${shop.gate}` : 'Gate -'}</span>
-              </span>
-              <span className="meta-badge">
-                <MdStairs className="shop-tile-icon" />
-                <span className="shop-tile-text">{shop.floor ? `Floor ${shop.floor}` : 'Floor -'}</span>
-              </span>
+            <div className="restaurant-image">
+              <img 
+                src={shop.image || getPlaceholderByKey(shop.id || shop.name)} 
+                alt={shop.name}
+                onError={(e) => {
+                  e.currentTarget.src = getPlaceholderByKey(shop.id || shop.name);
+                }}
+              />
             </div>
-          </button>
+            <div className="restaurant-details">
+              <div className="restaurant-header">
+                <h3 className="restaurant-name">{shop.name}</h3>
+                <div className="restaurant-rating">
+                  <FaStar className="star-icon" />
+                  <span>{shop.rating}</span>
+                  <span className="review-count">({shop.reviewCount})</span>
+                </div>
+              </div>
+              <p className="restaurant-description">{shop.description}</p>
+              <div className="restaurant-footer">
+                <div className="delivery-time">
+                  <MdAccessTime className="time-icon" />
+                  <span>{shop.deliveryTime}</span>
+                </div>
+                <div className="food-items">
+                  {shop.items.slice(0, 2).map((item, index) => (
+                    <span key={index} className="food-tag">{item}</span>
+                  ))}
+                  {shop.items.length > 2 && (
+                    <span className="food-tag more">+{shop.items.length - 2} more</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>

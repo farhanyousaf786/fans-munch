@@ -1,0 +1,146 @@
+/* Menu List Page - responsive grid */
+.menu-page {
+  padding: 0 16px 24px;
+}
+
+.menu-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 8px;
+}
+
+.back-btn {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.header-spacer { width: 36px; }
+
+.menu-page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+.menu-page-status {
+  padding: 24px 0;
+  color: #666;
+}
+
+.menu-page-status.error {
+  color: #E53E3E;
+}
+
+.menu-page-search {
+  padding: 4px 0 12px;
+}
+
+.menu-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+
+.menu-search-input:focus {
+  border-color: #3D70FF;
+  box-shadow: 0 0 0 3px rgba(61,112,255,0.08);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.menu-grid-card {
+  background: #fff;
+  border: 1px solid #E8E8E8;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-grid-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Animations */
+.fade-in { animation: fadeIn .35s ease both; }
+.fade-up { animation: fadeUp .4s ease both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-grid-image {
+  height: 150px;
+  overflow: hidden;
+}
+
+.menu-grid-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.menu-grid-content {
+  padding: 12px;
+}
+
+.menu-grid-name {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.menu-grid-price {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3D70FF;
+}

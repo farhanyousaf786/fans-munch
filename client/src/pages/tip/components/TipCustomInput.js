@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TipCustomInput = ({ value, onChange }) => {
+const TipCustomInput = ({ value, onChange, inputRef }) => {
   return (
     <div className="custom-tip-section">
       <label className="custom-tip-label">Custom tip (%)</label>
@@ -12,6 +12,7 @@ const TipCustomInput = ({ value, onChange }) => {
         onChange={(e) => onChange(e.target.value)}
         min="0"
         max="100"
+        ref={inputRef}
       />
     </div>
   );

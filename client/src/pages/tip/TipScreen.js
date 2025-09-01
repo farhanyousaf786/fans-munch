@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
 import TipHeader from './components/TipHeader';
@@ -14,20 +14,32 @@ const TipScreen = () => {
   const [tipAmount, setTipAmount] = useState(0);
   const [orderTotal, setOrderTotal] = useState(0);
   const [customTipController, setCustomTipController] = useState('');
+  const customInputRef = useRef(null);
   
   const tipPercentages = [6, 10, 14, 18];
 
   useEffect(() => {
-    // Get order total from cart (matches Flutter initState)
+    // Get order total from cart and compute tip whenever selected percentage changes
     const total = cartUtils.getTotalPrice();
     setOrderTotal(total);
-    calculateTip(selectedTipPercentage, total);
+    const tipInAmount = (total * selectedTipPercentage / 100);
+    setTipAmount(Math.round(tipInAmount * 100) / 100);
   }, [selectedTipPercentage]);
 
   const calculateTip = (percentage, total = orderTotal) => {
     // Calculate tip amount (matches Flutter _calculateTip)
     const tipInAmount = (total * percentage / 100);
     setTipAmount(Math.round(tipInAmount * 100) / 100); // Round to 2 decimal places
+  };
+
+  const focusCustomTip = () => {
+    // Reveal custom tip input and focus it
+    requestAnimationFrame(() => {
+      if (customInputRef.current) {
+        customInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        customInputRef.current.focus();
+      }
+    });
   };
 
   const updateTip = (percentage) => {
@@ -86,14 +98,19 @@ const TipScreen = () => {
           <span className="order-total">${orderTotal.toFixed(2)}</span>.
         </p>
 
+        {/* Illustration */}
+        <div className="delivery-illustration">
+          <img src={process.env.PUBLIC_URL + '/assets/images/tipimage.png'} alt="Add a tip" className="tip-illustration-img" />
+        </div>
+
         {/* Tip amount summary */}
-        <TipSummary tipAmount={tipAmount} />
+        <TipSummary tipAmount={tipAmount} onCustomTip={focusCustomTip} />
 
         {/* Presets */}
         <TipPresets options={tipPercentages} selected={selectedTipPercentage} onChange={updateTip} />
 
         {/* Custom input */}
-        <TipCustomInput value={customTipController} onChange={handleCustomTipChange} />
+        <TipCustomInput value={customTipController} onChange={handleCustomTipChange} inputRef={customInputRef} />
 
         {/* Actions */}
         <TipActions onAddTip={handleAddTip} onSkipTip={handleSkipTip} tipAmount={tipAmount} />

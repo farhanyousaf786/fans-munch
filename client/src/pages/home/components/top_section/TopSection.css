@@ -1,11 +1,12 @@
 /* Home Top Section */
 .home-top-section {
-  background: url('/assets/images/background-blur-homepage.png') no-repeat center center;
-  background-size: cover;
+  /* move bg to ::after to avoid sharp/blur mixing lines */
+  background: none;
   color: white;
   padding: 20px 16px 30px;
   position: relative;
   z-index: 1;
+  overflow: hidden; /* clip any subpixel seams on edges */
 }
 
 .home-top-section::before {
@@ -15,8 +16,25 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.6) 0%,
+    rgba(0,0,0,0.35) 40%,
+    rgba(0,0,0,0.12) 70%,
+    rgba(0,0,0,0) 100%
+  );
+  z-index: -1; /* above blurred layer */
+}
+
+/* subtle blur layer */
+.home-top-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/assets/images/on-boarding-1.png') center center / cover no-repeat;
+  filter: blur(1.2px); /* subtle blur */
+  opacity: 1;
+  z-index: -2;
 }
 
 /* Header */
@@ -40,26 +58,42 @@
 }
 
 .stadium-selector {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 8px 16px;
+  border-radius: 24px;
+  padding: 8px 14px;
   cursor: pointer;
   transition: background 0.2s;
-  flex: 1;
   margin-right: 10px;
   text-align: left;
+  width: auto; /* only as wide as content */
+  max-width: 100%;
+  gap: 10px;
 }
 
 .stadium-selector:hover {
   background: rgba(255, 255, 255, 0.15);
 }
 
+.loc-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+}
+
 .location-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  /* force colored PNG to white */
+  filter: brightness(0) invert(1);
+  opacity: 0.95;
 }
 
 .stadium-info {
@@ -73,11 +107,18 @@
 .stadium-name-container {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.select-stadium-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.9);
+  margin-right: 8px;
 }
 
 .stadium-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -102,22 +143,48 @@
 /* Welcome Message */
 .welcome-message {
   margin: 15px 0 25px 0;
+  text-align: left; /* align left as requested */
 }
 
 .welcome-message h1 {
-  font-size: 20px;
+  font-size: 18px; /* slightly smaller */
   font-weight: 500;
   margin: 0 0 2px 0;
-  color: white;
+  color: #fff;
   opacity: 0.9;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
 }
 
 .welcome-message h2 {
-  font-size: 26px;
+  font-size: 22px; /* slightly smaller */
   font-weight: 700;
   margin: 0;
-  color: white;
+  color: #fff;
   letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Scope overrides for top section to ensure white text and masked selector */
+.home-top-section .stadium-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 14px;
+  border-radius: 24px;
+  backdrop-filter: blur(6px); /* mask/glass effect */
+  -webkit-backdrop-filter: blur(6px);
+  width: auto; /* content width only */
+}
+
+.home-top-section .stadium-name {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.home-top-section .dropdown-arrow {
+  color: rgba(255,255,255,1);
 }
 
 /* Search Bar */

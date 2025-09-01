@@ -1,18 +1,18 @@
 .category-list {
-  margin-bottom: 32px;
-  padding-top: 16px; /* Added top padding */
+  margin-bottom: 8px;
+  padding-top: 8px; /* tighter top spacing */
   background-color: #fff; /* Ensure background is white for consistency */
 }
 
 .section-header {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 .section-title {
   font-size: 24px;
   font-weight: 700;
   color: #333;
-  margin: 0 0 8px 0;
+  
 }
 
 .section-subtitle {
@@ -24,14 +24,13 @@
 .categories-container {
   display: flex;
   flex-wrap: nowrap; /* single row */
-  gap: 8px;
   overflow-x: auto; /* horizontal scroll */
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch; /* smooth on iOS */
   scroll-snap-type: x mandatory; /* snap to items */
-  padding-bottom: 10px; /* add space below chips */
   scrollbar-width: none; /* Firefox: hide scrollbar */
   -ms-overflow-style: none; /* IE/Edge */
+  margin-left: 16px;
 }
 
 .categories-container::-webkit-scrollbar { /* WebKit: hide scrollbar */

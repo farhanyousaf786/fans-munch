@@ -4,12 +4,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  padding: 10px 16px 16px;
+  background: #ffffff;
+  padding: 8px 12px 12px; /* little padding from sides and bottom */
   display: flex;
   align-items: center;
+  justify-content: center; /* center the pill */
   gap: 16px;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* remove elevation */
   z-index: 1100;
 }
 
@@ -71,10 +72,73 @@
   font-size: 18px;
 }
 
+/* New pill CTA like Figma */
+.pill-cta {
+  width: 100%;
+  max-width: 560px; /* centered pill width */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px; /* taller pill */
+  box-shadow: none; /* remove elevation */
+  cursor: pointer;
+}
+
+.pill-leading {
+  width: 52px; /* bigger knob */
+  height: 52px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #3D70FF 0%, #5A84F8 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+}
+
+.pill-text {
+  color: #9CA3AF; /* fallback */
+  font-size: 18px; /* slightly bigger */
+  font-weight: 700;
+  /* shimmer animation */
+  background: linear-gradient(90deg, #9CA3AF 0%, #cbd5e1 50%, #9CA3AF 100%);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pillShimmer 1.8s ease-in-out infinite;
+}
+
+/* Swipe track behavior */
+.swipe-track {
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  /* leave right padding as-is, increase left to make room for knob */
+  padding-left: 80px; /* 16 gap + 52 knob + 12 spacing */
+}
+
+.swipe-knob {
+  position: absolute;
+  left: 16px; /* same as padding baseline used in JS */
+  top: 50%;
+  transform: translateY(-50%);
+  will-change: transform;
+  touch-action: none; /* allow horizontal drag without scrolling */
+}
+
+@keyframes pillShimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
   .food-detail-bottom-bar {
-    padding: 8px 12px 12px;
+    padding: 8px 10px 12px; /* small on mobile */
     gap: 12px;
   }
   
@@ -83,8 +147,6 @@
     height: 44px;
   }
   
-  .add-to-cart-button {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
+  .pill-leading { width: 46px; height: 46px; }
+  .pill-text { font-size: 16px; }
 }

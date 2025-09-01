@@ -106,9 +106,6 @@ const OrderConfirmScreen = () => {
     if (!formData.seatNo.trim()) {
       newErrors.seatNo = 'Please enter seat number';
     }
-    if (!formData.section.trim()) {
-      newErrors.section = 'Please enter section';
-    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -268,11 +265,13 @@ const OrderConfirmScreen = () => {
         {/* Header */}
         <ConfirmHeader onBack={handleBack} />
 
+        {/* Instruction */}
+
+        {/* Ticket Image Upload (Gallery / Camera choices) */}
+        <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
+
         {/* Seat Information Form */}
         <SeatForm formData={formData} errors={errors} onChange={handleInputChange} />
-
-        {/* Ticket Image Upload */}
-        <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 
         {/* Payment Method */}
         <PaymentMethods selected={selectedPaymentMethod} onSelect={setSelectedPaymentMethod} />

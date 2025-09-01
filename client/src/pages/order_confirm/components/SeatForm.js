@@ -5,9 +5,36 @@ const SeatForm = ({ formData, errors, onChange }) => {
     <div className="seat-info-section">
       <h2 className="section-title">Seat Information</h2>
 
+      {/* First row: Seat Number & Stand Number */}
       <div className="form-row">
         <div className="form-field">
-          <label className="field-label">Row *</label>
+          <label className="field-label">Seat Number</label>
+          <input
+            type="text"
+            className={`field-input ${errors.seatNo ? 'error' : ''}`}
+            placeholder="Enter seat number"
+            value={formData.seatNo}
+            onChange={(e) => onChange('seatNo', e.target.value)}
+          />
+          {errors.seatNo && <span className="error-text">{errors.seatNo}</span>}
+        </div>
+
+        <div className="form-field">
+          <label className="field-label">Stand Number</label>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="Enter stand"
+            value={formData.stand || ''}
+            onChange={(e) => onChange('stand', e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Second row: Row Number & Entrance */}
+      <div className="form-row">
+        <div className="form-field">
+          <label className="field-label">Row Number</label>
           <input
             type="text"
             className={`field-input ${errors.row ? 'error' : ''}`}
@@ -19,44 +46,7 @@ const SeatForm = ({ formData, errors, onChange }) => {
         </div>
 
         <div className="form-field">
-          <label className="field-label">Seat Number *</label>
-          <input
-            type="text"
-            className={`field-input ${errors.seatNo ? 'error' : ''}`}
-            placeholder="Enter seat number"
-            value={formData.seatNo}
-            onChange={(e) => onChange('seatNo', e.target.value)}
-          />
-          {errors.seatNo && <span className="error-text">{errors.seatNo}</span>}
-        </div>
-      </div>
-
-      <div className="form-field">
-        <label className="field-label">Section *</label>
-        <input
-          type="text"
-          className={`field-input ${errors.section ? 'error' : ''}`}
-          placeholder="Enter section"
-          value={formData.section}
-          onChange={(e) => onChange('section', e.target.value)}
-        />
-        {errors.section && <span className="error-text">{errors.section}</span>}
-      </div>
-
-      <div className="form-row">
-        <div className="form-field">
-          <label className="field-label">Area (Optional)</label>
-          <input
-            type="text"
-            className="field-input"
-            placeholder="Enter area"
-            value={formData.area || ''}
-            onChange={(e) => onChange('area', e.target.value)}
-          />
-        </div>
-
-        <div className="form-field">
-          <label className="field-label">Entrance (Optional)</label>
+          <label className="field-label">Entrance</label>
           <input
             type="text"
             className="field-input"
@@ -67,22 +57,27 @@ const SeatForm = ({ formData, errors, onChange }) => {
         </div>
       </div>
 
-      <div className="form-field">
-        <label className="field-label">Stand (Optional)</label>
-        <input
-          type="text"
-          className="field-input"
-          placeholder="Enter stand"
-          value={formData.stand || ''}
-          onChange={(e) => onChange('stand', e.target.value)}
-        />
+      {/* Third row: Area & (spacer) */}
+      <div className="form-row">
+        <div className="form-field">
+          <label className="field-label">Area</label>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="Enter area"
+            value={formData.area || ''}
+            onChange={(e) => onChange('area', e.target.value)}
+          />
+        </div>
+        <div className="form-field" />
       </div>
 
+      {/* Additional Details */}
       <div className="form-field">
-        <label className="field-label">Seat Details (Optional)</label>
+        <label className="field-label">Additional Details</label>
         <textarea
           className="field-input textarea"
-          placeholder="Additional seat information"
+          placeholder="Add text"
           value={formData.seatDetails}
           onChange={(e) => onChange('seatDetails', e.target.value)}
           rows={3}

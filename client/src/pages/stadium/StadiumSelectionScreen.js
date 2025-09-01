@@ -55,11 +55,18 @@ const StadiumSelectionScreen = () => {
 
   return (
     <div className="stadium-selection-screen">
+      {/* Background image and overlay */}
+      <div
+        className="stadium-bg"
+        style={{ backgroundImage: "url(/assets/images/on-boarding-1.png)" }}
+      />
+      <div className="stadium-overlay" />
+
       <div className="stadium-container">
         {/* Header */}
         <div className="stadium-header">
-          <h1 className="stadium-title">Select Your Stadium</h1>
-          <p className="stadium-subtitle">Choose where you want to order food from</p>
+          <h1 className="stadium-title animate-down">Select Your Stadium</h1>
+          <p className="stadium-subtitle animate-up">Choose where you want to order food from</p>
         </div>
 
         {/* Loading State */}

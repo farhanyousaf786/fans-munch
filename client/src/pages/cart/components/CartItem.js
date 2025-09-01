@@ -9,24 +9,27 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
       <div className="cart-item">
         {/* Item Info Section */}
         <div className="item-info">
-          <h4 className="item-name">{item.name}</h4>
+          <div className="item-header">
+            <h4 className="item-name">{item.name}</h4>
+            <div className="quantity-controls">
+              <button 
+                className="quantity-btn remove"
+                onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+              >
+                <MdRemove size={16} />
+              </button>
+              <span className="quantity-display">{String(item.quantity).padStart(2, '0')}</span>
+              <button 
+                className="quantity-btn add"
+                onClick={() => onAddToCart(item.id)}
+              >
+                <MdAdd size={16} />
+              </button>
+            </div>
+          </div>
+          
           <div className="item-price-section">
             <span className="item-price">${item.price.toFixed(2)}</span>
-          </div>
-          <div className="quantity-controls">
-            <button 
-              className="quantity-btn remove"
-              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-            >
-              <MdRemove size={16} />
-            </button>
-            <span className="quantity-display">{item.quantity}</span>
-            <button 
-              className="quantity-btn add"
-              onClick={() => onAddToCart(item.id)}
-            >
-              <MdAdd size={16} />
-            </button>
           </div>
         </div>
 

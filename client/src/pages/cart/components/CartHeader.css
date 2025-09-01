@@ -1,51 +1,72 @@
-/* Cart Header Component */
-.cart-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Cart Hero Header */
+.cart-hero {
   position: relative;
-  margin-bottom: 20px;
+  height: 240px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  margin: 0 0 16px 0;
+  /* Avoid horizontal scroll; do not exceed viewport width */
+  width: 100%;
+  border-radius: 0; /* full width, no white edges */
 }
 
-.back-button {
+.cart-hero-overlay {
   position: absolute;
-  left: 0;
-  background: none;
+  inset: 0;
+  /* Uniform subtle darkening without white fade */
+  background: rgba(0,0,0,0.25);
+}
+
+.cart-hero-title {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0;
+  z-index: 2;
+}
+
+.cart-back-button {
+  position: absolute;
+  /* Respect safe area on mobile to avoid clipping */
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 20px;
+  width: 44px;
+  height: 44px;
   border: none;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  box-shadow: none;
+  z-index: 3;
+  margin-top: 12px;
 }
 
-.back-button:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
+.cart-back-button svg { font-size: 22px; }
 
-.cart-title {
-  font-size: 25px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-}
-
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
-  .cart-header {
-    gap: 12px;
+  .cart-hero {
+    height: 210px;
+    /* Keep within viewport to prevent horizontal scrolling */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
-  
-  .cart-title {
-    font-size: 22px;
-  }
+  .cart-hero-title { font-size: 22px; top: 34%; }
 }
 
 @media (max-width: 480px) {
-  .cart-title {
-    font-size: 20px;
-  }
+  .cart-hero { height: 190px; }
+  .cart-hero-title { font-size: 20px; top: 36%; }
+  .cart-back-button { width: 42px; height: 42px; }
 }

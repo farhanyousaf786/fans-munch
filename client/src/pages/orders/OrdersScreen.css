@@ -165,16 +165,17 @@
 
 /* Order Card */
 .order-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(16,24,40,0.06);
+  border: 1px solid #EEF1F6;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .order-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16,24,40,0.10);
 }
 
 .order-header {
@@ -198,14 +199,47 @@
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
   font-weight: 600;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  line-height: 1;
 }
+.status-active { background: #E9F9EE; color: #108A43; }
+.status-completed { background: #EAF1FF; color: #2C5CFF; }
+.status-cancelled { background: #FFE9EA; color: #D12C3A; }
+
+/* New compact layout sections */
+.order-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.order-top .order-number { color: #677389; font-weight: 600; font-size: 14px; }
+
+.order-restaurant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.shop-avatar {
+  width: 24px; height: 24px; border-radius: 8px; background: #F2F4F7;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.shop-name { color: #1F2937; font-weight: 600; font-size: 15px; }
+
+.order-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.order-meta-left { display: flex; align-items: center; gap: 8px; color: #98A2B3; font-size: 13px; }
+.meta-item { color: #98A2B3; }
+.meta-dot { color: #D0D5DD; }
+.order-price { font-weight: 700; color: #111827; }
 
 /* Order Items */
 .order-items {

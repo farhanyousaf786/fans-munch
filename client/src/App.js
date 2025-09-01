@@ -17,7 +17,9 @@ import FoodDetailScreen from './pages/food_detail/FoodDetailScreen';
 import TipScreen from './pages/tip/TipScreen';
 import ShopMenuScreen from './pages/shop_menu/ShopMenuScreen';
 import OrderConfirmScreen from './pages/order_confirm/OrderConfirmScreen';
+import OrderTrackScreen from './pages/order_track/OrderTrackScreen';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
+import MenuListPage from './pages/menu/MenuListPage';
 import ToastContainer from './components/toast/ToastContainer';
 
 function App() {
@@ -69,6 +71,7 @@ function App() {
             
             {/* Main App Routes */}
             <Route path="/home" element={<Home />} />
+            <Route path="/menu" element={<MenuListPage />} />
             <Route path="/orders" element={<OrdersScreen />} />
             <Route path="/cart" element={<CartScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
@@ -81,6 +84,7 @@ function App() {
             {/* Order Flow Routes */}
             <Route path="/tip" element={<TipScreen />} />
             <Route path="/order/confirm" element={<OrderConfirmScreen />} />
+            <Route path="/order/:orderId" element={<OrderTrackScreen />} />
             
             {/* Redirect any unknown routes to splash */}
             <Route path="*" element={<Navigate to="/" replace />} />

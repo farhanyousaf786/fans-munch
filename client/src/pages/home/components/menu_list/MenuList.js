@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { MdAccessTime } from 'react-icons/md';
 import './MenuList.css';
 
+// Local asset images to use as random placeholders for food items
+const assetPlaceholders = [
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
+  process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png',
+];
+
+function getPlaceholderByKey(key) {
+  const str = String(key || 'food');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const idx = Math.abs(hash) % assetPlaceholders.length;
+  return assetPlaceholders[idx];
+}
+
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
 
@@ -68,10 +86,13 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     <div className="menu-list">
       <div className="section-header">
         <h2 className="section-title">{getSectionTitle()}</h2>
+        {!searchTerm && (
+          <button className="see-all-button" onClick={() => navigate('/menu')}>
+            <span>See All</span>
+          </button>
+        )}
         {error && (
-          <p className="section-subtitle error-text">
-            {error}
-          </p>
+          <p className="section-subtitle error-text">{error}</p>
         )}
       </div>
       
@@ -87,10 +108,10 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
               {/* Food Image - 120px height like Flutter app */}
               <div className="menu-image-horizontal">
                 <img 
-                  src={food.getPrimaryImage()} 
+                  src={food.getPrimaryImage() || getPlaceholderByKey(food.id || food.name)} 
                   alt={food.name}
                   onError={(e) => {
-                    e.target.src = '/api/placeholder/160/120';
+                    e.currentTarget.src = getPlaceholderByKey(food.id || food.name);
                   }}
                 />
                 

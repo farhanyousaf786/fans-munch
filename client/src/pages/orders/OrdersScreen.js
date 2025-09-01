@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userStorage } from '../../utils/storage';
 import orderRepository from '../../repositories/orderRepository';
 import { OrderStatus } from '../../models/Order';
-import { collection, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import './OrdersScreen.css';
 
@@ -12,7 +13,9 @@ const OrdersScreen = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('active'); // active, completed, cancelled
   const [shopDetails, setShopDetails] = useState({}); // Cache for shop details
+  const navigate = useNavigate();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchUserOrders();
   }, []);
@@ -99,16 +102,7 @@ const OrdersScreen = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case OrderStatus.PENDING: return '#FF9800'; // Orange
-      case OrderStatus.PREPARING: return '#2196F3'; // Blue
-      case OrderStatus.DELIVERING: return '#9C27B0'; // Purple
-      case OrderStatus.DELIVERED: return '#4CAF50'; // Green
-      case OrderStatus.CANCELED: return '#F44336'; // Red
-      default: return '#FF9800';
-    }
-  };
+  // getStatusColor removed (unused)
 
   const getStatusText = (status) => {
     switch (status) {
@@ -119,6 +113,13 @@ const OrdersScreen = () => {
       case OrderStatus.CANCELED: return 'Canceled';
       default: return 'Pending';
     }
+  };
+
+  const getStatusClass = (status) => {
+    if ([OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.DELIVERING].includes(status)) return 'status-active';
+    if (status === OrderStatus.DELIVERED) return 'status-completed';
+    if (status === OrderStatus.CANCELED) return 'status-cancelled';
+    return 'status-active';
   };
 
   const filteredOrders = orders.filter(order => {
@@ -133,6 +134,13 @@ const OrdersScreen = () => {
     }
     return true;
   });
+
+  const handleTrackOrder = (order) => {
+    const docId = order.id; // Firestore document id
+    if (docId) {
+      navigate(`/order/${docId}`);
+    }
+  };
 
   return (
     <div className="orders-screen">
@@ -156,12 +164,6 @@ const OrdersScreen = () => {
             onClick={() => setActiveTab('completed')}
           >
             Completed
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'cancelled' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cancelled')}
-          >
-            Cancelled
           </button>
         </div>
 
@@ -190,69 +192,35 @@ const OrdersScreen = () => {
           ) : (
             filteredOrders.map(order => (
               <div key={order.id || order.orderId} className="order-card">
-                <div className="order-header">
-                  <div className="order-info">
-                    <h3 className="restaurant-name">
-                      {order.shopId && shopDetails[order.shopId] 
-                        ? shopDetails[order.shopId].name 
-                        : 'Stadium Food'
-                      }
-                    </h3>
-                    <p className="order-number">#{order.orderId}</p>
-                  </div>
-                  <div className="order-status">
-                    <span 
-                      className="status-badge"
-                      style={{ backgroundColor: getStatusColor(order.status) }}
-                    >
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
+                {/* Top: Order number + status */}
+                <div className="order-top">
+                  <div className="order-number">Order #{order.orderId}</div>
+                  <span className={`status-badge ${getStatusClass(order.status)}`}>{getStatusText(order.status)}</span>
                 </div>
 
-                <div className="order-items">
-                  {order.cart && order.cart.length > 0 ? (
-                    order.cart.map((item, index) => (
-                      <span key={index} className="order-item">
-                        {item.quantity}x {item.name}
-                        {index < order.cart.length - 1 && ', '}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="order-item">No items found</span>
-                  )}
+                {/* Shop row */}
+                <div className="order-restaurant">
+                  <span className="shop-avatar" aria-hidden>🍔</span>
+                  <span className="shop-name">
+                    {order.shopId && shopDetails[order.shopId] 
+                      ? shopDetails[order.shopId].name 
+                      : 'Stadium Food'}
+                  </span>
                 </div>
 
-                <div className="order-details">
-                  <div className="order-seat-info">
-                    {order.seatInfo && (
-                      <span className="seat-info">
-                        📍 Section {order.seatInfo.section}, Row {order.seatInfo.row}, Seat {order.seatInfo.seatNo}
-                      </span>
-                    )}
+                {/* Meta row: items + date on left, price on right */}
+                <div className="order-meta">
+                  <div className="order-meta-left">
+                    <span className="meta-item">{Array.isArray(order.cart) ? order.cart.reduce((sum, i) => sum + (i.quantity || 1), 0) : 0} Items</span>
+                    <span className="meta-dot">•</span>
+                    <span className="meta-item">{order.getFormattedDate()}</span>
                   </div>
-                  {order.tipAmount > 0 && (
-                    <div className="tip-info">
-                      <span className="tip-label">Tip:</span>
-                      <span className="tip-amount">${order.tipAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="order-footer">
-                  <div className="order-time">
-                    <span className="time-label">Ordered:</span>
-                    <span className="time-value">{order.getFormattedDate()}</span>
-                  </div>
-                  <div className="order-total">
-                    ${order.total.toFixed(2)}
-                  </div>
+                  <div className="order-price">${order.total.toFixed(2)}</div>
                 </div>
 
                 {[OrderStatus.PENDING, OrderStatus.PREPARING].includes(order.status) && (
                   <div className="order-actions">
-                    <button className="track-button">Track Order</button>
-                    <button className="cancel-button">Cancel</button>
+                    <button className="track-button" onClick={() => handleTrackOrder(order)}>Track Order</button>
                   </div>
                 )}
               </div>

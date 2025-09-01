@@ -1,11 +1,13 @@
 .menu-list {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
   background-color: #fff;
 }
 
 .section-header {
-  padding: 0 0px;
   margin-bottom: 0px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .section-title {
@@ -13,6 +15,20 @@
   font-weight: 600;
   color: #666;
   margin: 0;
+}
+
+.see-all-button {
+  background: none;
+  border: none;
+  color: #3D70FF;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.see-all-button:active {
+  transform: scale(0.98);
 }
 
 .section-subtitle {

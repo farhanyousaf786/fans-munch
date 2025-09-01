@@ -44,7 +44,9 @@ const TopSection = (props) => {
       {/* Header with location and cart */}
       <div className="home-header">
         <div className="stadium-selector" onClick={handleStadiumClick}>
-          <img src="/assets/icons/location.png" alt="Location" className="location-icon" />
+          <span className="loc-badge">
+            <img src="/assets/icons/location.png" alt="Location" className="location-icon" />
+          </span>
           <div className="stadium-info">
             <div className="stadium-name-container">
               <span className="stadium-name">

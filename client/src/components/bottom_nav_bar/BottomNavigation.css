@@ -1,13 +1,16 @@
 /* Bottom Navigation Styles */
 .bottom-navigation {
   position: fixed;
-  bottom: 0;
+  /* Lift the whole bar above iOS/Android home indicator */
+  bottom: env(safe-area-inset-bottom, 0px);
   left: 0;
   right: 0;
   background: white;
   border-top: 1px solid #e0e0e0;
   box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 9999;
+  /* Inner padding for touch comfort */
+  padding-bottom: 6px;
 }
 
 .nav-container {
@@ -186,7 +189,4 @@
   }
 }
 
-/* Add padding to body when bottom nav is present */
-body {
-  padding-bottom: env(safe-area-inset-bottom);
-}
+/* Removed global body padding-bottom to prevent extra scroll at page end */

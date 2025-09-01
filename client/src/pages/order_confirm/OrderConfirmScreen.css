@@ -2,9 +2,16 @@
 
 .order-confirm-screen {
   min-height: 100vh;
-  background-color: #F5F5F5;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
+}
+
+/* custom image icon size */
+.upload-icon-img {
+  width: 70px; /* slightly bigger */
+  height: 70px;
+  object-fit: contain;
 }
 
 .order-confirm-container {
@@ -18,35 +25,55 @@
   gap: 24px;
 }
 
+/* Instruction above tiles */
+.pre-seat-instructions {
+  margin: 4px 0 -6px 0;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
 /* Header */
 .order-confirm-header {
+  position: relative; /* allow absolute back button */
   display: flex;
   align-items: center;
+  justify-content: center; /* center the title */
   gap: 16px;
+  min-height: 44px; /* ensure room for back button */
+  padding-top: 16px; /* little padding from top */
+  margin-bottom: 16px;
+
 }
 
 .back-button {
-  background: none;
+  position: absolute;
+  left: 0;
+  top: 8px; /* align with header padding */
+  width: 44px;
+  height: 44px;
+  background: #3D70FF;
   border: none;
-  color: white;
+  color: #fff;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: transform 0.08s;
+  margin-bottom: 16px;
 }
 
-.back-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
+.back-button:hover { box-shadow: none; }
+.back-button:active { transform: translateY(1px); }
 
 .order-confirm-title {
   font-size: 24px;
   font-weight: bold;
   color: #333;
   margin: 0;
+  padding-top: 2px; /* optical alignment with the icon */
+  text-align: center;
 }
 
 /* Section Styles */
@@ -69,8 +96,17 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* remove card shadow */
 }
+
+/* Ensure seat form text is left-aligned */
+.seat-info-section .section-title {
+  text-align: left;
+}
+
+.seat-info-section .form-field { align-items: stretch; }
+.seat-info-section .field-label { text-align: left; }
+.seat-info-section .field-input { text-align: left; }
 
 .form-row {
   display: grid;
@@ -82,6 +118,7 @@
 .form-field {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* allow grid item to shrink inside column */
   gap: 8px;
 }
 
@@ -93,26 +130,32 @@
 
 .field-input {
   padding: 12px 16px;
-  border: 2px solid #E0E0E0;
-  border-radius: 8px;
+  border: none; /* remove border */
+  border-radius: 12px;
   font-size: 16px;
-  background: white;
-  transition: border-color 0.2s;
+  background: #F6F7FB; /* light grey */
+  transition: box-shadow 0.2s, background 0.2s;
+  width: 100%;
+  box-sizing: border-box; /* prevent overflow from padding */
 }
 
 .field-input:focus {
   outline: none;
-  border-color: #3D70FF;
+  background: #F4F6FF;
+  box-shadow: inset 0 0 0 2px #3D70FF; /* accessible focus ring */
 }
 
-.field-input.error {
-  border-color: #FF4444;
-}
+.field-input.error { box-shadow: inset 0 0 0 2px #FF4444; }
+
+/* Softer placeholder color */
+.field-input::placeholder { color: #A0A6B1; }
 
 .field-input.textarea {
   resize: vertical;
   min-height: 80px;
   font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .error-text {
@@ -125,35 +168,58 @@
 .ticket-upload-section {
   background: white;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px 20px 10px; /* reduce bottom padding to tighten space below */
+  box-shadow: none; /* remove card shadow */
 }
 
 .upload-options {
-  display: flex;
-  gap: 16px;
+  display: flex; /* force one row on wider screens */
+  justify-content: space-between; /* push to left and right */
+  align-items: center;
+  gap: 12px;
 }
 
 .upload-option {
-  flex: 1;
+  flex: 0 0 68px; /* compact buttons */
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
-  border: 2px dashed #E0E0E0;
-  border-radius: 8px;
-  background: #F9F9F9;
-  color: #666;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 2px dashed #CFE0FF; /* restore border */
+  border-radius: 12px;
+  background: transparent; /* no card background */
+  color: #333;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
 }
 
 .upload-option:hover {
-  border-color: #3D70FF;
-  color: #3D70FF;
-  background: #F0F4FF;
+  transform: translateY(-1px);
+}
+
+.upload-option span { font-weight: 500; }
+
+/* OR separator */
+.upload-or-separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 0 0; /* remove extra space under OR */
+}
+
+.upload-or-separator .line {
+  flex: 1;
+  height: 1px;
+  background: #E6E9F2;
+}
+
+.upload-or-separator .or {
+  color: #999;
+  font-size: 12px;
+  letter-spacing: 0.08em;
 }
 
 .uploaded-image {
@@ -165,7 +231,7 @@
   max-width: 200px;
   height: auto;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* remove image shadow */
 }
 
 /* Payment Method Section */
@@ -173,7 +239,7 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* remove card shadow */
 }
 
 .payment-options {
@@ -212,7 +278,7 @@
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* remove card shadow */
 }
 
 .summary-row {
@@ -293,12 +359,14 @@
   }
 
   .form-row {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: 1fr 1fr; /* keep two columns on mobile */
+    gap: 12px; /* slightly smaller gap for narrow screens */
   }
 
   .upload-options {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px; /* keep side by side on mobile too */
   }
 
   .payment-options {

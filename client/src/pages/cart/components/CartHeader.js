@@ -6,14 +6,18 @@ import './CartHeader.css';
 const CartHeader = ({ isFromHome = false }) => {
   const navigate = useNavigate();
 
+  // Use a public asset to avoid import issues and ensure deployment works
+  const bgUrl = process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png';
+
   return (
-    <div className="cart-header">
+    <div className="cart-hero" style={{ backgroundImage: `url(${bgUrl})` }}>
       {!isFromHome && (
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <MdArrowBack size={24} />
+        <button className="cart-back-button" onClick={() => navigate(-1)} aria-label="Back">
+          <MdArrowBack />
         </button>
       )}
-      <h1 className="cart-title">Cart</h1>
+      <div className="cart-hero-overlay" />
+      <h1 className="cart-hero-title">Add to Cart</h1>
     </div>
   );
 };

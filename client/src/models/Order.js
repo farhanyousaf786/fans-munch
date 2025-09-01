@@ -260,8 +260,18 @@ export class Order {
    */
   getFormattedDate() {
     if (!this.createdAt) return '';
-    
-    const date = this.createdAt instanceof Date ? this.createdAt : new Date(this.createdAt);
+
+    let date;
+    if (this.createdAt instanceof Date) {
+      date = this.createdAt;
+    } else if (this.createdAt && typeof this.createdAt.toDate === 'function') {
+      // Firestore Timestamp
+      date = this.createdAt.toDate();
+    } else if (typeof this.createdAt === 'number' || typeof this.createdAt === 'string') {
+      date = new Date(this.createdAt);
+    }
+
+    if (!date || isNaN(date.getTime())) return '';
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   }
 

@@ -265,10 +265,11 @@ const FoodDetailScreen = () => {
   return (
     <div className="food-detail-screen">
       {/* Header Component */}
-      <FoodHeader food={food} onBack={handleBack} />
+      <FoodHeader food={food} onBack={handleBack} isFavorite={isFavorite} onToggleFavorite={handleToggleFavorite} />
 
       {/* Content */}
       <div className="food-detail-content">
+        <div className="food-card">
         {/* Food Info Component */}
         <FoodInfo 
           food={food} 
@@ -285,12 +286,11 @@ const FoodDetailScreen = () => {
 
         {/* Testimonials Component */}
         <TestimonialsList testimonials={testimonials} />
+        </div>
       </div>
 
       {/* Bottom Bar Component */}
       <FoodBottomBar 
-        isFavorite={isFavorite}
-        onToggleFavorite={handleToggleFavorite}
         onAddToCart={handleAddToCart}
       />
     </div>
