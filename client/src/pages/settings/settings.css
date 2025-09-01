@@ -1,0 +1,88 @@
+/* Shared styles for Settings screens */
+.screen {
+  min-height: calc(100vh - 80px);
+  padding: 20px 16px 90px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.static-screen h1,
+.form-screen h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 8px 0 16px;
+}
+
+.static-screen p,
+.static-screen li {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.section-card {
+  background: #fff;
+  border: 1px solid #EEF1F6;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.section-card h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #101828;
+  margin: 0 0 8px;
+}
+
+.simple-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.simple-form textarea,
+.simple-form input {
+  width: 100%;
+  border: 1px solid #dbe3f0;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.simple-form button {
+  align-self: flex-start;
+  background: #2F6BFF;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(47,107,255,0.25);
+}
+
+.lang-options {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+
+.lang-btn {
+  border: 1px solid #dbe3f0;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+.lang-btn.active {
+  background: #2F6BFF;
+  color: #fff;
+  border-color: #2F6BFF;
+}
+
+.helper {
+  font-size: 12px;
+  color: #64748b;
+}

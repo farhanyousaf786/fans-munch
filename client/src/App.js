@@ -21,6 +21,13 @@ import OrderTrackScreen from './pages/order_track/OrderTrackScreen';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
 import MenuListPage from './pages/menu/MenuListPage';
 import ToastContainer from './components/toast/ToastContainer';
+// Settings screens
+import AboutAppScreen from './pages/settings/AboutAppScreen';
+import TermsScreen from './pages/settings/TermsScreen';
+import PrivacyPolicyScreen from './pages/settings/PrivacyPolicyScreen';
+import FeedbackScreen from './pages/settings/FeedbackScreen';
+import ReportProblemScreen from './pages/settings/ReportProblemScreen';
+import LanguageScreen from './pages/settings/LanguageScreen';
 
 function App() {
   // Parse QR parameters on first load and store seat info
@@ -75,6 +82,13 @@ function App() {
             <Route path="/orders" element={<OrdersScreen />} />
             <Route path="/cart" element={<CartScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
+            {/* Settings */}
+            <Route path="/settings/about" element={<AboutAppScreen />} />
+            <Route path="/settings/terms" element={<TermsScreen />} />
+            <Route path="/settings/privacy" element={<PrivacyPolicyScreen />} />
+            <Route path="/settings/feedback" element={<FeedbackScreen />} />
+            <Route path="/settings/report" element={<ReportProblemScreen />} />
+            <Route path="/settings/language" element={<LanguageScreen />} />
             
             {/* Food Detail Route */}
             <Route path="/food/:foodId" element={<FoodDetailScreen />} />

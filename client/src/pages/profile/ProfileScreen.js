@@ -86,12 +86,12 @@ const ProfileScreen = () => {
   // helper removed; using compact stats card UI
 
   const settingsOptions = [
-    { icon: IoLanguageOutline, title: 'Language', subtitle: 'Choose your language', action: () => console.log('Language') },
-    { icon: IoInformationCircleOutline, title: 'About app', subtitle: 'Version and info', action: () => console.log('About app') },
-    { icon: IoDocumentTextOutline, title: 'Terms and conditions', subtitle: 'Read our terms', action: () => console.log('Terms') },
-    { icon: IoChatboxEllipsesOutline, title: 'Feedback', subtitle: 'Tell us what you think', action: () => console.log('Feedback') },
-    { icon: IoLockClosedOutline, title: 'Privacy policy', subtitle: 'How we handle data', action: () => console.log('Privacy') },
-    { icon: IoBugOutline, title: 'Report a Problem', subtitle: 'Something not working?', action: () => console.log('Report a problem') },
+    { icon: IoLanguageOutline, title: 'Language', subtitle: 'Choose your language', action: () => navigate('/settings/language') },
+    { icon: IoInformationCircleOutline, title: 'About app', subtitle: 'Version and info', action: () => navigate('/settings/about') },
+    { icon: IoDocumentTextOutline, title: 'Terms and conditions', subtitle: 'Read our terms', action: () => navigate('/settings/terms') },
+    { icon: IoChatboxEllipsesOutline, title: 'Feedback', subtitle: 'Tell us what you think', action: () => navigate('/settings/feedback') },
+    { icon: IoLockClosedOutline, title: 'Privacy policy', subtitle: 'How we handle data', action: () => navigate('/settings/privacy') },
+    { icon: IoBugOutline, title: 'Report a Problem', subtitle: 'Something not working?', action: () => navigate('/settings/report') },
   ];
 
   return (
