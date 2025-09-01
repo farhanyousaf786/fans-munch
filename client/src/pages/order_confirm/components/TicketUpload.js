@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { IoCamera, IoImage } from 'react-icons/io5';
 
 const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
   const galleryInputRef = useRef(null);

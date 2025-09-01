@@ -278,9 +278,10 @@
 .settings-item-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 14px; /* tighter to align titles visually */
   position: relative;
   z-index: 1;
+  flex: 1; /* allow text to take remaining width */
 }
 
 .settings-icon {
@@ -299,35 +300,32 @@
   box-shadow: 0 6px 12px rgba(61, 112, 255, 0.15);
 }
 
-.settings-text {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 1;
+.settings-text { 
+  display: flex; 
+  flex-direction: column; 
+  flex: 1; 
+}
+
+.settings-text { 
+  display: flex; 
+  flex-direction: column; 
 }
 
 .settings-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #101828 !important; /* keep consistent */
   margin-bottom: 4px;
-  transition: color 0.3s ease;
+  line-height: 1.2;
   letter-spacing: -0.01em;
-}
-
-.settings-item:hover .settings-title {
-  color: #3D70FF;
+  text-align: left;
 }
 
 .settings-subtitle {
   font-size: 0.9rem;
   color: #64748b;
   line-height: 1.3;
-  transition: color 0.3s ease;
-}
-
-.settings-item:hover .settings-subtitle {
-  color: #475569;
+  text-align: left;
 }
 
 .settings-arrow {
@@ -337,6 +335,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 1;
+  align-self: center; /* align arrow vertically */
 }
 
 .settings-item:hover .settings-arrow {
@@ -459,3 +458,134 @@
     font-size: 1.1rem;
   }
 }
+
+/* --- New Profile Hero + Stats (mock-aligned) --- */
+.profile-hero {
+  position: relative;
+  height: 200px; /* more space for avatar/name */
+  background: #111; /* fallback solid color (no image to avoid build error) */
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3; /* keep above stats card overlap */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  padding-bottom: 28px; /* push content up from overlap */
+  color: #fff;
+}
+
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar.small {
+  width: 56px;
+  height: 56px;
+  border: 2px solid rgba(255,255,255,0.9);
+}
+
+.hero-user .hero-name {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.hero-user .hero-email {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.logout-chip {
+  background: #e11d48; /* red */
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-chip svg { font-size: 16px; }
+
+.stats-card {
+  margin-top: -8px; /* reduce overlap so it doesn't cover hero content */
+  background: #fff;
+  border: 1px solid #EEF1F6;
+  border-radius: 14px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+  z-index: 2; /* below hero-content */
+}
+
+.stats-col {
+  flex: 1;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+.stats-number {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.stats-number.green { color: #16a34a; }
+
+.stats-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.divider {
+  width: 1px;
+  background: #EEF1F6;
+}
+
+.section-header {
+  margin: 16px 0 8px;
+  font-weight: 700;
+  color: #101828;
+}
+
+.settings-list .settings-item {
+  background: #fff;
+  border: 1px solid #EEF1F6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center; /* vertical center */
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 12px;
+  min-height: 72px; /* uniform height */
+}
+
+.settings-list .settings-icon {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  color: #3D70FF;
+}
+
+.settings-list .settings-title { font-size: 14px; }
+.settings-list .settings-subtitle { font-size: 12px; }

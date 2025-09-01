@@ -23,3 +23,26 @@
 .price { margin-top: 2px; font-weight: 600; font-size: 13px; }
 .qty { font-size: 11px; color: #6b7280; }
 .loading, .error, .empty-items { color: #6b7280; padding: 10px; text-align: center; font-size: 12px; }
+
+/* Sticky footer CTA */
+.footer-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom)); /* keep above bottom nav */
+  display: flex;
+  justify-content: center;
+  padding: 10px 12px;
+  pointer-events: none; /* allow button to capture events */
+}
+
+.cta-button {
+  pointer-events: auto;
+  background: #2F6BFF;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 0 6px 16px rgba(47,107,255,0.35);
+}

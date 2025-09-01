@@ -112,6 +112,19 @@ const OrdersScreen = () => {
     return 'status-active';
   };
 
+  // Title for order card: first item name > shop name > generic
+  const getOrderTitle = (order) => {
+    try {
+      const firstItem = Array.isArray(order?.cart) ? order.cart[0] : null;
+      const itemName = firstItem?.name || firstItem?.title;
+      if (itemName) return itemName;
+      if (order?.shopId && shopDetails[order.shopId]) return shopDetails[order.shopId].name;
+      return 'Order';
+    } catch (_) {
+      return 'Order';
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     if (activeTab === 'active') {
       return [OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.DELIVERING].includes(order.status);
@@ -192,9 +205,7 @@ const OrdersScreen = () => {
                 <div className="order-restaurant">
                   <span className="shop-avatar" aria-hidden>🍔</span>
                   <span className="shop-name">
-                    {order.shopId && shopDetails[order.shopId] 
-                      ? shopDetails[order.shopId].name 
-                      : 'Stadium Food'}
+                    {getOrderTitle(order)}
                   </span>
                 </div>
 
@@ -208,7 +219,7 @@ const OrdersScreen = () => {
                   <div className="order-price">${order.total.toFixed(2)}</div>
                 </div>
 
-                {[OrderStatus.PENDING, OrderStatus.PREPARING].includes(order.status) && (
+                {order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELED && (
                   <div className="order-actions">
                     <button className="track-button" onClick={() => handleTrackOrder(order)}>Track Order</button>
                   </div>
