@@ -62,7 +62,7 @@ export default function OrderTrackScreen() {
             <div className="qr-card">
               {code ? (
                 <div className="qr-wrap">
-                  <QRCode value={String(code)} size={180} />
+                  <QRCode value={String(code)} size={140} />
                 </div>
               ) : (
                 <div className="qr-placeholder">No code</div>
