@@ -5,17 +5,19 @@ import { db } from '../../config/firebase';
 import { OrderStatus } from '../../models/Order';
 import QRCode from 'react-qr-code';
 import './OrderTrackScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
-const steps = [
-  { key: OrderStatus.PENDING, label: 'Order Received' },
-  { key: OrderStatus.PREPARING, label: 'Preparing' },
-  { key: OrderStatus.DELIVERING, label: 'On the way' },
-  { key: OrderStatus.DELIVERED, label: 'Delivered' }
+const baseSteps = [
+  { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
+  { key: OrderStatus.PREPARING, labelKey: 'track.preparing' },
+  { key: OrderStatus.DELIVERING, labelKey: 'track.on_the_way' },
+  { key: OrderStatus.DELIVERED, labelKey: 'track.delivered' }
 ];
 
 export default function OrderTrackScreen() {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,6 +43,7 @@ export default function OrderTrackScreen() {
     return () => unsub();
   }, [orderId]);
 
+  const steps = baseSteps.map(s => ({ ...s, label: t(s.labelKey) }));
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
   const code = order?.orderCode || order?.orderId || order?.id || '';
 
@@ -48,13 +51,13 @@ export default function OrderTrackScreen() {
     <div className="order-track-screen">
       <div className="hero">
         <button className="back-btn" onClick={() => navigate(-1)}>←</button>
-        <div className="hero-title">Order</div>
-        <div className="order-code">Order #{order?.orderId || order?.id}</div>
+        <div className="hero-title">{t('track.order')}</div>
+        <div className="order-code">{t('track.order')} #{order?.orderId || order?.id}</div>
       </div>
 
       <div className="content">
         {loading ? (
-          <div className="loading">Loading…</div>
+          <div className="loading">{t('track.loading')}</div>
         ) : error ? (
           <div className="error">{error}</div>
         ) : (
@@ -65,7 +68,7 @@ export default function OrderTrackScreen() {
                   <QRCode value={String(code)} size={140} />
                 </div>
               ) : (
-                <div className="qr-placeholder">No code</div>
+                <div className="qr-placeholder">{t('track.no_code')}</div>
               )}
             </div>
 
@@ -85,23 +88,23 @@ export default function OrderTrackScreen() {
             </div>
 
             <div className="items-section">
-              <div className="items-title">Items</div>
+              <div className="items-title">{t('track.items')}</div>
               {Array.isArray(order?.cart) && order.cart.length > 0 ? (
                 order.cart.map((item, i) => (
                   <div className="item-card" key={i}>
                     <div className="item-left">
                       <div className="thumb" aria-hidden>🥤</div>
                       <div className="meta">
-                        <div className="name">{item.name || 'Item'}</div>
+                        <div className="name">{item.name || t('track.item')}</div>
                         <div className="desc">{item.description || ''}</div>
                         <div className="price">${Number(item.price || 0).toFixed(2)}</div>
                       </div>
                     </div>
-                    <div className="qty">Qty {item.quantity || 1}</div>
+                    <div className="qty">{t('track.qty')} {item.quantity || 1}</div>
                   </div>
                 ))
               ) : (
-                <div className="empty-items">No items</div>
+                <div className="empty-items">{t('track.no_items')}</div>
               )}
             </div>
           </>

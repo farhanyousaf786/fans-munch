@@ -6,6 +6,7 @@ import { OrderStatus } from '../../models/Order';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import './OrdersScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -14,6 +15,7 @@ const OrdersScreen = () => {
   const [activeTab, setActiveTab] = useState('active'); // active, completed, cancelled
   const [shopDetails, setShopDetails] = useState({}); // Cache for shop details
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Real-time subscription to user's orders
   useEffect(() => {
@@ -27,7 +29,7 @@ const OrdersScreen = () => {
     setLoading(true);
     const unsubscribe = orderRepository.streamOrdersForUser(userData.id, async (liveOrders, err) => {
       if (err) {
-        setError('Failed to load orders. Please try again.');
+        setError(t('orders.error_loading'));
         setOrders([]);
         setLoading(false);
         return;
@@ -96,12 +98,12 @@ const OrdersScreen = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case OrderStatus.PENDING: return 'Pending';
-      case OrderStatus.PREPARING: return 'Preparing';
-      case OrderStatus.DELIVERING: return 'Delivering';
-      case OrderStatus.DELIVERED: return 'Delivered';
-      case OrderStatus.CANCELED: return 'Canceled';
-      default: return 'Pending';
+      case OrderStatus.PENDING: return t('orders.pending');
+      case OrderStatus.PREPARING: return t('orders.preparing');
+      case OrderStatus.DELIVERING: return t('orders.delivering');
+      case OrderStatus.DELIVERED: return t('orders.delivered');
+      case OrderStatus.CANCELED: return t('orders.cancelled');
+      default: return t('orders.pending');
     }
   };
 
@@ -119,9 +121,9 @@ const OrdersScreen = () => {
       const itemName = firstItem?.name || firstItem?.title;
       if (itemName) return itemName;
       if (order?.shopId && shopDetails[order.shopId]) return shopDetails[order.shopId].name;
-      return 'Order';
+      return t('orders.order');
     } catch (_) {
-      return 'Order';
+      return t('orders.order');
     }
   };
 
@@ -150,8 +152,8 @@ const OrdersScreen = () => {
       <div className="orders-container">
         {/* Header */}
         <div className="orders-header">
-          <h1 className="orders-title">My Orders</h1>
-          <p className="orders-subtitle">Track your food orders</p>
+          <h1 className="orders-title">{t('orders.my_orders')}</h1>
+          <p className="orders-subtitle">{t('orders.subtitle')}</p>
         </div>
 
         {/* Tabs */}
@@ -160,13 +162,13 @@ const OrdersScreen = () => {
             className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
             onClick={() => setActiveTab('active')}
           >
-            Active
+            {t('orders.active')}
           </button>
           <button 
             className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
             onClick={() => setActiveTab('completed')}
           >
-            Completed
+            {t('orders.completed')}
           </button>
         </div>
 
@@ -175,29 +177,29 @@ const OrdersScreen = () => {
           {loading ? (
             <div className="loading-state">
               <div className="loading-spinner"></div>
-              <p>Loading your orders...</p>
+              <p>{t('orders.loading')}</p>
             </div>
           ) : error ? (
             <div className="error-state">
               <div className="error-icon">⚠️</div>
-              <h3>Error Loading Orders</h3>
+              <h3>{t('orders.error_loading')}</h3>
               <p>{error}</p>
               <button className="retry-button" onClick={() => window.location.reload()}>
-                Try Again
+                {t('orders.try_again')}
               </button>
             </div>
           ) : filteredOrders.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🍽️</div>
-              <h3>No {activeTab} orders</h3>
-              <p>Your {activeTab} orders will appear here</p>
+              <h3>{t('orders.no_orders')}</h3>
+              <p>{t('orders.empty_hint')}</p>
             </div>
           ) : (
             filteredOrders.map(order => (
               <div key={order.id || order.orderId} className="order-card">
                 {/* Top: Order number + status */}
                 <div className="order-top">
-                  <div className="order-number">Order #{order.orderId}</div>
+                  <div className="order-number">{t('orders.order')} #{order.orderId}</div>
                   <span className={`status-badge ${getStatusClass(order.status)}`}>{getStatusText(order.status)}</span>
                 </div>
 
@@ -212,7 +214,7 @@ const OrdersScreen = () => {
                 {/* Meta row: items + date on left, price on right */}
                 <div className="order-meta">
                   <div className="order-meta-left">
-                    <span className="meta-item">{Array.isArray(order.cart) ? order.cart.reduce((sum, i) => sum + (i.quantity || 1), 0) : 0} Items</span>
+                    <span className="meta-item">{Array.isArray(order.cart) ? order.cart.reduce((sum, i) => sum + (i.quantity || 1), 0) : 0} {t('orders.items')}</span>
                     <span className="meta-dot">•</span>
                     <span className="meta-item">{order.getFormattedDate()}</span>
                   </div>
@@ -221,7 +223,7 @@ const OrdersScreen = () => {
 
                 {order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELED && (
                   <div className="order-actions">
-                    <button className="track-button" onClick={() => handleTrackOrder(order)}>Track Order</button>
+                    <button className="track-button" onClick={() => handleTrackOrder(order)}>{t('orders.track')}</button>
                   </div>
                 )}
               </div>

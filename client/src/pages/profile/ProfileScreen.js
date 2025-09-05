@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/i18n';
 import {
   IoPersonOutline,
   IoLogOutOutline,
@@ -17,6 +18,7 @@ import './ProfileScreen.css';
 
 const ProfileScreen = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [userData, setUserData] = useState(null);
   const [orderStats, setOrderStats] = useState({
     active: 0,
@@ -86,12 +88,12 @@ const ProfileScreen = () => {
   // helper removed; using compact stats card UI
 
   const settingsOptions = [
-    { icon: IoLanguageOutline, title: 'Language', subtitle: 'Choose your language', action: () => navigate('/settings/language') },
-    { icon: IoInformationCircleOutline, title: 'About app', subtitle: 'Version and info', action: () => navigate('/settings/about') },
-    { icon: IoDocumentTextOutline, title: 'Terms and conditions', subtitle: 'Read our terms', action: () => navigate('/settings/terms') },
-    { icon: IoChatboxEllipsesOutline, title: 'Feedback', subtitle: 'Tell us what you think', action: () => navigate('/settings/feedback') },
-    { icon: IoLockClosedOutline, title: 'Privacy policy', subtitle: 'How we handle data', action: () => navigate('/settings/privacy') },
-    { icon: IoBugOutline, title: 'Report a Problem', subtitle: 'Something not working?', action: () => navigate('/settings/report') },
+    { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
+    { icon: IoInformationCircleOutline, title: t('profile.about'), subtitle: t('profile.about_sub'), action: () => navigate('/settings/about') },
+    { icon: IoDocumentTextOutline, title: t('profile.terms'), subtitle: t('profile.terms_sub'), action: () => navigate('/settings/terms') },
+    { icon: IoChatboxEllipsesOutline, title: t('profile.feedback'), subtitle: t('profile.feedback_sub'), action: () => navigate('/settings/feedback') },
+    { icon: IoLockClosedOutline, title: t('profile.privacy'), subtitle: t('profile.privacy_sub'), action: () => navigate('/settings/privacy') },
+    { icon: IoBugOutline, title: t('profile.report'), subtitle: t('profile.report_sub'), action: () => navigate('/settings/report') },
   ];
 
   return (
@@ -112,7 +114,7 @@ const ProfileScreen = () => {
               <div className="hero-email">{userData?.email || ''}</div>
             </div>
           </div>
-          <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> Logout</button>
+          <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
         </div>
       </div>
 
@@ -120,17 +122,17 @@ const ProfileScreen = () => {
         <div className="stats-card">
           <div className="stats-col">
             <div className="stats-number">{loading ? '…' : orderStats.active}</div>
-            <div className="stats-label">Active</div>
+            <div className="stats-label">{t('profile.active')}</div>
           </div>
           <div className="divider" />
           <div className="stats-col">
             <div className="stats-number green">{loading ? '…' : orderStats.completed}</div>
-            <div className="stats-label">Completed</div>
+            <div className="stats-label">{t('profile.completed')}</div>
           </div>
         </div>
 
         <div className="settings-section">
-          <div className="section-header">Settings</div>
+          <div className="section-header">{t('profile.settings')}</div>
           <div className="settings-list">
             {settingsOptions.map((option, idx) => {
               const Icon = option.icon;
