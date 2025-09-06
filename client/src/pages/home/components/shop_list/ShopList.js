@@ -6,6 +6,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../../config/firebase';
 import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
+import { useTranslation } from '../../../../i18n/i18n';
 
 // Local asset images to use as random placeholders
 const assetPlaceholders = [
@@ -65,6 +66,7 @@ const ShopList = ({ onShopSelect }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadStadiumIdAndFetchShops();
@@ -131,7 +133,7 @@ const ShopList = ({ onShopSelect }) => {
       }
     } catch (err) {
       console.error('❌ Error loading shops:', err);
-      setError('Failed to fetch restaurants');
+      setError(t('home.error_fetch_shops'));
       setShops([]);
     } finally {
       setLoading(false);
@@ -150,7 +152,7 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Shops</h2>
+          <h2 className="section-title">{t('home.shops')}</h2>
          
         </div>
         <div className="shop-shimmer">
@@ -174,13 +176,13 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Shops</h2>
+          <h2 className="section-title">{t('home.shops')}</h2>
           
         </div>
         <div className="error-container">
           <p className="error-text">{error}</p>
           <button className="retry-button" onClick={loadStadiumIdAndFetchShops}>
-            Try Again
+            {t('home.retry')}
           </button>
         </div>
       </div>
@@ -192,11 +194,11 @@ const ShopList = ({ onShopSelect }) => {
     return (
       <div className="shop-list">
         <div className="section-header">
-          <h2 className="section-title">Shops</h2>
+          <h2 className="section-title">{t('home.shops')}</h2>
          
         </div>
         <div className="empty-container">
-          <p className="empty-text">No shops available</p>
+          <p className="empty-text">{t('home.no_shops')}</p>
         </div>
       </div>
     );
@@ -214,7 +216,7 @@ const ShopList = ({ onShopSelect }) => {
   return (
     <div className="shop-list">
       <div className="section-header">
-        <h2 className="section-title">Shops</h2>
+        <h2 className="section-title">{t('home.shops')}</h2>
         
       </div>
       
@@ -254,7 +256,7 @@ const ShopList = ({ onShopSelect }) => {
                     <span key={index} className="food-tag">{item}</span>
                   ))}
                   {shop.items.length > 2 && (
-                    <span className="food-tag more">+{shop.items.length - 2} more</span>
+                    <span className="food-tag more">+{shop.items.length - 2} {t('home.more_suffix')}</span>
                   )}
                 </div>
               </div>

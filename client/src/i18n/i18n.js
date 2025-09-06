@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { settingsStorage } from '../utils/storage';
+import enOverrides from './locales/en.json';
+import heOverrides from './locales/he.json';
 
+// Built-in default translations (safe fallback)
 const translations = {
   en: {
     common: {
@@ -186,6 +189,24 @@ const translations = {
   },
 };
 
+// Deep merge util to allow JSON overrides without losing defaults
+function deepMerge(target, source) {
+  if (!source) return target;
+  const output = Array.isArray(target) ? [...target] : { ...target };
+  Object.keys(source).forEach((key) => {
+    const srcVal = source[key];
+    const tgtVal = output[key];
+    if (
+      srcVal && typeof srcVal === 'object' && !Array.isArray(srcVal)
+    ) {
+      output[key] = deepMerge(tgtVal && typeof tgtVal === 'object' ? tgtVal : {}, srcVal);
+    } else {
+      output[key] = srcVal;
+    }
+  });
+  return output;
+}
+
 const I18nContext = createContext({
   lang: 'en',
   t: (key) => key,
@@ -203,7 +224,12 @@ export const I18nProvider = ({ children }) => {
     return () => window.removeEventListener('language-changed', handler);
   }, []);
 
-  const dict = translations[lang] || translations.en;
+  // Apply JSON overrides on top of defaults if present
+  const dict = useMemo(() => {
+    const base = translations[lang] || translations.en;
+    const override = lang === 'he' ? heOverrides : enOverrides; // defaults for unknown -> en
+    return deepMerge(base, override);
+  }, [lang]);
 
   const t = useMemo(() => {
     return (path) => {

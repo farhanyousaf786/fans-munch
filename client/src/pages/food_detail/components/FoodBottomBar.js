@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MdArrowForward } from 'react-icons/md';
 import './FoodBottomBar.css';
+import { useTranslation } from '../../../i18n/i18n';
 
 const FoodBottomBar = ({ onAddToCart }) => {
   const trackRef = useRef(null);
@@ -8,6 +9,7 @@ const FoodBottomBar = ({ onAddToCart }) => {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [trackMetrics, setTrackMetrics] = useState({ max: 0, knob: 44, padding: 16 });
+  const { t } = useTranslation();
 
   // Measure sizes after mount and on resize
   useEffect(() => {
@@ -99,7 +101,7 @@ const FoodBottomBar = ({ onAddToCart }) => {
         className="pill-cta swipe-track"
         role="button"
         tabIndex={0}
-        aria-label="Swipe to add to cart"
+        aria-label={t('food.swipe_add_to_cart')}
         onKeyDown={onKeyDown}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
@@ -111,7 +113,7 @@ const FoodBottomBar = ({ onAddToCart }) => {
         >
           <MdArrowForward />
         </span>
-        <span className="pill-text">Swipe to add to Cart</span>
+        <span className="pill-text">{t('food.swipe_add_to_cart')}</span>
       </div>
     </div>
   );

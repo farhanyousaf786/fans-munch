@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { ThemeProvider } from './context/ThemeContext';
-import { seatStorage } from './utils/storage';
+import { I18nProvider } from './i18n/i18n';
+import { seatStorage, userStorage } from './utils/storage';
 
 // Import all screens
 import SplashScreen from './pages/splash/SplashScreen';
@@ -57,12 +58,13 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <Router>
-        <div className="App">
+    <I18nProvider>
+      <ThemeProvider>
+        <Router>
+          <div className="App">
           <Routes>
-            {/* Authentication - First screen */}
-            <Route path="/" element={<AuthScreen />} />
+            {/* Authentication - redirect to Home if already logged in */}
+            <Route path="/" element={userStorage.isLoggedIn() ? <Navigate to="/home" replace /> : <AuthScreen />} />
             
             {/* Splash Screen - After auth */}
             <Route path="/splash" element={<SplashScreen />} />
@@ -102,16 +104,17 @@ function App() {
             
             {/* Redirect any unknown routes to splash */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          
-          {/* Bottom Navigation - Shows on main app screens */}
-          <BottomNavigation />
-          
-          {/* Toast Container - Shows cart notifications */}
-          <ToastContainer />
-        </div>
-      </Router>
-    </ThemeProvider>
+            </Routes>
+            
+            {/* Bottom Navigation - Shows on main app screens */}
+            <BottomNavigation />
+            
+            {/* Toast Container - Shows cart notifications */}
+            <ToastContainer />
+          </div>
+        </Router>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }
 

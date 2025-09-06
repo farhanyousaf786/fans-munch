@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { MdSearch } from 'react-icons/md';
 import './SearchFilterWidget.css';
+import { useTranslation } from '../../../../i18n/i18n';
 
 const SearchFilterWidget = ({ onChanged }) => {
   const [searchValue, setSearchValue] = useState('');
+  const { t } = useTranslation();
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -21,7 +23,7 @@ const SearchFilterWidget = ({ onChanged }) => {
           <input
             type="text"
             className="search-input"
-            placeholder="Search for food items..."
+            placeholder={t('home.search_placeholder')}
             value={searchValue}
             onChange={handleSearchChange}
           />

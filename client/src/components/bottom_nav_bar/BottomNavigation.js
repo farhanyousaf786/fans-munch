@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   MdHome, 
@@ -11,10 +11,12 @@ import { cartUtils } from '../../utils/cartUtils';
 import orderRepository from '../../repositories/orderRepository';
 import { OrderStatus } from '../../models/Order';
 import './BottomNavigation.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const BottomNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [cartItemCount, setCartItemCount] = useState(0);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
 
@@ -83,36 +85,36 @@ const BottomNavigation = () => {
     }
   };
 
-  const navItems = [
+  const navItems = useMemo(() => ([
     {
       id: 'home',
       icon: MdHome,
       activeIcon: MdHome,
-      label: 'Home',
+      label: t('nav.home'),
       path: '/home'
     },
     {
       id: 'orders',
       icon: MdReceipt,
       activeIcon: MdReceipt,
-      label: 'Orders',
+      label: t('nav.orders'),
       path: '/orders'
     },
     {
       id: 'cart',
       icon: MdShoppingCart,
       activeIcon: MdShoppingCart,
-      label: 'Cart',
+      label: t('nav.cart'),
       path: '/cart'
     },
     {
       id: 'profile',
       icon: MdPerson,
       activeIcon: MdPerson,
-      label: 'Profile',
+      label: t('nav.profile'),
       path: '/profile'
     }
-  ];
+  ]), [t]);
 
   const handleNavigation = (path) => {
     navigate(path);

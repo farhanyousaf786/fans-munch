@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
+import { useTranslation } from '../../../i18n/i18n';
 
 const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
   const galleryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const { t } = useTranslation();
 
   const openGallery = () => {
     if (galleryInputRef.current) galleryInputRef.current.click();
@@ -15,8 +17,8 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
 
   return (
     <div className="ticket-upload-section">
-      <h2 className="section-title">Ticket Image (Optional)</h2>
-      <p className="section-description">Upload your ticket image to auto-fill seat information</p>
+      <h2 className="section-title">{t('order.ticket_image_title')}</h2>
+      <p className="section-description">{t('order.ticket_image_desc')}</p>
 
       {/* Hidden inputs */}
       <input
@@ -36,18 +38,18 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
       />
 
       <div className="upload-options">
-        <button type="button" className="upload-option" onClick={openGallery} aria-label="Choose From Gallery">
+        <button type="button" className="upload-option" onClick={openGallery} aria-label={t('order.choose_from_gallery')}>
           <img
             src={process.env.PUBLIC_URL + '/assets/images/choose-from-gallery.png'}
-            alt="Choose From Gallery"
+            alt={t('order.choose_from_gallery')}
             className="upload-icon-img"
           />
         </button>
 
-        <button type="button" className="upload-option" onClick={openCamera} aria-label="Front Camera">
+        <button type="button" className="upload-option" onClick={openCamera} aria-label={t('order.front_camera')}>
           <img
             src={process.env.PUBLIC_URL + '/assets/images/camera.png'}
-            alt="Front Camera"
+            alt={t('order.front_camera')}
             className="upload-icon-img"
           />
         </button>
@@ -55,13 +57,13 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
 
       <div className="upload-or-separator">
         <span className="line" />
-        <span className="or">OR</span>
+        <span className="or">{t('order.or')}</span>
         <span className="line" />
       </div>
 
       {ticketImage && (
         <div className="uploaded-image">
-          <img src={ticketImage} alt="Ticket" className="ticket-preview" />
+          <img src={ticketImage} alt={t('order.ticket_alt') } className="ticket-preview" />
         </div>
       )}
     </div>

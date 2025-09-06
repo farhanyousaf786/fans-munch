@@ -1,8 +1,10 @@
 import React from 'react';
 import { MdStar, MdAccessTime } from 'react-icons/md';
 import './FoodInfo.css';
+import { useTranslation } from '../../../i18n/i18n';
 
 const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
+  const { t } = useTranslation();
   // Check if this is an offer item with discount
   const hasDiscount = food?.discountPercentage && food.discountPercentage > 0;
   const discountedPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food?.price;
@@ -24,7 +26,7 @@ const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
             <>
               <div className="discounted-price">${discountedPrice?.toFixed(2)}</div>
               <div className="original-price">${food?.price?.toFixed(2)}</div>
-              <div className="discount-badge">{Math.round(food.discountPercentage)}% OFF</div>
+              <div className="discount-badge">{Math.round(food.discountPercentage)}% {t('food.off')}</div>
             </>
           ) : (
             <div className="food-price">${food?.price?.toFixed(2)}</div>
@@ -32,9 +34,9 @@ const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
         </div>
         <div className="food-prep-time">
           <MdAccessTime className="time-icon" />
-          <span>{food?.preparationTime || 15} min</span>
+          <span>{food?.preparationTime || 15} {t('food.min')}</span>
         </div>
-        <div className="order-count">{orderCount} orders</div>
+        <div className="order-count">{orderCount} {t('food.orders')}</div>
       </div>
     </div>
   );

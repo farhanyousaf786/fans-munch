@@ -1,0 +1,96 @@
+{
+  "home": {
+    "select_stadium": "Stadium Selection",
+    "greeting": "Good Morning,",
+    "search_placeholder": "Search for food items...",
+    "categories": "Categories",
+    "cat_all": "All",
+    "cat_pizza": "Pizza",
+    "cat_burgers": "Burgers",
+    "cat_drinks": "Drinks",
+    "cat_desserts": "Desserts",
+    "cat_coffee": "Coffee",
+    "cat_asian": "Asian",
+    "cat_bakery": "Bakery",
+    "popular_menu": "Popular Menu",
+    "see_all": "See All",
+    "search_results": "Search Results",
+    "no_results_for": "No results found for",
+    "no_menu": "No menu items available",
+    "shops": "Shops",
+    "error_fetch_shops": "Failed to fetch restaurants",
+    "retry": "Try Again",
+    "no_shops": "No shops available",
+    "more_suffix": "more"
+  }
+  ,
+  "cart": {
+    "add_to_cart": "Add to Cart",
+    "empty": "Cart is empty",
+    "subtotal": "Subtotal",
+    "delivery": "Handling & Delivery",
+    "tip": "Tip",
+    "discount": "Discount",
+    "total": "Total",
+    "place_order": "Place Order"
+  }
+  ,
+  "food": {
+    "description": "Description",
+    "no_description": "No description available",
+    "off": "OFF",
+    "min": "min",
+    "orders": "orders",
+    "swipe_add_to_cart": "Swipe to add to Cart",
+    "not_found": "Food not found",
+    "try_again": "Try Again"
+  }
+  ,
+  "tip": {
+    "title": "Add Tip",
+    "supports_runner": "Your entire tip supports the runner.",
+    "order_total_is": "Order total is",
+    "illustration_alt": "Add a tip",
+    "tip_amount": "Tip Amount",
+    "custom_tip": "Custom Tip",
+    "custom_tip_label": "Custom tip (%)",
+    "custom_tip_placeholder": "Enter custom percentage",
+    "add_tip": "Add Tip",
+    "skip": "Skip"
+  }
+  ,
+  "order": {
+    "confirm_title": "Confirm Order",
+    "ticket_image_title": "Ticket Image (Optional)",
+    "ticket_image_desc": "Upload your ticket image to auto-fill seat information",
+    "choose_from_gallery": "Choose From Gallery",
+    "front_camera": "Front Camera",
+    "or": "OR",
+    "ticket_alt": "Ticket",
+
+    "seat_info_title": "Seat Information",
+    "seat_number": "Seat Number",
+    "seat_number_ph": "Enter seat number",
+    "stand_number": "Stand Number",
+    "stand_number_ph": "Enter stand",
+    "row_number": "Row Number",
+    "row_number_ph": "Enter row number",
+    "entrance": "Entrance",
+    "entrance_ph": "Enter entrance",
+    "area": "Area",
+    "area_ph": "Enter area",
+    "additional_details": "Additional Details",
+    "additional_details_ph": "Add text",
+
+    "summary_title": "Order Summary",
+    "subtotal": "Subtotal",
+    "tip": "Tip",
+    "total": "Total",
+
+    "processing": "Processing...",
+    "place_order_with_total": "Place Order - ${total}",
+    "place_order": "Place Order",
+    "card_payment_title": "Card Payment",
+    "confirm_card_payment": "Confirm Card Payment"
+  }
+}

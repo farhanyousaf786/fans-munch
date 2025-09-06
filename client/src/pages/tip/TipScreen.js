@@ -7,9 +7,11 @@ import TipCustomInput from './components/TipCustomInput';
 import TipSummary from './components/TipSummary';
 import TipActions from './components/TipActions';
 import './TipScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const TipScreen = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedTipPercentage, setSelectedTipPercentage] = useState(10); // Default to 10%
   const [tipAmount, setTipAmount] = useState(0);
   const [orderTotal, setOrderTotal] = useState(0);
@@ -92,15 +94,15 @@ const TipScreen = () => {
         <TipHeader onBack={handleBack} />
 
         {/* Title */}
-        <h1 className="tip-title">Add Tip</h1>
+        <h1 className="tip-title">{t('tip.title')}</h1>
         <p className="tip-description">
-          Your entire tip supports the runner. Order total is{' '}
+          {t('tip.supports_runner')} {t('tip.order_total_is')}{' '}
           <span className="order-total">${orderTotal.toFixed(2)}</span>.
         </p>
 
         {/* Illustration */}
         <div className="delivery-illustration">
-          <img src={process.env.PUBLIC_URL + '/assets/images/tipimage.png'} alt="Add a tip" className="tip-illustration-img" />
+          <img src={process.env.PUBLIC_URL + '/assets/images/tipimage.png'} alt={t('tip.illustration_alt')} className="tip-illustration-img" />
         </div>
 
         {/* Tip amount summary */}

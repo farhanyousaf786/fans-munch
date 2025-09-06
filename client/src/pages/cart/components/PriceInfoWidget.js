@@ -1,5 +1,6 @@
 import React from 'react';
 import './PriceInfoWidget.css';
+import { useTranslation } from '../../../i18n/i18n';
 
 const PriceInfoWidget = ({ 
   cartItems, 
@@ -10,6 +11,7 @@ const PriceInfoWidget = ({
   calculateTotal, 
   onPlaceOrder 
 }) => {
+  const { t } = useTranslation();
   if (cartItems.length === 0) {
     return null;
   }
@@ -19,29 +21,29 @@ const PriceInfoWidget = ({
       <div className="price-info-content">
         {/* Price breakdown */}
         <div className="price-row">
-          <span>Subtotal</span>
+          <span>{t('cart.subtotal')}</span>
           <span>${calculateSubtotal().toFixed(2)}</span>
         </div>
         <div className="price-row">
-          <span>Handling & Delivery</span>
+          <span>{t('cart.delivery')}</span>
           <span>${calculateDeliveryFee().toFixed(2)}</span>
         </div>
         <div className="price-row">
-          <span>Tip</span>
+          <span>{t('cart.tip')}</span>
           <span>${calculateTip().toFixed(2)}</span>
         </div>
         <div className="price-row">
-          <span>Discount</span>
+          <span>{t('cart.discount')}</span>
           <span>-${calculateDiscount().toFixed(2)}</span>
         </div>
         <div className="price-row total">
-          <span>Total</span>
+          <span>{t('cart.total')}</span>
           <span>${calculateTotal().toFixed(2)}</span>
         </div>
         
         {/* Place Order Button */}
         <button className="place-order-button" onClick={onPlaceOrder}>
-          Place Order
+          {t('cart.place_order')}
         </button>
       </div>
     </div>

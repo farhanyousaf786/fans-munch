@@ -10,64 +10,66 @@ import {
   MdRamenDining
 } from 'react-icons/md';
 import './CategoryList.css';
+import { useTranslation } from '../../../../i18n/i18n';
 
 const CategoryList = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const { t } = useTranslation();
 
   // Mock categories data - in real app, this would come from Firebase/API
   const categories = [
     {
       id: 'all',
-      name: 'All',
+      name: t('home.cat_all'),
       icon: MdRestaurant,
       color: '#3D70FF',
       count: 120
     },
     {
       id: 'pizza',
-      name: 'Pizza',
+      name: t('home.cat_pizza'),
       icon: MdLocalPizza,
       color: '#FF6B6B',
       count: 25
     },
     {
       id: 'burgers',
-      name: 'Burgers',
+      name: t('home.cat_burgers'),
       icon: MdFastfood,
       color: '#4ECDC4',
       count: 18
     },
     {
       id: 'drinks',
-      name: 'Drinks',
+      name: t('home.cat_drinks'),
       icon: MdLocalDrink,
       color: '#45B7D1',
       count: 32
     },
     {
       id: 'desserts',
-      name: 'Desserts',
+      name: t('home.cat_desserts'),
       icon: MdIcecream,
       color: '#F7B731',
       count: 15
     },
     {
       id: 'coffee',
-      name: 'Coffee',
+      name: t('home.cat_coffee'),
       icon: MdLocalCafe,
       color: '#8B4513',
       count: 12
     },
     {
       id: 'asian',
-      name: 'Asian',
+      name: t('home.cat_asian'),
       icon: MdRamenDining,
       color: '#E74C3C',
       count: 20
     },
     {
       id: 'bakery',
-      name: 'Bakery',
+      name: t('home.cat_bakery'),
       icon: MdCake,
       color: '#9B59B6',
       count: 8
@@ -83,7 +85,7 @@ const CategoryList = () => {
   return (
     <div className="category-list">
       <div className="section-header">
-        <h2 className="section-title">Categories</h2>
+        <h2 className="section-title">{t('home.categories')}</h2>
       </div>
       
       <div className="categories-container">

@@ -40,8 +40,9 @@ const AuthScreen = () => {
         // Sign in user
         const user = await userRepository.signInUser(formData.email, formData.password);
         
-        // Save user data to localStorage
+        // Save user data and token to localStorage
         userStorage.setUserData(user.toMap());
+        userStorage.setUserToken(`token_${user.id || Date.now()}`);
         
         console.log('✅ Sign in completed, navigating to onboarding');
         
@@ -69,8 +70,9 @@ const AuthScreen = () => {
         const result = await userRepository.registerUser(formData);
         
         if (result.success) {
-          // Save user data to localStorage
+          // Save user data and token to localStorage
           userStorage.setUserData(result.user.toMap());
+          userStorage.setUserToken(`token_${result.user.id || Date.now()}`);
           
           console.log('✅ Registration completed, navigating to onboarding');
           

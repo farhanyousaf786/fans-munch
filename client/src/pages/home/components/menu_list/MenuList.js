@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccessTime } from 'react-icons/md';
 import './MenuList.css';
+import { useTranslation } from '../../../../i18n/i18n';
 
 // Local asset images to use as random placeholders for food items
 const assetPlaceholders = [
@@ -23,6 +24,7 @@ function getPlaceholderByKey(key) {
 
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -35,9 +37,9 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   // Get section title based on search state
   const getSectionTitle = () => {
     if (searchTerm.trim()) {
-      return `Search Results (${menuItems.length})`;
+      return `${t('home.search_results')} (${menuItems.length})`;
     }
-    return 'Popular Menu';
+    return t('home.popular_menu');
   };
 
   // Loading state
@@ -67,8 +69,8 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   // Empty state
   if (!loading && menuItems.length === 0) {
     const emptyMessage = searchTerm.trim() 
-      ? `No results found for "${searchTerm}"`
-      : 'No menu items available';
+      ? `${t('home.no_results_for')} "${searchTerm}"`
+      : t('home.no_menu');
     
     return (
       <div className="menu-list">
@@ -88,7 +90,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
         <h2 className="section-title">{getSectionTitle()}</h2>
         {!searchTerm && (
           <button className="see-all-button" onClick={() => navigate('/menu')}>
-            <span>See All</span>
+            <span>{t('home.see_all')}</span>
           </button>
         )}
         {error && (

@@ -4,11 +4,13 @@ import { MdShoppingCart, MdKeyboardArrowRight } from 'react-icons/md';
 import { stadiumStorage } from '../../../../utils/storage';
 import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
+import { useTranslation } from '../../../../i18n/i18n';
 
 const TopSection = (props) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStadium, setSelectedStadium] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Load selected stadium using storage utility
@@ -50,7 +52,7 @@ const TopSection = (props) => {
           <div className="stadium-info">
             <div className="stadium-name-container">
               <span className="stadium-name">
-                {selectedStadium ? selectedStadium.name : 'Stadium Selection'}
+                {selectedStadium ? selectedStadium.name : t('home.select_stadium')}
               </span>
               <MdKeyboardArrowRight size={20} className="dropdown-arrow" />
             </div>
@@ -63,7 +65,7 @@ const TopSection = (props) => {
 
       {/* Welcome Message */}
       <div className="welcome-message">
-        <h1>Good Morning,</h1>
+        <h1>{t('home.greeting')}</h1>
         <h2>Ibn e Yousaf!</h2>
       </div>
 

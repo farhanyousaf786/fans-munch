@@ -2,9 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdArrowBack } from 'react-icons/md';
 import './CartHeader.css';
+import { useTranslation } from '../../../i18n/i18n';
 
 const CartHeader = ({ isFromHome = false }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Use a public asset to avoid import issues and ensure deployment works
   const bgUrl = process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png';
@@ -17,7 +19,7 @@ const CartHeader = ({ isFromHome = false }) => {
         </button>
       )}
       <div className="cart-hero-overlay" />
-      <h1 className="cart-hero-title">Add to Cart</h1>
+      <h1 className="cart-hero-title">{t('cart.add_to_cart')}</h1>
     </div>
   );
 };

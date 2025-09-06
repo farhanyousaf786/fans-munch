@@ -1,13 +1,15 @@
 import React from 'react';
+import { useTranslation } from '../../../i18n/i18n';
 
 const TipActions = ({ onAddTip, onSkipTip, tipAmount = 0 }) => {
+  const { t } = useTranslation();
   return (
     <div className="tip-actions">
       <button className="add-tip-button" onClick={onAddTip}>
-        Add Tip (${tipAmount.toFixed(2)})
+        {t('tip.add_tip')} (${tipAmount.toFixed(2)})
       </button>
       <button className="skip-tip-button" onClick={onSkipTip}>
-        Skip
+        {t('tip.skip')}
       </button>
     </div>
   );

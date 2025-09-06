@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { showToast } from '../../../components/toast/ToastContainer';
+import { useTranslation } from '../../../i18n/i18n';
 
 // Lightweight Airwallex card UI demo. It:
 // - Loads the Airwallex Elements script
@@ -17,6 +18,7 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const { t } = useTranslation();
 
   // Load Airwallex script
   useEffect(() => {
@@ -122,7 +124,7 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
 
   return (
     <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>Card Payment (Airwallex)</div>
+      <div style={{ fontWeight: 600, marginBottom: 8 }}>{t('order.card_payment_title')}</div>
       {inMock && (
         <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>
           Running in <strong>mock</strong> mode on the server. Card field is hidden. Install @airwallex/node-sdk on
@@ -132,7 +134,7 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
       <div ref={containerRef} id="awx-card-container" style={{ minHeight: 60 }} />
       {!inMock && showConfirmButton && (
         <button onClick={onConfirm} style={{ marginTop: 12 }} disabled={!ready}>
-          Confirm Card Payment
+          {t('order.confirm_card_payment')}
         </button>
       )}
     </div>

@@ -1,0 +1,96 @@
+{
+  "home": {
+    "select_stadium": "בחירת אצטדיון",
+    "greeting": "בוקר טוב,",
+    "search_placeholder": "חפשו פריטי מזון...",
+    "categories": "קטגוריות",
+    "cat_all": "הכול",
+    "cat_pizza": "פיצה",
+    "cat_burgers": "המבורגרים",
+    "cat_drinks": "משקאות",
+    "cat_desserts": "קינוחים",
+    "cat_coffee": "קפה",
+    "cat_asian": "אסייתי",
+    "cat_bakery": "מאפייה",
+    "popular_menu": "תפריט פופולרי",
+    "see_all": "הצג הכל",
+    "search_results": "תוצאות חיפוש",
+    "no_results_for": "לא נמצאו תוצאות עבור",
+    "no_menu": "אין פריטי תפריט זמינים",
+    "shops": "חנויות",
+    "error_fetch_shops": "אירע שגיאה בטעינת מסעדות",
+    "retry": "נסה שוב",
+    "no_shops": "אין חנויות זמינות",
+    "more_suffix": "עוד"
+  }
+  ,
+  "cart": {
+    "add_to_cart": "הוסף לעגלה",
+    "empty": "העגלה ריקה",
+    "subtotal": "סה\"כ ביניים",
+    "delivery": "טיפול ומשלוח",
+    "tip": "טיפ",
+    "discount": "הנחה",
+    "total": "סה\"כ",
+    "place_order": "בצע הזמנה"
+  }
+  ,
+  "food": {
+    "description": "תיאור",
+    "no_description": "אין תאור זמין",
+    "off": "הנחה",
+    "min": "דק׳",
+    "orders": "הזמנות",
+    "swipe_add_to_cart": "החלק להוספה לעגלה",
+    "not_found": "המנה לא נמצאה",
+    "try_again": "נסה שוב"
+  }
+  ,
+  "tip": {
+    "title": "הוסף טיפ",
+    "supports_runner": "כל הטיפ שלך תומך בשליח.",
+    "order_total_is": "סכום ההזמנה הוא",
+    "illustration_alt": "הוסף טיפ",
+    "tip_amount": "סכום הטיפ",
+    "custom_tip": "טיפ מותאם",
+    "custom_tip_label": "טיפ מותאם (%)",
+    "custom_tip_placeholder": "הכנס אחוז מותאם",
+    "add_tip": "הוסף טיפ",
+    "skip": "דלג"
+  }
+  ,
+  "order": {
+    "confirm_title": "אישור הזמנה",
+    "ticket_image_title": "תמונת כרטיס (אופציונלי)",
+    "ticket_image_desc": "העלו תמונת כרטיס כדי למלא אוטומטית את פרטי המושב",
+    "choose_from_gallery": "בחירה מהגלריה",
+    "front_camera": "מצלמה קדמית",
+    "or": "או",
+    "ticket_alt": "כרטיס",
+
+    "seat_info_title": "פרטי מושב",
+    "seat_number": "מספר מושב",
+    "seat_number_ph": "הכניסו מספר מושב",
+    "stand_number": "מספר יציע",
+    "stand_number_ph": "הכניסו יציע",
+    "row_number": "מספר שורה",
+    "row_number_ph": "הכניסו מספר שורה",
+    "entrance": "כניסה",
+    "entrance_ph": "הכניסו כניסה",
+    "area": "אזור",
+    "area_ph": "הכניסו אזור",
+    "additional_details": "פרטים נוספים",
+    "additional_details_ph": "הוסיפו טקסט",
+
+    "summary_title": "סיכום הזמנה",
+    "subtotal": "סכום ביניים",
+    "tip": "טיפ",
+    "total": "סה\"כ",
+
+    "processing": "מעבד...",
+    "place_order_with_total": "בצע הזמנה - ${total}",
+    "place_order": "בצע הזמנה",
+    "card_payment_title": "תשלום בכרטיס",
+    "confirm_card_payment": "אשר תשלום בכרטיס"
+  }
+}
