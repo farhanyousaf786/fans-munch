@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
 import { userStorage, stadiumStorage, seatStorage } from '../../utils/storage';
@@ -11,10 +11,13 @@ import TicketUpload from './components/TicketUpload';
 import PaymentMethods from './components/PaymentMethods';
 import OrderSummary from './components/OrderSummary';
 import PlaceOrderBar from './components/PlaceOrderBar';
+import PaymentForm from './components/PaymentForm';
 import './OrderConfirmScreen.css';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
+  const paymentRef = useRef(null);
+  const [awxIntent, setAwxIntent] = useState(null); // { id, clientSecret, mode }
   
   // Form state
   const [formData, setFormData] = useState({
@@ -80,6 +83,42 @@ const OrderConfirmScreen = () => {
     }
   }, []);
 
+  // Pre-create payment intent on load so card UI can render immediately
+  useEffect(() => {
+    let cancelled = false;
+    const createIntentIfNeeded = async () => {
+      try {
+        // Do not recreate if we already have a valid intent in state
+        if (awxIntent?.id && awxIntent?.clientSecret) return;
+
+        const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
+          ? process.env.REACT_APP_API_BASE.trim()
+          : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+
+        const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: finalTotal, currency: 'USD' })
+        });
+        const text = await res.text();
+        let data; try { data = JSON.parse(text); } catch (_) {}
+        if (!res.ok) {
+          console.warn('[OrderConfirm] Pre-create intent failed:', text);
+          return;
+        }
+        if (!cancelled) {
+          setAwxIntent({ id: data?.intentId, clientSecret: data?.clientSecret, mode: data?.mode });
+        }
+      } catch (e) {
+        console.warn('[OrderConfirm] Pre-create intent error:', e?.message || e);
+      }
+    };
+
+    createIntentIfNeeded();
+    return () => { cancelled = true; };
+    // Recreate if total changes significantly (e.g., tip change)
+  }, [finalTotal]);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -129,23 +168,47 @@ const OrderConfirmScreen = () => {
     setLoading(true);
     
     try {
-      // Build base URL to call server correctly in dev and prod
-      const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
-        ? process.env.REACT_APP_API_BASE.trim()
-        : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+      // Ensure we have an intent (pre-created in useEffect; if missing, create now)
+      if (!awxIntent?.id || !awxIntent?.clientSecret) {
+        const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
+          ? process.env.REACT_APP_API_BASE.trim()
+          : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+        const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: finalTotal, currency: 'USD' })
+        });
+        const text = await res.text();
+        let data; try { data = JSON.parse(text); } catch (_) {}
+        if (!res.ok) {
+          throw new Error((data && (data.error || data.message)) || text || 'Create intent failed');
+        }
+        setAwxIntent({ id: data?.intentId, clientSecret: data?.clientSecret, mode: data?.mode });
+        // Provide immediate feedback once
+        const startMsg = data?.mode === 'mock'
+          ? '✅ Payment initialized (mock). Processing your order...'
+          : '✅ Payment intent ready. Processing your order...';
+        showToast(startMsg, 'success', 2000);
+      }
 
-      // 1) Call backend test endpoint to simulate payment success
-      const res = await fetch(`${API_BASE}/api/airwallex/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: finalTotal, currency: 'USD' })
-      });
+      // If real SDK mode, wait for card element to be ready, then confirm before saving
+      if (awxIntent?.mode === 'sdk' && paymentRef.current?.confirm) {
+        let attempts = 0;
+        const maxAttempts = 15; // ~3s @ 200ms
+        while (!(paymentRef.current.isReady && paymentRef.current.isReady()) && attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 200));
+          attempts += 1;
+        }
 
-      // Accept JSON or plain text (proxy errors)
-      const text = await res.text();
-      let data; try { data = JSON.parse(text); } catch (_) {}
-      if (!res.ok) {
-        throw new Error((data && data.message) || text || 'Server test failed');
+        if (!(paymentRef.current.isReady && paymentRef.current.isReady())) {
+          throw new Error('Card element not ready');
+        }
+
+        const confirmRes = await paymentRef.current.confirm();
+        console.log('[OrderConfirm] confirm() result:', confirmRes);
+        if (!confirmRes?.ok) {
+          throw new Error(confirmRes?.error?.message || 'Card confirmation failed');
+        }
       }
 
       // 2) Save order in Firebase
@@ -195,7 +258,7 @@ const OrderConfirmScreen = () => {
       cartUtils.clearCart();
       localStorage.removeItem('selectedTip');
 
-      const msg = (data && data.message) || 'Order placed successfully!';
+      const msg = 'Order placed successfully!';
       alert(`${msg} Order ID: ${createdOrder.orderId}`);
       showToast(`Order placed successfully! Order ID: ${createdOrder.orderId}`, 'success', 4000);
 
@@ -231,6 +294,15 @@ const OrderConfirmScreen = () => {
 
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} tipData={tipData} finalTotal={finalTotal} />
+
+        {/* Card UI (Airwallex) */}
+        <PaymentForm
+          ref={paymentRef}
+          intentId={awxIntent?.id}
+          clientSecret={awxIntent?.clientSecret}
+          mode={awxIntent?.mode}
+          showConfirmButton={false}
+        />
 
         {/* Place Order Button */}
         <PlaceOrderBar loading={loading} finalTotal={finalTotal} onPlaceOrder={handlePayment} />
