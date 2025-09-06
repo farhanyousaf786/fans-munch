@@ -259,8 +259,7 @@ const OrderConfirmScreen = () => {
       localStorage.removeItem('selectedTip');
 
       const msg = 'Order placed successfully!';
-      alert(`${msg} Order ID: ${createdOrder.orderId}`);
-      showToast(`Order placed successfully! Order ID: ${createdOrder.orderId}`, 'success', 4000);
+      showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
 
       // Navigate after a short delay
       setTimeout(() => navigate('/home', { replace: true }), 1200);
@@ -289,8 +288,6 @@ const OrderConfirmScreen = () => {
         {/* Seat Information Form */}
         <SeatForm formData={formData} errors={errors} onChange={handleInputChange} />
 
-        {/* Payment Methods */}
-        <PaymentMethods selected={selectedPaymentMethod} onSelect={setSelectedPaymentMethod} />
 
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} tipData={tipData} finalTotal={finalTotal} />

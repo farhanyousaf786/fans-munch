@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import { showToast } from '../../../components/toast/ToastContainer';
 
 // Lightweight Airwallex card UI demo. It:
 // - Loads the Airwallex Elements script
@@ -11,7 +12,8 @@ import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } f
 // Props:
 // - intentId, clientSecret, mode ('sdk' | 'mock') provided by parent after creating intent
 // - showConfirmButton: optionally render a local confirm button (default false since parent controls Place Order)
-const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false }, ref) => {
+// - onConfirmed: optional callback invoked after successful confirmation
+const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed }, ref) => {
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -19,7 +21,17 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
   // Load Airwallex script
   useEffect(() => {
     const scriptId = 'airwallex-elements-bundle';
-    if (document.getElementById(scriptId)) return; // already there
+    const existing = document.getElementById(scriptId);
+    if (existing) {
+      // Script already injected (common when user navigates back). If global is ready, mark as ready.
+      if (window?.Airwallex) {
+        try {
+          window.Airwallex.init({ env: 'demo' });
+        } catch (_) {}
+        setReady(true);
+      }
+      return;
+    }
 
     const script = document.createElement('script');
     script.id = scriptId;
@@ -71,7 +83,7 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
         return { ok: true, status: 'MOCK', intentId };
       }
       if (!window?.Airwallex || !cardRef.current || !intentId || !clientSecret) {
-        alert('Card element not ready (or running in mock mode).');
+        showToast('Card element not ready (or running in mock mode).', 'error', 3000);
         return;
       }
       const res = await window.Airwallex.confirmPaymentIntent({
@@ -81,18 +93,19 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
       });
       console.log('[PaymentForm] confirm result:', res);
       if (res?.status === 'SUCCEEDED') {
-        alert('✅ Payment successful!');
+        showToast('Payment successful!', 'success', 2500);
+        try { onConfirmed && onConfirmed({ intentId, status: 'SUCCEEDED' }); } catch (_) {}
         return { ok: true, status: 'SUCCEEDED', intentId };
       } else if (res?.status === 'REQUIRES_ACTION') {
-        alert('Action required (3DS). Follow the instructions.');
+        showToast('Action required (3DS). Follow the instructions.', 'info', 3500);
         return { ok: false, status: 'REQUIRES_ACTION', intentId, error: res?.error };
       } else {
-        alert('❌ Payment failed: ' + (res?.error?.message || 'Unknown'));
+        showToast('Payment failed: ' + (res?.error?.message || 'Unknown'), 'error', 4000);
         return { ok: false, status: res?.status || 'FAILED', intentId, error: res?.error };
       }
     } catch (e) {
       console.error('[PaymentForm] confirm error:', e);
-      alert('❌ Confirm error: ' + (e?.message || 'Unknown'));
+      showToast('Confirm error: ' + (e?.message || 'Unknown'), 'error', 4000);
       return { ok: false, status: 'ERROR', error: e };
     }
   };
