@@ -23,17 +23,75 @@ if (typeof _fetch !== 'function') {
   }
 }
 
-const ENV = process.env.AIRWALLEX_ENV || 'demo';
+// Environment configuration - use AIRWALLEX_ENV to control everything
+const MODE = process.env.AIRWALLEX_ENV || 'demo'; // 'demo', 'production', or 'mock'
+
+const ENV = MODE === 'production' ? 'production' : 'demo';
+const USE_MOCK = MODE === 'mock';
+
+// Auto-configure credentials and URLs based on mode
+const getConfig = () => {
+  if (USE_MOCK) {
+    return { env: 'demo', baseUrl: null, clientId: null, apiKey: null };
+  }
+  
+  if (MODE === 'production') {
+    return {
+      env: 'production',
+      baseUrl: process.env.AIRWALLEX_BASE_URL || 'https://api.airwallex.com/api/v1',
+      clientId: process.env.AIRWALLEX_CLIENT_ID,
+      apiKey: process.env.AIRWALLEX_API_KEY
+    };
+  }
+  
+  // Demo mode
+  return {
+    env: 'demo',
+    baseUrl: process.env.AIRWALLEX_BASE_URL || 'https://api-demo.airwallex.com/api/v1',
+    clientId: process.env.AIRWALLEX_CLIENT_ID_DEMO || process.env.AIRWALLEX_CLIENT_ID,
+    apiKey: process.env.AIRWALLEX_API_KEY_DEMO || process.env.AIRWALLEX_API_KEY
+  };
+};
+
+const config = getConfig();
+
+// Debug logging to see what's actually loaded
+console.log('[DEBUG] Environment variables loaded:', {
+  AIRWALLEX_ENV: process.env.AIRWALLEX_ENV,
+  AIRWALLEX_CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID?.slice(0, 6) + '...',
+  AIRWALLEX_API_KEY: process.env.AIRWALLEX_API_KEY?.slice(0, 6) + '...',
+  AIRWALLEX_BASE_URL: process.env.AIRWALLEX_BASE_URL,
+  computed_MODE: MODE,
+  computed_config: {
+    env: config.env,
+    baseUrl: config.baseUrl,
+    hasClientId: !!config.clientId,
+    hasApiKey: !!config.apiKey
+  }
+});
 
 exports.createPaymentIntent = async (req, res) => {
   try {
-    const { amount = 100, currency = 'USD' } = req.body || {};
+    console.log('[Payments] MODE:', MODE, '| ENV:', config.env, '| MOCK:', USE_MOCK ? 'on' : 'off');
 
-    if (AirwallexCtor && process.env.AIRWALLEX_CLIENT_ID && process.env.AIRWALLEX_API_KEY) {
+    // Explicit mock mode: short-circuit for local testing
+    if (USE_MOCK) {
+      return res.json({
+        success: true,
+        intentId: 'mock_' + Date.now(),
+        clientSecret: 'mock_secret_' + Math.random().toString(36).slice(2),
+        mode: 'mock',
+      });
+    }
+    // Use the actual cart total from the request for real charges
+    const currency = (req.body && req.body.currency) || 'USD';
+    const amount = (req.body && req.body.amount) || 11.0; // Default to $11 if not provided
+
+    if (AirwallexCtor && config.clientId && config.apiKey) {
       const airwallex = new AirwallexCtor({
-        clientId: process.env.AIRWALLEX_CLIENT_ID,
-        apiKey: process.env.AIRWALLEX_API_KEY,
-        env: ENV,
+        clientId: config.clientId,
+        apiKey: config.apiKey,
+        env: config.env,
         apiVersion: '2025-02-14',
       });
 
@@ -59,9 +117,8 @@ exports.createPaymentIntent = async (req, res) => {
       }
     }
 
-    // REST fallback (demo env)
-    // Use v1 base to avoid 404s: https://api-demo.airwallex.com/api/v1
-    const base = process.env.AIRWALLEX_BASE_URL || 'https://api-demo.airwallex.com/api/v1';
+    // REST fallback
+    const base = config.baseUrl;
     if (typeof _fetch !== 'function') {
       throw new Error('fetch is not available on this Node version; please upgrade Node to >=18 or install node-fetch');
     }
@@ -71,8 +128,8 @@ exports.createPaymentIntent = async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-client-id': process.env.AIRWALLEX_CLIENT_ID || '',
-        'x-api-key': process.env.AIRWALLEX_API_KEY || '',
+        'x-client-id': config.clientId || '',
+        'x-api-key': config.apiKey || '',
       },
       body: JSON.stringify({}),
     });
@@ -121,6 +178,8 @@ exports.createPaymentIntent = async (req, res) => {
     });
   } catch (err) {
     console.error('[Payments] createPaymentIntent error:', err?.message || err);
+    console.error('[Payments] Full error details:', err);
+    // When not in explicit mock mode, surface the error so the client can fix credentials
     return res.status(500).json({ success: false, error: err?.message || 'Payment intent failed' });
   }
 };

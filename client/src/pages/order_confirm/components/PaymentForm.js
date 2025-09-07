@@ -18,7 +18,7 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
   const containerRef = useRef(null);
   const cardRef = useRef(null);
   const [ready, setReady] = useState(false);
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   // Load Airwallex script
   useEffect(() => {
@@ -28,7 +28,11 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
       // Script already injected (common when user navigates back). If global is ready, mark as ready.
       if (window?.Airwallex) {
         try {
-          window.Airwallex.init({ env: 'demo' });
+          window.Airwallex.init({
+            env: process.env.REACT_APP_AIRWALLEX_ENV || 'demo',
+            origin: window.location.origin,
+            locale: lang === 'he' ? 'he' : 'en',
+          });
         } catch (_) {}
         setReady(true);
       }
@@ -43,7 +47,11 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
       // Initialize
       try {
         if (window?.Airwallex) {
-          window.Airwallex.init({ env: 'demo', origin: window.location.origin });
+          window.Airwallex.init({
+            env: process.env.REACT_APP_AIRWALLEX_ENV || 'demo',
+            origin: window.location.origin,
+            locale: lang === 'he' ? 'he' : 'en',
+          });
           setReady(true);
         } else {
           console.warn('[PaymentForm] Airwallex global not present');
@@ -58,18 +66,19 @@ const PaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButto
 
   // Mount/unmount card when ready and intent is provided by parent
   useEffect(() => {
-    try {
-      if (!ready) return;
-      if (!window?.Airwallex) return;
-      // In mock mode we do not mount card
-      if (mode !== 'sdk') return;
-      if (!intentId || !clientSecret) return;
+    if (!ready || !intentId || !clientSecret || (mode !== 'sdk' && mode !== 'mock')) {
+      return;
+    } 
+    if (!window?.Airwallex) return;
+    if (!intentId || !clientSecret) return;
 
-      // Clean re-mount
-      if (cardRef.current) {
-        try { cardRef.current.unmount?.(); } catch (_) {}
-        cardRef.current = null;
-      }
+    // Clean re-mount
+    if (cardRef.current) {
+      try { cardRef.current.unmount?.(); } catch (_) {}
+      cardRef.current = null;
+    }
+
+    try {
       const card = window.Airwallex.createElement('card', {});
       cardRef.current = card;
       card.mount(containerRef.current);

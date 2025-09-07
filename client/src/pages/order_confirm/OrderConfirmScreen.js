@@ -94,11 +94,12 @@ const OrderConfirmScreen = () => {
         const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
           ? process.env.REACT_APP_API_BASE.trim()
           : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+        const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
 
         const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, currency: 'USD' })
+          body: JSON.stringify({ amount: finalTotal, currency: CURRENCY })
         });
         const text = await res.text();
         let data; try { data = JSON.parse(text); } catch (_) {}
@@ -173,10 +174,11 @@ const OrderConfirmScreen = () => {
         const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
           ? process.env.REACT_APP_API_BASE.trim()
           : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+        const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
         const res = await fetch(`${API_BASE}/api/payments/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, currency: 'USD' })
+          body: JSON.stringify({ amount: finalTotal, currency: CURRENCY })
         });
         const text = await res.text();
         let data; try { data = JSON.parse(text); } catch (_) {}
