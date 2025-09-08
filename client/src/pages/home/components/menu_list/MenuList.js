@@ -24,7 +24,7 @@ function getPlaceholderByKey(key) {
 
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -131,7 +131,12 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
               
               {/* Food Details - matching Flutter app padding */}
               <div className="menu-content-horizontal">
-                <h3 className="menu-name-horizontal">{food.name}</h3>
+                {(() => {
+                  const displayName = (food.nameMap && (food.nameMap[lang] || food.nameMap.en)) || food.name;
+                  return (
+                    <h3 className="menu-name-horizontal">{displayName}</h3>
+                  );
+                })()}
                 <p className="menu-price-horizontal">{food.getFormattedPrice()}</p>
                 
                 {/* Preparation time */}

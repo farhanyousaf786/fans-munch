@@ -1,7 +1,8 @@
 /**
- * Order Model - Matches Flutter stadium_food Order model exactly
+ * Order Model - Matches Flutter stadium_food Order model
  * Used for saving orders to Firebase after successful Stripe payment
  */
+import { Timestamp, GeoPoint } from 'firebase/firestore';
 
 export const OrderStatus = {
   PENDING: 0,
@@ -120,21 +121,51 @@ export class Order {
     return {
       cart: this.cart.map(item => {
         // Store complete food data like Flutter does
+        // Ensure category is an ID and descriptionMap has content
+        const resolvedCategory = item.categoryId || item.category || '';
+        const resolvedDescriptionMap = (() => {
+          const dm = item.descriptionMap || {};
+          const hasContent = dm && Object.keys(dm).length > 0;
+          if (hasContent) return dm;
+          const desc = item.description || '';
+          return {
+            en: (item.nameMap && item.nameMap.en) ? (dm.en || desc) : desc,
+            he: (item.nameMap && item.nameMap.he) ? (dm.he || desc) : desc,
+          };
+        })();
+
+        const resolvedNameMap = (() => {
+          const nm = item.nameMap || {};
+          const hasContent = nm && Object.keys(nm).length > 0;
+          if (hasContent) return nm;
+          const base = item.name || '';
+          return {
+            en: nm.en || base,
+            he: nm.he || base,
+          };
+        })();
+
         const foodData = {
           id: item.id,
+          docId: item.docId || item.id,
           allergens: item.allergens || [],
-          category: item.category || 'Food',
+          category: resolvedCategory,
           createdAt: item.createdAt instanceof Date ? item.createdAt : (item.createdAt && item.createdAt.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date())),
           customization: item.customization || {},
           description: item.description || '',
+          descriptionMap: resolvedDescriptionMap,
           extras: item.extras || [],
           images: item.images || [],
           isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
           name: item.name || '',
+          nameMap: resolvedNameMap,
           nutritionalInfo: item.nutritionalInfo || {},
           preparationTime: item.preparationTime || 15,
           price: parseFloat((item.price || 0).toFixed(2)),
+           currency: item.currency || 'USD',
           sauces: item.sauces || [],
+          // Shops: include all shopIds exactly like menuItems schema; keep shopId for compatibility
+          shopIds: Array.isArray(item.shopIds) ? [...item.shopIds] : (item.shopId ? [item.shopId] : []),
           shopId: item.shopId || '',
           stadiumId: item.stadiumId || '',
           sizes: item.sizes || [],
@@ -162,12 +193,36 @@ export class Order {
       orderCode: this.orderCode,
       deliveryUserId: this.deliveryUserId,
       status: this.status,
-      createdAt: this.createdAt instanceof Date ? this.createdAt : (this.createdAt ? new Date(this.createdAt) : null),
-      updatedAt: this.updatedAt instanceof Date ? this.updatedAt : (this.updatedAt ? new Date(this.updatedAt) : new Date()),
-      deliveryTime: this.deliveryTime instanceof Date ? this.deliveryTime : (this.deliveryTime ? new Date(this.deliveryTime) : null),
+      // Use Firestore Timestamp to match Flutter
+      createdAt: this.createdAt
+        ? (this.createdAt instanceof Date ? Timestamp.fromDate(this.createdAt) : (typeof this.createdAt?.toDate === 'function' ? this.createdAt : Timestamp.fromDate(new Date(this.createdAt))))
+        : Timestamp.fromDate(new Date()),
+      updatedAt: this.updatedAt
+        ? (this.updatedAt instanceof Date ? Timestamp.fromDate(this.updatedAt) : (typeof this.updatedAt?.toDate === 'function' ? this.updatedAt : Timestamp.fromDate(new Date(this.updatedAt))))
+        : Timestamp.fromDate(new Date()),
+      deliveryTime: this.deliveryTime
+        ? (this.deliveryTime instanceof Date ? Timestamp.fromDate(this.deliveryTime) : (typeof this.deliveryTime?.toDate === 'function' ? this.deliveryTime : Timestamp.fromDate(new Date(this.deliveryTime))))
+        : null,
       seatInfo: this.seatInfo,
-      customerLocation: this.customerLocation,
-      location: this.location
+      // Ensure GeoPoint for locations if latitude/longitude provided
+      customerLocation: (() => {
+        const loc = this.customerLocation;
+        if (!loc) return null;
+        if (loc instanceof GeoPoint) return loc;
+        if (typeof loc?.lat === 'number' && typeof loc?.lng === 'number') return new GeoPoint(loc.lat, loc.lng);
+        if (typeof loc?.latitude === 'number' && typeof loc?.longitude === 'number') return new GeoPoint(loc.latitude, loc.longitude);
+        if (Array.isArray(loc) && loc.length === 2) return new GeoPoint(Number(loc[0]), Number(loc[1]));
+        return loc; // as-is
+      })(),
+      location: (() => {
+        const loc = this.location;
+        if (!loc) return null;
+        if (loc instanceof GeoPoint) return loc;
+        if (typeof loc?.lat === 'number' && typeof loc?.lng === 'number') return new GeoPoint(loc.lat, loc.lng);
+        if (typeof loc?.latitude === 'number' && typeof loc?.longitude === 'number') return new GeoPoint(loc.latitude, loc.longitude);
+        if (Array.isArray(loc) && loc.length === 2) return new GeoPoint(Number(loc[0]), Number(loc[1]));
+        return loc;
+      })()
     };
   }
 
@@ -186,7 +241,8 @@ export class Order {
     stadiumId,
     shopId,
     customerLocation = null,
-    location = null
+    location = null,
+    deliveryUserId = null
   }) {
     const total = subtotal + deliveryFee + tipAmount - discount;
     const orderId = Date.now().toString();
@@ -214,7 +270,7 @@ export class Order {
       shopId,
       orderId,
       orderCode,
-      deliveryUserId: null,
+      deliveryUserId: deliveryUserId,
       status: OrderStatus.PENDING,
       createdAt,
       updatedAt: new Date(),

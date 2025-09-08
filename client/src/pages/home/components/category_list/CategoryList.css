@@ -31,6 +31,7 @@
   scrollbar-width: none; /* Firefox: hide scrollbar */
   -ms-overflow-style: none; /* IE/Edge */
   margin-left: 16px;
+  gap: 12px; /* space between chips */
 }
 
 .categories-container::-webkit-scrollbar { /* WebKit: hide scrollbar */
@@ -42,12 +43,13 @@
   background-color: #fff;
   border: 1px solid #E8E8E8;
   border-radius: 999px; /* pill */
-  padding: 6px 10px;
+  padding: 6px 12px; /* slightly larger horizontal padding */
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   text-align: left;
+  white-space: nowrap; /* keep in one line; chip expands with text */
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   scroll-snap-align: start;
 }
@@ -86,10 +88,11 @@
 }
 
 .category-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: #333;
   margin: 0;
+  white-space: nowrap; /* prevent wrapping inside chip */
 }
 
 .category-count {

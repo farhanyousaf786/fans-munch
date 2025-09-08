@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   MdLocalPizza, 
   MdFastfood, 
@@ -11,75 +11,58 @@ import {
 } from 'react-icons/md';
 import './CategoryList.css';
 import { useTranslation } from '../../../../i18n/i18n';
+import { db } from '../../../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
-const CategoryList = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const { t } = useTranslation();
+const CategoryList = ({ selectedCategory: selectedCategoryProp = 'all', onSelect }) => {
+  const [selectedCategoryState, setSelectedCategoryState] = useState(selectedCategoryProp || 'all');
+  const selectedCategory = selectedCategoryProp ?? selectedCategoryState;
+  const [categories, setCategories] = useState([]);
+  const { t, lang } = useTranslation();
 
-  // Mock categories data - in real app, this would come from Firebase/API
-  const categories = [
-    {
-      id: 'all',
-      name: t('home.cat_all'),
-      icon: MdRestaurant,
-      color: '#3D70FF',
-      count: 120
-    },
-    {
-      id: 'pizza',
-      name: t('home.cat_pizza'),
-      icon: MdLocalPizza,
-      color: '#FF6B6B',
-      count: 25
-    },
-    {
-      id: 'burgers',
-      name: t('home.cat_burgers'),
-      icon: MdFastfood,
-      color: '#4ECDC4',
-      count: 18
-    },
-    {
-      id: 'drinks',
-      name: t('home.cat_drinks'),
-      icon: MdLocalDrink,
-      color: '#45B7D1',
-      count: 32
-    },
-    {
-      id: 'desserts',
-      name: t('home.cat_desserts'),
-      icon: MdIcecream,
-      color: '#F7B731',
-      count: 15
-    },
-    {
-      id: 'coffee',
-      name: t('home.cat_coffee'),
-      icon: MdLocalCafe,
-      color: '#8B4513',
-      count: 12
-    },
-    {
-      id: 'asian',
-      name: t('home.cat_asian'),
-      icon: MdRamenDining,
-      color: '#E74C3C',
-      count: 20
-    },
-    {
-      id: 'bakery',
-      name: t('home.cat_bakery'),
-      icon: MdCake,
-      color: '#9B59B6',
-      count: 8
-    }
-  ];
+  // Load categories from Firestore
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDocs(collection(db, 'categories'));
+        const items = snap.docs.map((doc) => {
+          const data = doc.data() || {};
+          const name = data?.nameMap?.[lang] || data?.nameMap?.en || data?.name || doc.id;
+          const icon = data?.icon || '🍔';
+          return {
+            id: data?.docId || doc.id,
+            name,
+            icon, // emoji string
+            color: '#3D70FF', // default color; could be extended via Firestore later
+          };
+        });
+        // Prepend the synthetic 'All' category
+        const allCat = {
+          id: 'all',
+          name: t('home.cat_all'),
+          icon: MdRestaurant,
+          color: '#3D70FF',
+        };
+        if (!cancelled) setCategories([allCat, ...items]);
+      } catch (e) {
+        console.warn('[CategoryList] Failed to load categories:', e?.message || e);
+        // Fallback to just 'All' if Firestore fails
+        setCategories([
+          { id: 'all', name: t('home.cat_all'), icon: MdRestaurant, color: '#3D70FF' },
+        ]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [db, lang, t]);
 
   const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId);
-    // In real app, this would trigger filtering of menu items
-    console.log('Selected category:', categoryId);
+    // Update internal state only if uncontrolled
+    if (onSelect) {
+      onSelect(categoryId);
+    } else {
+      setSelectedCategoryState(categoryId);
+    }
   };
 
   return (
@@ -90,7 +73,8 @@ const CategoryList = () => {
       
       <div className="categories-container">
         {categories.map((category) => {
-          const IconComponent = category.icon;
+          const isEmoji = typeof category.icon === 'string';
+          const IconComponent = isEmoji ? null : category.icon;
           const isSelected = selectedCategory === category.id;
           
           return (
@@ -105,12 +89,18 @@ const CategoryList = () => {
                   backgroundColor: isSelected ? category.color : `${category.color}15`,
                 }}
               >
-                <IconComponent 
-                  className="category-icon"
-                  style={{ 
-                    color: isSelected ? 'white' : category.color 
-                  }}
-                />
+                {isEmoji ? (
+                  <span className="category-icon" style={{ fontSize: 22 }}>
+                    {category.icon}
+                  </span>
+                ) : (
+                  <IconComponent 
+                    className="category-icon"
+                    style={{ 
+                      color: isSelected ? 'white' : category.color 
+                    }}
+                  />
+                )}
               </div>
               
               <div className="category-info">

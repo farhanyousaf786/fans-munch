@@ -1,52 +1,109 @@
 /**
  * Food Model
- * Based on stadium_food Flutter app structure
+ * Aligned with MenuItem pattern (i18n, shopIds, currency, Timestamp handling)
  */
+import { Timestamp } from 'firebase/firestore';
 
 class Food {
   constructor({
-    id = '',
-    allergens = [],
-    category = '',
-    createdAt = new Date(),
-    customization = {},
+    // Identifiers
+    id = '', // existing id usage in app
+    docId = null, // new pattern field
+
+    // Display and i18n
+    name = '',
+    nameMap = {},
     description = '',
-    extras = [],
+    descriptionMap = {},
+
+    // Pricing and currency
+    price = 0,
+    currency = 'USD',
+
+    // Classification
+    category = '', // categoryId string
     images = [],
     isAvailable = true,
-    name = '',
-    nutritionalInfo = {},
     preparationTime = 15,
-    price = 0,
-    sauces = [],
-    shopId = '',
+
+    // Ownership/placement
+    shopIds = [],
+    shopId = '', // backward compatibility
     stadiumId = '',
-    sizes = [],
+
+    // Customization
+    customization = {
+      toppings: [],
+      extras: [],
+      sauces: [],
+      sizes: []
+    },
+    // Legacy separate arrays (still supported)
     toppings = [],
-    updatedAt = new Date(),
+    extras = [],
+    sauces = [],
+    sizes = [],
+
+    // Nutrition and compliance
+    allergens = [],
+    nutritionalInfo = {},
     foodType = { halal: false, kosher: false, vegan: false },
-    quantity = 1
+
+    // Timestamps
+    createdAt = new Date(),
+    updatedAt = new Date(),
+
+    // Cart/runtime (not stored on item doc normally)
+    quantity = 1,
   }) {
-    this.id = id;
-    this.allergens = allergens;
-    this.category = category;
-    this.createdAt = createdAt;
-    this.customization = customization;
+    // IDs
+    this.id = id || docId || '';
+    this.docId = docId || id || null;
+
+    // Display/i18n
+    this.name = name;
+    this.nameMap = nameMap || {};
     this.description = description;
-    this.extras = extras;
+    this.descriptionMap = descriptionMap || {};
+
+    // Pricing
+    this.price = price;
+    this.currency = currency;
+
+    // Classification
+    this.category = category;
     this.images = images;
     this.isAvailable = isAvailable;
-    this.name = name;
-    this.nutritionalInfo = nutritionalInfo;
     this.preparationTime = preparationTime;
-    this.price = price;
-    this.sauces = sauces;
-    this.shopId = shopId;
+
+    // Ownership/placement
+    const normalizedShopIds = Array.isArray(shopIds)
+      ? shopIds
+      : [shopIds].filter(Boolean);
+    // include legacy single shopId if provided
+    if (shopId && !normalizedShopIds.includes(shopId)) normalizedShopIds.push(shopId);
+    this.shopIds = normalizedShopIds;
+    this.shopId = shopId || normalizedShopIds[0] || '';
     this.stadiumId = stadiumId;
-    this.sizes = sizes;
-    this.toppings = toppings;
-    this.updatedAt = updatedAt;
+
+    // Customization
+    this.customization = {
+      toppings: customization?.toppings ?? toppings ?? [],
+      extras: customization?.extras ?? extras ?? [],
+      sauces: customization?.sauces ?? sauces ?? [],
+      sizes: customization?.sizes ?? sizes ?? [],
+    };
+
+    // Nutrition/compliance
+    this.allergens = allergens;
+    this.nutritionalInfo = nutritionalInfo;
     this.foodType = foodType;
+
+    // Timestamps
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+
+    // Cart/runtime
     this.quantity = quantity;
   }
 
@@ -57,28 +114,84 @@ class Food {
    * @returns {Food}
    */
   static fromMap(id, data) {
+    // Backward-compatible constructor from legacy map + id
     return new Food({
       id: id,
-      allergens: data.allergens || [],
+      docId: data.docId || id,
+      // i18n
+      name: data.name || data?.nameMap?.en || '',
+      nameMap: data.nameMap || {},
+      description: data.description || data?.descriptionMap?.en || '',
+      descriptionMap: data.descriptionMap || {},
+      // pricing
+      price: data.price ?? 0,
+      currency: data.currency || 'USD',
+      // classification
       category: data.category || '',
-      createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-      customization: data.customization || {},
-      description: data.description || '',
-      extras: data.extras || [],
       images: data.images || [],
       isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
-      name: data.name || '',
-      nutritionalInfo: data.nutritionalInfo || {},
       preparationTime: data.preparationTime || 15,
-      price: data.price || 0,
-      sauces: data.sauces || [],
+      // ownership/placement
+      shopIds: data.shopIds || (data.shopId ? [data.shopId] : []),
       shopId: data.shopId || '',
       stadiumId: data.stadiumId || '',
-      sizes: data.sizes || [],
-      toppings: data.toppings || [],
-      updatedAt: data.updatedAt ? data.updatedAt.toDate() : new Date(),
+      // customization
+      customization: data.customization || {
+        toppings: data.toppings || [],
+        extras: data.extras || [],
+        sauces: data.sauces || [],
+        sizes: data.sizes || [],
+      },
+      // nutrition/compliance
+      allergens: data.allergens || [],
+      nutritionalInfo: data.nutritionalInfo || {},
       foodType: data.foodType || { halal: false, kosher: false, vegan: false },
-      quantity: data.quantity || 1
+      // timestamps
+      createdAt: Food.parseFirestoreDate(data.createdAt),
+      updatedAt: Food.parseFirestoreDate(data.updatedAt),
+      // cart/runtime
+      quantity: data.quantity || 1,
+    });
+  }
+
+  /**
+   * New-style creator aligned with MenuItem pattern (no separate id param)
+   */
+  static fromFirestore(data) {
+    return new Food({
+      id: data.id || data.docId || '',
+      docId: data.docId || data.id || null,
+      // i18n
+      name: data.name || data?.nameMap?.en || '',
+      nameMap: data.nameMap || {},
+      description: data.description || data?.descriptionMap?.en || '',
+      descriptionMap: data.descriptionMap || {},
+      // pricing
+      price: data.price ?? 0,
+      currency: data.currency || 'USD',
+      // classification
+      category: data.category || '',
+      images: data.images || [],
+      isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
+      preparationTime: data.preparationTime || 15,
+      // ownership/placement
+      shopIds: data.shopIds || (data.shopId ? [data.shopId] : []),
+      shopId: data.shopId || '',
+      stadiumId: data.stadiumId || '',
+      // customization
+      customization: data.customization || {
+        toppings: data.toppings || [],
+        extras: data.extras || [],
+        sauces: data.sauces || [],
+        sizes: data.sizes || [],
+      },
+      // nutrition/compliance
+      allergens: data.allergens || [],
+      nutritionalInfo: data.nutritionalInfo || {},
+      foodType: data.foodType || { halal: false, kosher: false, vegan: false },
+      // timestamps
+      createdAt: Food.parseFirestoreDate(data.createdAt),
+      updatedAt: Food.parseFirestoreDate(data.updatedAt),
     });
   }
 
@@ -87,28 +200,67 @@ class Food {
    * @returns {Object}
    */
   toMap() {
+    // Backward compatible map (keeps legacy fields) – used by app code
     return {
       id: this.id,
-      allergens: this.allergens,
-      category: this.category,
-      createdAt: this.createdAt,
-      customization: this.customization,
+      docId: this.docId,
+      // i18n
+      name: this.name,
+      nameMap: this.nameMap,
       description: this.description,
-      extras: this.extras,
+      descriptionMap: this.descriptionMap,
+      // pricing
+      price: this.price,
+      currency: this.currency,
+      // classification
+      category: this.category,
       images: this.images,
       isAvailable: this.isAvailable,
-      name: this.name,
-      nutritionalInfo: this.nutritionalInfo,
       preparationTime: this.preparationTime,
-      price: this.price,
-      sauces: this.sauces,
+      // ownership/placement
+      shopIds: this.shopIds,
       shopId: this.shopId,
       stadiumId: this.stadiumId,
-      sizes: this.sizes,
-      toppings: this.toppings,
-      updatedAt: this.updatedAt,
+      // customization (also expose legacy fields for compatibility)
+      customization: this.customization,
+      toppings: this.customization?.toppings || [],
+      extras: this.customization?.extras || [],
+      sauces: this.customization?.sauces || [],
+      sizes: this.customization?.sizes || [],
+      // nutrition/compliance
+      allergens: this.allergens,
+      nutritionalInfo: this.nutritionalInfo,
       foodType: this.foodType,
-      quantity: this.quantity
+      // timestamps (as Date objects)
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      // runtime/cart
+      quantity: this.quantity,
+    };
+  }
+
+  // Firestore write-friendly map (uses Timestamp)
+  toFirestore() {
+    return {
+      name: this.name,
+      nameMap: this.nameMap,
+      description: this.description,
+      descriptionMap: this.descriptionMap,
+      price: this.price,
+      category: this.category,
+      images: this.images,
+      isAvailable: this.isAvailable,
+      preparationTime: this.preparationTime,
+      shopIds: this.shopIds,
+      stadiumId: this.stadiumId,
+      customization: this.customization,
+      allergens: this.allergens,
+      nutritionalInfo: this.nutritionalInfo,
+      foodType: this.foodType,
+      currency: this.currency,
+      docId: this.docId,
+      createdAt: this.createdAt instanceof Date ? Timestamp.fromDate(this.createdAt) : this.createdAt,
+      updatedAt: this.updatedAt instanceof Date ? Timestamp.fromDate(this.updatedAt) : this.updatedAt,
     };
   }
 
@@ -117,7 +269,9 @@ class Food {
    * @returns {string}
    */
   getFormattedPrice() {
-    return `$${this.price.toFixed(2)}`;
+    const curr = (this.currency || 'USD').toUpperCase();
+    const symbol = curr === 'ILS' ? '₪' : curr === 'EUR' ? '€' : '$';
+    return `${symbol}${this.price.toFixed(2)}`;
   }
 
   /**
@@ -206,7 +360,22 @@ class Food {
    * @returns {string}
    */
   getFormattedTotalPrice() {
-    return `$${this.getTotalPrice().toFixed(2)}`;
+    const curr = (this.currency || 'USD').toUpperCase();
+    const symbol = curr === 'ILS' ? '₪' : curr === 'EUR' ? '€' : '$';
+    return `${symbol}${this.getTotalPrice().toFixed(2)}`;
+  }
+
+  // Helpers
+  static parseFirestoreDate(dateValue) {
+    if (!dateValue) return new Date();
+    // Firestore Timestamp
+    if (typeof dateValue?.toDate === 'function') {
+      return dateValue.toDate();
+    }
+    if (dateValue instanceof Date) return dateValue;
+    if (typeof dateValue === 'string') return new Date(dateValue);
+    if (typeof dateValue === 'number') return new Date(dateValue);
+    return new Date();
   }
 }
 

@@ -17,6 +17,7 @@ function Home() {
   const [filteredOffers, setFilteredOffers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShopId, setSelectedShopId] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('all');
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,7 +33,7 @@ function Home() {
   useEffect(() => {
     filterMenuItems();
     filterOffers();
-  }, [searchTerm, allMenuItems, allOffers, selectedShopId]);
+  }, [searchTerm, allMenuItems, allOffers, selectedShopId, selectedCategoryId]);
 
   const loadMenuItems = async () => {
     try {
@@ -103,13 +104,20 @@ function Home() {
       items = items.filter(item => Array.isArray(item.shopIds) && item.shopIds.includes(selectedShopId));
     }
 
+    // Filter by selected category if not 'all'
+    if (selectedCategoryId && selectedCategoryId !== 'all') {
+      items = items.filter(item => (item.category || '').toLowerCase() === String(selectedCategoryId).toLowerCase());
+    }
+
     // Apply search filtering if present
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
       items = items.filter(item =>
-        item.name?.toLowerCase().includes(lower) ||
-        item.description?.toLowerCase().includes(lower) ||
-        item.category?.toLowerCase().includes(lower)
+        (item.name?.toLowerCase().includes(lower)) ||
+        (item.description?.toLowerCase().includes(lower)) ||
+        (item.category?.toLowerCase().includes(lower)) ||
+        (item.nameMap && Object.values(item.nameMap).some(v => String(v).toLowerCase().includes(lower))) ||
+        (item.descriptionMap && Object.values(item.descriptionMap).some(v => String(v).toLowerCase().includes(lower)))
       );
     }
 
@@ -151,7 +159,10 @@ function Home() {
       
 
 
-                <CategoryList />
+                <CategoryList 
+                  selectedCategory={selectedCategoryId}
+                  onSelect={(id) => setSelectedCategoryId(id)}
+                />
 
          
         <MenuList 

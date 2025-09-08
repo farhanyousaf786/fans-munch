@@ -92,16 +92,21 @@ export const cartUtils = {
         const cartItem = {
           id: food.id,
           name: food.name,
+          nameMap: food.nameMap || {},
           price: actualPrice, // Use discounted price if available
           originalPrice: food.price, // Keep original price for reference
           discountPercentage: food.discountPercentage || 0, // Store discount info
           images: food.images || [],
           quantity: quantity,
-          shopId: food.shopId,
+          shopId: food.shopId || (Array.isArray(food.shopIds) && food.shopIds.length > 0 ? food.shopIds[0] : ''),
+          shopIds: Array.isArray(food.shopIds) ? [...food.shopIds] : (food.shopId ? [food.shopId] : []),
           stadiumId: food.stadiumId,
           preparationTime: food.preparationTime || 15,
           description: food.description || '',
+          descriptionMap: food.descriptionMap || {},
           allergens: food.allergens || [],
+          category: food.category || '', // category ID
+          currency: food.currency || 'USD',
           addedAt: new Date().toISOString()
         };
         

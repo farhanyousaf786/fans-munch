@@ -19,8 +19,8 @@ exports.createPaymentIntent = async (req, res) => {
     
     console.log('[Stripe] Creating payment intent...');
     
-    // Get amount and currency from request
-    const { amount, currency = 'USD' } = req.body;
+    // Get amount, currency, and optional vendor connected account from request
+    const { amount, currency = 'ils', vendorConnectedAccountId } = req.body;
     
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -29,11 +29,14 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
-    // Convert amount to cents (Stripe expects smallest currency unit)
+    // Convert amount to the smallest currency unit (cents/agorot)
     const amountInCents = Math.round(amount * 100);
 
-    // Create payment intent
-    const paymentIntent = await stripeClient.paymentIntents.create({
+    // Calculate vendor share (98%) if connected account provided
+    const vendorAmount = vendorConnectedAccountId ? Math.round(amountInCents * 0.98) : undefined;
+
+    // Build intent payload
+    const paymentIntentData = {
       amount: amountInCents,
       currency: currency.toLowerCase(),
       automatic_payment_methods: {
@@ -41,9 +44,21 @@ exports.createPaymentIntent = async (req, res) => {
       },
       metadata: {
         source: 'fans-munch-app',
-        timestamp: new Date().toISOString()
-      }
-    });
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    // If vendor account provided, route funds and record vendor in metadata
+    if (vendorConnectedAccountId) {
+      paymentIntentData.transfer_data = {
+        destination: vendorConnectedAccountId,
+        amount: vendorAmount,
+      };
+      paymentIntentData.metadata.vendorAccountId = vendorConnectedAccountId;
+    }
+
+    // Create payment intent
+    const paymentIntent = await stripeClient.paymentIntents.create(paymentIntentData);
 
     console.log('[Stripe] Payment intent created:', paymentIntent.id);
 

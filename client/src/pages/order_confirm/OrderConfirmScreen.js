@@ -12,6 +12,8 @@ import OrderSummary from './components/OrderSummary';
 import PlaceOrderBar from './components/PlaceOrderBar';
 import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
+import { db } from '../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -97,7 +99,14 @@ const OrderConfirmScreen = () => {
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, currency: CURRENCY })
+          // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
+          // amount: finalTotal,
+          body: JSON.stringify({ 
+            amount: 2,
+            currency: 'ils',
+            // vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc'
+            vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo'
+          })
         });
         const text = await res.text();
         let data; try { data = JSON.parse(text); } catch (_) {}
@@ -178,7 +187,14 @@ const OrderConfirmScreen = () => {
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: finalTotal, currency: CURRENCY })
+          // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
+          // amount: finalTotal,
+          body: JSON.stringify({ 
+            amount: 2, 
+            currency: 'ils',
+            // vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc'
+            vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo'
+          })
         });
         const text = await res.text();
         let data; try { data = JSON.parse(text); } catch (_) {}
@@ -235,6 +251,44 @@ const OrderConfirmScreen = () => {
         0
       );
 
+      // Resolve nearest active delivery user (if we have customer location)
+      let nearestDeliveryUserId = null;
+      try {
+        if (customerLocation && typeof customerLocation.latitude === 'number' && typeof customerLocation.longitude === 'number') {
+          const snap = await getDocs(collection(db, 'deliveryUsers'));
+          let best = { id: null, dist: Number.POSITIVE_INFINITY };
+          const toRad = (x) => (x * Math.PI) / 180;
+          const haversine = (lat1, lon1, lat2, lon2) => {
+            const R = 6371; // km
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+          };
+          snap.forEach((doc) => {
+            const data = doc.data() || {};
+            if (data.isActive !== true) return; // only active drivers
+            const loc = data.location; // can be GeoPoint or [lat, lng]
+            let lat, lng;
+            if (loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number') {
+              lat = loc.latitude; lng = loc.longitude;
+            } else if (Array.isArray(loc) && loc.length === 2) {
+              lat = Number(loc[0]); lng = Number(loc[1]);
+            }
+            if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+              const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
+              if (d < best.dist) best = { id: data.id || doc.id, dist: d };
+            }
+          });
+          nearestDeliveryUserId = best.id;
+        }
+      } catch (e) {
+        console.warn('Could not resolve nearest delivery user:', e?.message || e);
+      }
+
       const order = Order.createFromCart({
         cartItems,
         subtotal: totals.subtotal,
@@ -247,7 +301,8 @@ const OrderConfirmScreen = () => {
         stadiumId: stadiumData.id,
         shopId: cartItems[0].shopId || '',
         customerLocation,
-        location: customerLocation
+        location: customerLocation,
+        deliveryUserId: nearestDeliveryUserId || null
       });
 
       const createdOrder = await orderRepository.createOrder(order);
