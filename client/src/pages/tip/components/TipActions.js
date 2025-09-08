@@ -3,10 +3,11 @@ import { useTranslation } from '../../../i18n/i18n';
 
 const TipActions = ({ onAddTip, onSkipTip, tipAmount = 0 }) => {
   const { t } = useTranslation();
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="tip-actions">
       <button className="add-tip-button" onClick={onAddTip}>
-        {t('tip.add_tip')} (${tipAmount.toFixed(2)})
+        {t('tip.add_tip')} ({formatILS(tipAmount)})
       </button>
       <button className="skip-tip-button" onClick={onSkipTip}>
         {t('tip.skip')}

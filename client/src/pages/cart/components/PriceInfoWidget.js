@@ -16,29 +16,25 @@ const PriceInfoWidget = ({
     return null;
   }
 
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+
   return (
     <div className="price-info-widget">
       <div className="price-info-content">
         {/* Price breakdown */}
         <div className="price-row">
           <span>{t('cart.subtotal')}</span>
-          <span>${calculateSubtotal().toFixed(2)}</span>
+          <span>{formatILS(calculateSubtotal())}</span>
         </div>
         <div className="price-row">
           <span>{t('cart.delivery')}</span>
-          <span>${calculateDeliveryFee().toFixed(2)}</span>
+          <span>{formatILS(calculateDeliveryFee())}</span>
         </div>
-        <div className="price-row">
-          <span>{t('cart.tip')}</span>
-          <span>${calculateTip().toFixed(2)}</span>
-        </div>
-        <div className="price-row">
-          <span>{t('cart.discount')}</span>
-          <span>-${calculateDiscount().toFixed(2)}</span>
-        </div>
+        
+       
         <div className="price-row total">
           <span>{t('cart.total')}</span>
-          <span>${calculateTotal().toFixed(2)}</span>
+          <span>{formatILS(calculateTotal())}</span>
         </div>
         
         {/* Place Order Button */}

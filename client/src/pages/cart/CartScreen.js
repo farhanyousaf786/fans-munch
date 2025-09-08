@@ -94,7 +94,9 @@ const CartScreen = ({ isFromHome = false }) => {
   };
 
   const calculateDeliveryFee = () => {
-    return 2.99; // Fixed delivery fee (matches Flutter)
+    // Handling & Delivery: 2 ILS per item (sum of quantities)
+    const totalQty = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    return totalQty * 2; // ILS
   };
 
   const calculateTip = () => {

@@ -33,6 +33,7 @@ const OrderConfirmScreen = () => {
   
   // Order state
   const [orderTotal, setOrderTotal] = useState(0);
+  const [deliveryFee, setDeliveryFee] = useState(0); // ILS per item
   const [tipData, setTipData] = useState({ amount: 0, percentage: 0 });
   const [finalTotal, setFinalTotal] = useState(0);
   
@@ -44,17 +45,22 @@ const OrderConfirmScreen = () => {
 
   useEffect(() => {
     // Initialize order data
+    const cartItems = cartUtils.getCartItems();
     const cartTotal = cartUtils.getTotalPrice();
     setOrderTotal(cartTotal);
+    // Delivery fee = 2 ILS per item (sum of quantities)
+    const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
+    const fee = totalQty * 2;
+    setDeliveryFee(fee);
     
     // Get tip data
     const savedTip = localStorage.getItem('selectedTip');
     if (savedTip) {
       const tip = JSON.parse(savedTip);
       setTipData(tip);
-      setFinalTotal(cartTotal + tip.amount);
+      setFinalTotal(cartTotal + fee + tip.amount);
     } else {
-      setFinalTotal(cartTotal);
+      setFinalTotal(cartTotal + fee);
     }
 
     // Prefill seat info
@@ -244,9 +250,13 @@ const OrderConfirmScreen = () => {
         ticketImage: ticketImage || ''
       };
 
+      // Recompute delivery fee from cart at payment time (2 ILS per item)
+      const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
+      const fee = totalQty * 2;
+
       const totals = orderRepository.calculateOrderTotals(
         cartItems,
-        2, // deliveryFee
+        fee, // deliveryFee in ILS
         tipData.amount,
         0
       );
@@ -399,7 +409,7 @@ const OrderConfirmScreen = () => {
 
 
         {/* Order Summary */}
-        <OrderSummary orderTotal={orderTotal} tipData={tipData} finalTotal={finalTotal} />
+        <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
 
         {/* Stripe Payment Form */}
         <StripePaymentForm

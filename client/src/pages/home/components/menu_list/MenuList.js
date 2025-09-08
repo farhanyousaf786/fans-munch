@@ -25,6 +25,7 @@ function getPlaceholderByKey(key) {
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -137,7 +138,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                     <h3 className="menu-name-horizontal">{displayName}</h3>
                   );
                 })()}
-                <p className="menu-price-horizontal">{food.getFormattedPrice()}</p>
+                <p className="menu-price-horizontal">{formatILS(food.price)}</p>
                 
                 {/* Preparation time */}
                 <div className="menu-prep-time">

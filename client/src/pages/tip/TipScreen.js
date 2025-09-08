@@ -87,6 +87,8 @@ const TipScreen = () => {
 
   const handleBack = () => navigate(-1);
 
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+
   return (
     <div className="tip-screen">
       <div className="tip-container">
@@ -97,7 +99,7 @@ const TipScreen = () => {
         <h1 className="tip-title">{t('tip.title')}</h1>
         <p className="tip-description">
           {t('tip.supports_runner')} {t('tip.order_total_is')}{' '}
-          <span className="order-total">${orderTotal.toFixed(2)}</span>.
+          <span className="order-total">{formatILS(orderTotal)}</span>.
         </p>
 
         {/* Illustration */}
