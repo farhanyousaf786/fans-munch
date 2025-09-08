@@ -19,18 +19,12 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 
-// Health check route
-app.get('/', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Fans Munch API Server',
-    endpoints: [
-      '/api/stripe/create-intent',
-      '/api/stripe/confirm-payment',
-      '/api/airwallex/*',
-      '/api/payments/*'
-    ]
-  });
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
 const PORT = process.env.PORT || 5001;
