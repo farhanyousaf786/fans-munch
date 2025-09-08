@@ -13,7 +13,7 @@ import PlaceOrderBar from './components/PlaceOrderBar';
 import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -289,6 +289,62 @@ const OrderConfirmScreen = () => {
         console.warn('Could not resolve nearest delivery user:', e?.message || e);
       }
 
+      // Resolve nearest shop among those that carry items (cart shopIds); fallback to all shops
+      let nearestShopId = null;
+      try {
+        // Collect candidate shop IDs from cart
+        const candidateIds = Array.from(new Set(
+          cartItems.flatMap(it => Array.isArray(it.shopIds) ? it.shopIds : (it.shopId ? [it.shopId] : []))
+        ));
+
+        const toRad = (x) => (x * Math.PI) / 180;
+        const haversine = (lat1, lon1, lat2, lon2) => {
+          const R = 6371; // km
+          const dLat = toRad(lat2 - lat1);
+          const dLon = toRad(lon2 - lon1);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        };
+        const parseNum = (v) => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v.replace(/[^0-9+\-.]/g, '')) : NaN));
+
+        let shops = [];
+        if (candidateIds.length > 0) {
+          // Fetch only candidate shops
+          const docs = await Promise.all(candidateIds.map(id => getDoc(doc(db, 'shops', id))));
+          shops = docs.filter(d => d.exists()).map(d => ({ id: d.id, data: d.data() }));
+        } else {
+          // Fallback: all shops
+          const snap = await getDocs(collection(db, 'shops'));
+          shops = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+        }
+
+        let bestShop = { id: null, dist: Number.POSITIVE_INFINITY };
+        shops.forEach((entry) => {
+          const s = entry.data || {};
+          let lat, lng;
+          // Prefer explicit latitude/longitude fields if present
+          if (s.latitude != null && s.longitude != null) {
+            lat = parseNum(s.latitude);
+            lng = parseNum(s.longitude);
+          } else if (s.location && typeof s.location.latitude === 'number' && typeof s.location.longitude === 'number') {
+            lat = s.location.latitude; lng = s.location.longitude;
+          } else if (Array.isArray(s.location) && s.location.length === 2) {
+            lat = parseNum(s.location[0]); lng = parseNum(s.location[1]);
+          }
+          if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng) && customerLocation) {
+            const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
+            if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
+          }
+        });
+
+        nearestShopId = bestShop.id || null;
+      } catch (e) {
+        console.warn('Could not resolve nearest shop:', e?.message || e);
+      }
+
       const order = Order.createFromCart({
         cartItems,
         subtotal: totals.subtotal,
@@ -299,9 +355,9 @@ const OrderConfirmScreen = () => {
         userData,
         seatInfo,
         stadiumId: stadiumData.id,
-        shopId: cartItems[0].shopId || '',
+        shopId: nearestShopId || cartItems[0].shopId || '',
         customerLocation,
-        location: customerLocation,
+        location: null,
         deliveryUserId: nearestDeliveryUserId || null
       });
 

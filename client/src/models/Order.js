@@ -286,7 +286,7 @@ export class Order {
         ticketImage: seatInfo.ticketImage || ''
       },
       customerLocation,
-      location: location || customerLocation
+      location: location
     });
   }
 
