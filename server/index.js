@@ -19,6 +19,20 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 
+// Health check route
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Fans Munch API Server',
+    endpoints: [
+      '/api/stripe/create-intent',
+      '/api/stripe/confirm-payment',
+      '/api/airwallex/*',
+      '/api/payments/*'
+    ]
+  });
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
