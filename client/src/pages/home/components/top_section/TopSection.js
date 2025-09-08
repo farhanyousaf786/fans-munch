@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdShoppingCart, MdKeyboardArrowRight, MdKeyboardArrowLeft } from 'react-icons/md';
-import { stadiumStorage } from '../../../../utils/storage';
+import { stadiumStorage, userStorage } from '../../../../utils/storage';
 import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
 import { useTranslation } from '../../../../i18n/i18n';
@@ -10,6 +10,7 @@ const TopSection = (props) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStadium, setSelectedStadium] = useState(null);
+  const [userData, setUserData] = useState(null);
   const { t, lang } = useTranslation();
 
   useEffect(() => {
@@ -18,6 +19,10 @@ const TopSection = (props) => {
     if (stadium) {
       setSelectedStadium(stadium);
     }
+
+    // Load user data
+    const user = userStorage.getUserData();
+    setUserData(user);
   }, []);
 
   const handleCartClick = () => {
@@ -70,7 +75,7 @@ const TopSection = (props) => {
       {/* Welcome Message */}
       <div className="welcome-message">
         <h1>{t('home.greeting')}</h1>
-        <h2>Ibn e Yousaf!</h2>
+        <h2>{userData ? `${userData.firstName} ${userData.lastName}!` : 'Guest!'}</h2>
       </div>
 
       {/* Search Bar */}
