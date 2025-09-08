@@ -111,7 +111,7 @@ const OrderConfirmScreen = () => {
         const text = await res.text();
         let data; try { data = JSON.parse(text); } catch (_) {}
         if (!res.ok) {
-          console.warn('[OrderConfirm] Pre-create Stripe intent failed:', text);
+          console.warn('OrderConfirm Pre-create Stripe intent failed:', text);
           return;
         }
         if (!cancelled) {
