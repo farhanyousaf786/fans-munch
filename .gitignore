@@ -18,7 +18,7 @@ server/.env.*
 dist/
 build/
 client/build/
-server/build/
+# server/build/ - commented out so React build files can be deployed to Heroku
 
 # OS files
 .DS_Store
