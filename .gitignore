@@ -9,6 +9,10 @@ node_modules/
 .env
 client/.env
 server/.env
+# All env variants
+.env.*
+client/.env.*
+server/.env.*
 
 # Build outputs
 dist/
