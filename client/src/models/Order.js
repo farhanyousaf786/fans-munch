@@ -125,13 +125,10 @@ export class Order {
         const resolvedCategory = item.categoryId || item.category || '';
         const resolvedDescriptionMap = (() => {
           const dm = item.descriptionMap || {};
-          const hasContent = dm && Object.keys(dm).length > 0;
-          if (hasContent) return dm;
-          const desc = item.description || '';
-          return {
-            en: (item.nameMap && item.nameMap.en) ? (dm.en || desc) : desc,
-            he: (item.nameMap && item.nameMap.he) ? (dm.he || desc) : desc,
-          };
+          const desc = typeof item.description === 'string' ? item.description : '';
+          const en = (typeof dm.en === 'string' && dm.en.trim().length > 0) ? dm.en : desc;
+          const he = (typeof dm.he === 'string' && dm.he.trim().length > 0) ? dm.he : desc;
+          return { en, he };
         })();
 
         const resolvedNameMap = (() => {

@@ -93,4 +93,56 @@
     "card_payment_title": "Card Payment",
     "confirm_card_payment": "Confirm Card Payment"
   }
+  ,
+  "auth": {
+    "title_login": "Log in",
+    "title_register": "Create Account",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "email_ph": "Enter your email",
+    "password": "Password",
+    "password_ph": "Enter your password",
+    "confirm_password": "Re-enter Password",
+    "confirm_password_ph": "Re-enter your password",
+    "forgot_password": "Forgot Password?",
+    "sign_in": "Sign In",
+    "create_account": "Create Account",
+    "toggle_no_account": "Don't have an account? ",
+    "toggle_register_now": "Register Now",
+    "toggle_have_account": "Already have an account? ",
+    "toggle_sign_in": "Sign In",
+    "please_wait": "Please wait...",
+    "fill_required": "Please fill in all required fields.",
+    "passwords_no_match": "Passwords do not match."
+  }
+  ,
+  "onboarding": {
+    "skip": "Skip",
+    "step1": {
+      "title": "Tap. Sit. Enjoy.",
+      "subtitle": "A small tap – a big experience!",
+      "description": "Enjoy food, drinks and merch delivered right to your seat—so you can stay in the action, not the line."
+    },
+    "step2": {
+      "title": "Tap. Order. Relax.",
+      "subtitle": "Stay in your seat – we’re on our way!",
+      "description": "Order from your phone and get everything you need without ever leaving your seat. Enjoy!"
+    },
+    "step3": {
+      "title": "Tap. Order. Experience.",
+      "subtitle": "No getting up. No waiting. No missing out.",
+      "description": "Great food, drinks and products delivered to your seat—so you stay in the game, not the line."
+    }
+  }
+  ,
+  "stadium": {
+    "title": "Select Your Stadium",
+    "subtitle": "Choose where you want to order food from",
+    "loading": "Loading stadiums...",
+    "retry": "Retry",
+    "capacity": "Capacity",
+    "select_button": "Select a Stadium",
+    "continue_to": "Continue to"
+  }
 }

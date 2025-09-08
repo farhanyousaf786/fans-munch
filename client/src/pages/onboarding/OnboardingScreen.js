@@ -1,33 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OnboardingScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const OnboardingScreen = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+  const { t, lang } = useTranslation();
 
   const onboardingSteps = [
     {
       id: 1,
-      title: "Tap. Sit. Enjoy",
-      subtitle: "Stay in action, not in lines",
-      description: "Enjoy food, drinks and merch delivered right to your seat—so you can stay in the action, not the line.",
+      title: t('onboarding.step1.title'),
+      subtitle: t('onboarding.step1.subtitle'),
+      description: t('onboarding.step1.description'),
       image: "/assets/images/on-boarding-1.png",
       color: "#000000"
     },
     {
       id: 2,
-      title: "Tap sit Munch",
-      subtitle: "Order without leaving your seat",
-      description: "Order from your phone and get everything you need without ever leaving your seat. Enjoy!",
+      title: t('onboarding.step2.title'),
+      subtitle: t('onboarding.step2.subtitle'),
+      description: t('onboarding.step2.description'),
       image: "/assets/images/on-boarding-2.png",
       color: "#000000"
     },
     {
       id: 3,
-      title: "Stay in action, not in lines",
-      subtitle: "Delivered right to your seat",
-      description: "Enjoy food, drink and merch delivered right to your seat—so you can stay in the action, not the line.",
+      title: t('onboarding.step3.title'),
+      subtitle: t('onboarding.step3.subtitle'),
+      description: t('onboarding.step3.description'),
       image: "/assets/images/on-boarding-3.png",
       color: "#000000"
     }
@@ -51,7 +53,7 @@ const OnboardingScreen = () => {
   const currentStepData = onboardingSteps[currentStep];
 
   return (
-    <div className="onboarding-screen">
+    <div className="onboarding-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <div
         className="onboarding-bg"
         style={{ backgroundImage: `url(${currentStepData.image})` }}
@@ -60,7 +62,7 @@ const OnboardingScreen = () => {
       <div className="onboarding-container">
         {/* Skip Button */}
         <button className="skip-button" onClick={handleSkip}>
-          Skip
+          {t('onboarding.skip')}
         </button>
 
         {/* Content */}

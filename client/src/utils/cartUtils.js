@@ -65,17 +65,9 @@ export const cartUtils = {
         existingCart = [];
       }
       
-      // Flutter logic: If cart is not empty, check if new item is from same shop
-      if (existingCart.length > 0) {
-        const currentShopId = existingCart[0].shopId;
-        const newShopId = food.shopId;
-        
-        // If from different shop, clear cart (matches Flutter logic)
-        if (currentShopId !== newShopId) {
-          console.log('🏪 Different shop detected. Clearing cart. Current:', currentShopId, 'New:', newShopId);
-          existingCart = []; // Clear cart
-        }
-      }
+      // Previously: enforced single-shop cart by clearing when shops differed.
+      // Now: allow multiple shops in one cart (do NOT clear existing items).
+      // This matches the requested UX where users can add different items together.
       
       const existingItemIndex = existingCart.findIndex(item => item.id === food.id);
       

@@ -5,6 +5,7 @@ import { stadiumStorage } from '../../utils/storage';
 import Stadium from '../../models/Stadium';
 import stadiumRepository from '../../repositories/stadiumRepository';
 import './StadiumSelectionScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const StadiumSelectionScreen = () => {
   const [selectedStadium, setSelectedStadium] = useState(null);
@@ -13,6 +14,7 @@ const StadiumSelectionScreen = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { applyStadiumTheme } = useTheme();
+  const { t, lang } = useTranslation();
 
   // Fetch stadiums from Firebase on component mount
   useEffect(() => {
@@ -54,7 +56,7 @@ const StadiumSelectionScreen = () => {
   };
 
   return (
-    <div className="stadium-selection-screen">
+    <div className="stadium-selection-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Background image and overlay */}
       <div
         className="stadium-bg"
@@ -65,15 +67,15 @@ const StadiumSelectionScreen = () => {
       <div className="stadium-container">
         {/* Header */}
         <div className="stadium-header">
-          <h1 className="stadium-title animate-down">Select Your Stadium</h1>
-          <p className="stadium-subtitle animate-up">Choose where you want to order food from</p>
+          <h1 className="stadium-title animate-down">{t('stadium.title')}</h1>
+          <p className="stadium-subtitle animate-up">{t('stadium.subtitle')}</p>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p>Loading stadiums...</p>
+            <p>{t('stadium.loading')}</p>
           </div>
         )}
 
@@ -85,7 +87,7 @@ const StadiumSelectionScreen = () => {
               className="retry-button" 
               onClick={() => window.location.reload()}
             >
-              Retry
+              {t('stadium.retry')}
             </button>
           </div>
         )}
@@ -105,7 +107,7 @@ const StadiumSelectionScreen = () => {
                 <h3 className="stadium-name">{stadium.name}</h3>
                 <p className="stadium-location">{stadium.location}</p>
                 <div className="stadium-details">
-                  <span className="stadium-capacity">Capacity: {stadium.capacity}</span>
+                  <span className="stadium-capacity">{t('stadium.capacity')}: {stadium.capacity}</span>
                   <div className="stadium-teams">
                     {stadium.teams.map((team, index) => (
                       <span key={index} className="team-tag">{team}</span>
@@ -130,7 +132,7 @@ const StadiumSelectionScreen = () => {
             onClick={handleContinue}
             disabled={!selectedStadium}
           >
-            {selectedStadium ? `Continue to ${selectedStadium.name}` : 'Select a Stadium'}
+            {selectedStadium ? `${t('stadium.continue_to')} ${selectedStadium.name}` : t('stadium.select_button')}
           </button>
         </div>
       </div>

@@ -9,6 +9,33 @@
   overflow: hidden; /* clip any subpixel seams on edges */
 }
 
+/* RTL overrides for Hebrew */
+.home-top-section.rtl .home-header {
+  flex-direction: row-reverse;
+}
+
+.home-top-section.rtl .stadium-selector {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+.home-top-section.rtl .stadium-info {
+  text-align: right;
+}
+
+.home-top-section.rtl .welcome-message {
+  text-align: right;
+}
+
+.home-top-section.rtl .search-input-wrapper {
+  flex-direction: row-reverse;
+}
+
+.home-top-section.rtl .search-icon {
+  margin-right: 0;
+  margin-left: 12px;
+}
+
 .home-top-section::before {
   content: '';
   position: absolute;

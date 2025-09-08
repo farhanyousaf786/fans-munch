@@ -6,6 +6,7 @@ import { OrderStatus } from '../../models/Order';
 import QRCode from 'react-qr-code';
 import './OrderTrackScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle } from 'react-icons/md';
 
 const baseSteps = [
   { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
@@ -17,7 +18,8 @@ const baseSteps = [
 export default function OrderTrackScreen() {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isRTL = lang === 'he';
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,16 +45,30 @@ export default function OrderTrackScreen() {
     return () => unsub();
   }, [orderId]);
 
-  const steps = baseSteps.map(s => ({ ...s, label: t(s.labelKey) }));
+  const iconFor = (key) => {
+    switch (key) {
+      case OrderStatus.PENDING: return <MdReceiptLong />;
+      case OrderStatus.PREPARING: return <MdRestaurantMenu />;
+      case OrderStatus.DELIVERING: return <MdLocalShipping />;
+      case OrderStatus.DELIVERED: return <MdCheckCircle />;
+      default: return <MdReceiptLong />;
+    }
+  };
+
+  const steps = baseSteps.map(s => ({ ...s, label: t(s.labelKey), icon: iconFor(s.key) }));
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
   const code = order?.orderCode || order?.orderId || order?.id || '';
 
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+
   return (
-    <div className="order-track-screen">
+    <div className="order-track-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="hero">
-        <button className="back-btn" onClick={() => navigate(-1)}>←</button>
+        <button className="back-btn" aria-label={t('common.back')} onClick={() => navigate(-1)}>
+          {isRTL ? <MdArrowForward /> : <MdArrowBack />}
+        </button>
         <div className="hero-title">{t('track.order')}</div>
-        <div className="order-code">{t('track.order')} #{order?.orderId || order?.id}</div>
+        <div className="order-code">#{order?.orderId || order?.id}</div>
       </div>
 
       <div className="content">
@@ -75,12 +91,20 @@ export default function OrderTrackScreen() {
             <div className="timeline">
               {steps.map((step, idx) => {
                 const active = idx <= statusIndex || (statusIndex === -1 && idx === 0);
+                const current = idx === statusIndex || (statusIndex === -1 && idx === 0);
+                const done = idx < statusIndex; // fully completed segments
+                const hasNext = idx < steps.length - 1;
                 return (
-                  <div className={`timeline-item ${active ? 'active' : ''}`} key={step.key}>
+                  <div className={`timeline-item ${active ? 'active' : ''} ${current ? 'current' : ''} ${done ? 'done' : ''} ${hasNext ? 'has-next' : ''}`} key={step.key}>
                     <div className="dot" />
                     <div className="step-card">
-                      <div className="step-title">{step.label}</div>
-                      <div className="step-sub">{order?.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : ''}</div>
+                      <div className="step-row">
+                        <span className={`step-icon ${active ? 'on' : ''} ${current ? 'glow' : ''}`}>{step.icon}</span>
+                        <div className="step-text">
+                          <div className="step-title">{step.label}</div>
+                          <div className="step-sub">{order?.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : ''}</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
@@ -91,16 +115,22 @@ export default function OrderTrackScreen() {
               <div className="items-title">{t('track.items')}</div>
               {Array.isArray(order?.cart) && order.cart.length > 0 ? (
                 order.cart.map((item, i) => (
-                  <div className="item-card" key={i}>
-                    <div className="item-left">
-                      <div className="thumb" aria-hidden>🥤</div>
-                      <div className="meta">
+                  <div className="item-card modern" key={i}>
+                    <div className="item-main">
+                      <div className="item-top">
+                        <span className="qty-pill">{t('track.qty')} {item.quantity || 1}</span>
                         <div className="name">{item.name || t('track.item')}</div>
-                        <div className="desc">{item.description || ''}</div>
-                        <div className="price">${Number(item.price || 0).toFixed(2)}</div>
                       </div>
+                      <div className="desc clamp-2">{item.description || ''}</div>
+                      <div className="price ils">{formatILS(item.price)}</div>
                     </div>
-                    <div className="qty">{t('track.qty')} {item.quantity || 1}</div>
+                    <div className="item-media">
+                      {Array.isArray(item.images) && item.images.length > 0 ? (
+                        <img src={item.images[0]} alt={item.name || 'item'} onError={(e)=>{ e.currentTarget.style.display='none'; }} />
+                      ) : (
+                        <div className="thumb" aria-hidden>🥤</div>
+                      )}
+                    </div>
                   </div>
                 ))
               ) : (

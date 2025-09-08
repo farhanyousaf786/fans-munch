@@ -37,6 +37,29 @@
   border-top: 1px solid #ECECEC;
 }
 
+/* Currency badges under total */
+.currency-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 16px 0;
+}
+
+.currency-badge {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #EEF2FF;
+  color: #1E40AF;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.currency-badge.ils { background: #EEF2FF; color: #1E40AF; }
+.currency-badge.usd { background: #EFF6FF; color: #1D4ED8; }
+.currency-badge.eur { background: #F0FDF4; color: #047857; }
+
 /* Primary CTA */
 .place-order-button {
   background: #3D70FF;

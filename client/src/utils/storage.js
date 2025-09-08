@@ -309,7 +309,7 @@ export const settingsStorage = {
   getThemePreference: () => storage.getItem(STORAGE_KEYS.THEME_PREFERENCE, 'light'),
   
   setLanguagePreference: (language) => storage.setItem(STORAGE_KEYS.LANGUAGE_PREFERENCE, language),
-  getLanguagePreference: () => storage.getItem(STORAGE_KEYS.LANGUAGE_PREFERENCE, 'en'),
+  getLanguagePreference: () => storage.getItem(STORAGE_KEYS.LANGUAGE_PREFERENCE, null),
   
   setNotificationPreferences: (preferences) => storage.setItem(STORAGE_KEYS.NOTIFICATION_PREFERENCES, preferences),
   getNotificationPreferences: () => storage.getItem(STORAGE_KEYS.NOTIFICATION_PREFERENCES, {

@@ -5,6 +5,7 @@ import { useTranslation } from '../../../i18n/i18n';
 
 const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
   const { t } = useTranslation();
+  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   // Check if this is an offer item with discount
   const hasDiscount = food?.discountPercentage && food.discountPercentage > 0;
   const discountedPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food?.price;
@@ -24,12 +25,12 @@ const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
         <div className="food-price-container">
           {hasDiscount ? (
             <>
-              <div className="discounted-price">${discountedPrice?.toFixed(2)}</div>
-              <div className="original-price">${food?.price?.toFixed(2)}</div>
+              <div className="discounted-price">{formatILS(discountedPrice)}</div>
+              <div className="original-price">{formatILS(food?.price)}</div>
               <div className="discount-badge">{Math.round(food.discountPercentage)}% {t('food.off')}</div>
             </>
           ) : (
-            <div className="food-price">${food?.price?.toFixed(2)}</div>
+            <div className="food-price">{formatILS(food?.price)}</div>
           )}
         </div>
         <div className="food-prep-time">

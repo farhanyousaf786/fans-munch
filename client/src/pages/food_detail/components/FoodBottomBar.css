@@ -130,6 +130,17 @@
   touch-action: none; /* allow horizontal drag without scrolling */
 }
 
+/* RTL: knob starts on the right and slides left */
+.swipe-track.rtl {
+  padding-left: 18px;
+  padding-right: 80px; /* mirror spacing for right knob */
+}
+
+.swipe-track.rtl .swipe-knob {
+  left: auto;
+  right: 16px;
+}
+
 @keyframes pillShimmer {
   0% { background-position: 0% 0; }
   100% { background-position: 200% 0; }

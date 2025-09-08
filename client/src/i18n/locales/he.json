@@ -42,6 +42,7 @@
     "min": "דק׳",
     "orders": "הזמנות",
     "swipe_add_to_cart": "החלק להוספה לעגלה",
+    "add_to_cart_short": "הוסף לסל",
     "not_found": "המנה לא נמצאה",
     "try_again": "נסה שוב"
   }
@@ -92,5 +93,57 @@
     "place_order": "בצע הזמנה",
     "card_payment_title": "תשלום בכרטיס",
     "confirm_card_payment": "אשר תשלום בכרטיס"
+  }
+  ,
+  "auth": {
+    "title_login": "התחבר לחשבון שלך",
+    "title_register": "צור חשבון",
+    "first_name": "שם פרטי",
+    "last_name": "שם משפחה",
+    "email": "אימייל",
+    "email_ph": "הכנס אימייל",
+    "password": "סיסמה",
+    "password_ph": "הכנס סיסמה",
+    "confirm_password": "אימות סיסמה",
+    "confirm_password_ph": "הכנס שוב את הסיסמה",
+    "forgot_password": "שכחת סיסמה?",
+    "sign_in": "התחבר",
+    "create_account": "הירשם",
+    "toggle_no_account": "אין לך חשבון? ",
+    "toggle_register_now": "הירשם עכשיו",
+    "toggle_have_account": "כבר יש לך חשבון? ",
+    "toggle_sign_in": "התחבר",
+    "please_wait": "אנא המתן...",
+    "fill_required": "נא למלא את כל השדות הנדרשים.",
+    "passwords_no_match": "הסיסמאות אינן תואמות."
+  }
+  ,
+  "onboarding": {
+    "skip": "דלג",
+    "step1": {
+      "title": "תשב. תזמין. תתפנק.",
+      "subtitle": "לחיצה קטנה – חוויה גדולה!",
+      "description": "תיהנה מאוכל, משקאות ומוצרים שיגיעו ישירות למושב שלך – כדי שתוכל להישאר במשחק, לא בתור."
+    },
+    "step2": {
+      "title": "תשב. תזמין. תהנה.",
+      "subtitle": "תישאר בכיסא – אנחנו כבר באים!",
+      "description": "הזמן מהנייד וקבל הכל בלי לזוז מהמקום – חוויה נוחה ומהירה."
+    },
+    "step3": {
+      "title": "תשב. תזמין. תחווה.",
+      "subtitle": "בלי לקום. בלי לחכות. בלי לפספס.",
+      "description": "מוצרים, משקאות ואוכל עד הכיסא שלך – כדי שתישאר במרכז העניינים, לא בתור."
+    }
+  }
+  ,
+  "stadium": {
+    "title": "בחרו אצטדיון",
+    "subtitle": "בחרו מאיפה תרצו להזמין אוכל",
+    "loading": "טוען אצטדיונים...",
+    "retry": "נסה שוב",
+    "capacity": "קיבולת",
+    "select_button": "בחרו אצטדיון",
+    "continue_to": "המשך אל"
   }
 }

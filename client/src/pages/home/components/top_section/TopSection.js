@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdShoppingCart, MdKeyboardArrowRight } from 'react-icons/md';
+import { MdShoppingCart, MdKeyboardArrowRight, MdKeyboardArrowLeft } from 'react-icons/md';
 import { stadiumStorage } from '../../../../utils/storage';
 import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
@@ -10,7 +10,7 @@ const TopSection = (props) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStadium, setSelectedStadium] = useState(null);
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   useEffect(() => {
     // Load selected stadium using storage utility
@@ -42,7 +42,7 @@ const TopSection = (props) => {
   };
 
   return (
-    <div className="home-top-section">
+    <div className={`home-top-section ${lang === 'he' ? 'rtl' : ''}`} dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Header with location and cart */}
       <div className="home-header">
         <div className="stadium-selector" onClick={handleStadiumClick}>
@@ -54,7 +54,11 @@ const TopSection = (props) => {
               <span className="stadium-name">
                 {selectedStadium ? selectedStadium.name : t('home.select_stadium')}
               </span>
-              <MdKeyboardArrowRight size={20} className="dropdown-arrow" />
+              {lang === 'he' ? (
+                <MdKeyboardArrowLeft size={20} className="dropdown-arrow" />
+              ) : (
+                <MdKeyboardArrowRight size={20} className="dropdown-arrow" />
+              )}
             </div>
           </div>
         </div>

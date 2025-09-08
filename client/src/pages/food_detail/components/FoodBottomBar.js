@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MdArrowForward } from 'react-icons/md';
+import { MdArrowForward, MdArrowBack } from 'react-icons/md';
 import './FoodBottomBar.css';
 import { useTranslation } from '../../../i18n/i18n';
 
@@ -9,7 +9,8 @@ const FoodBottomBar = ({ onAddToCart }) => {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [trackMetrics, setTrackMetrics] = useState({ max: 0, knob: 44, padding: 16 });
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isRTL = lang === 'he';
 
   // Measure sizes after mount and on resize
   useEffect(() => {
@@ -44,7 +45,9 @@ const FoodBottomBar = ({ onAddToCart }) => {
     if (!dragging) return;
     const rect = trackRef.current.getBoundingClientRect();
     // X relative to the start of sliding range
-    const x = clientX - rect.left - trackMetrics.padding - trackMetrics.knob / 2;
+    const x = isRTL
+      ? (rect.right - clientX) - trackMetrics.padding - trackMetrics.knob / 2
+      : clientX - rect.left - trackMetrics.padding - trackMetrics.knob / 2;
     const clamped = Math.min(Math.max(x, 0), trackMetrics.max);
     setDragX(clamped);
   };
@@ -94,14 +97,16 @@ const FoodBottomBar = ({ onAddToCart }) => {
     }
   };
 
+  const labelText = isRTL ? t('food.add_to_cart_short') : t('food.swipe_add_to_cart');
+
   return (
-    <div className="food-detail-bottom-bar">
+    <div className="food-detail-bottom-bar" dir={isRTL ? 'rtl' : 'ltr'}>
       <div
         ref={trackRef}
-        className="pill-cta swipe-track"
+        className={`pill-cta swipe-track ${isRTL ? 'rtl' : ''}`}
         role="button"
         tabIndex={0}
-        aria-label={t('food.swipe_add_to_cart')}
+        aria-label={labelText}
         onKeyDown={onKeyDown}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
@@ -109,11 +114,11 @@ const FoodBottomBar = ({ onAddToCart }) => {
         <span
           ref={knobRef}
           className="pill-leading swipe-knob"
-          style={{ transform: `translateX(${dragX}px) translateY(-50%)` }}
+          style={{ transform: `translateX(${isRTL ? -dragX : dragX}px) translateY(-50%)` }}
         >
-          <MdArrowForward />
+          {isRTL ? <MdArrowBack /> : <MdArrowForward />}
         </span>
-        <span className="pill-text">{t('food.swipe_add_to_cart')}</span>
+        <span className="pill-text">{labelText}</span>
       </div>
     </div>
   );

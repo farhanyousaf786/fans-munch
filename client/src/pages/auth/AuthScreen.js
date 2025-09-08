@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
 import { userStorage, storageManager } from '../../utils/storage';
 import './AuthScreen.css';
+import { useTranslation } from '../../i18n/i18n';
 
 const AuthScreen = () => {
+  const { t, lang } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -51,13 +53,13 @@ const AuthScreen = () => {
       } else {
         // Validate required fields for registration
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
-          setError('Please fill in all required fields.');
+          setError(t('auth.fill_required'));
           return;
         }
         
         // Validate password confirmation
         if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match.');
+          setError(t('auth.passwords_no_match'));
           return;
         }
         
@@ -102,7 +104,7 @@ const AuthScreen = () => {
   };
 
   return (
-    <div className="auth-screen">
+    <div className="auth-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Upper Section */}
       <div className="auth-upper-section">
         <div className="auth-header">
@@ -111,7 +113,7 @@ const AuthScreen = () => {
             alt="Fan Munch Logo" 
             className="app-logo"
           />
-          <h1 className="auth-title">Log in</h1>
+          <h1 className="auth-title">{isLogin ? t('auth.title_login') : t('auth.title_register')}</h1>
         </div>
       </div>
       
@@ -125,27 +127,27 @@ const AuthScreen = () => {
           {!isLogin && (
             <>
               <div className="form-group">
-                <label htmlFor="firstName">First Name</label>
+                <label htmlFor="firstName">{t('auth.first_name')}</label>
                 <input
                   type="text"
                   id="firstName"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  placeholder="Enter your first name"
+                  placeholder={t('auth.first_name')}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="lastName">Last Name</label>
+                <label htmlFor="lastName">{t('auth.last_name')}</label>
                 <input
                   type="text"
                   id="lastName"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  placeholder="Enter your last name"
+                  placeholder={t('auth.last_name')}
                   required
                 />
               </div>
@@ -153,44 +155,44 @@ const AuthScreen = () => {
           )}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="Enter your email"
+              placeholder={t('auth.email_ph')}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              placeholder="Enter your password"
+              placeholder={t('auth.password_ph')}
               required
             />
             <a href="#forgot-password" className="forgot-password">
-              Forgot Password?
+              {t('auth.forgot_password')}
             </a>
           </div>
 
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="confirmPassword">Re-enter Password</label>
+              <label htmlFor="confirmPassword">{t('auth.confirm_password')}</label>
               <input
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                placeholder="Re-enter your password"
+                placeholder={t('auth.confirm_password_ph')}
                 required
               />
             </div>
@@ -207,20 +209,20 @@ const AuthScreen = () => {
             className="auth-button"
             disabled={loading}
           >
-            {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+            {loading ? t('auth.please_wait') : (isLogin ? t('auth.sign_in') : t('auth.create_account'))}
           </button>
         </form>
 
         {/* Toggle */}
         <div className="auth-toggle">
           <p className="toggle-text">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            {isLogin ? t('auth.toggle_no_account') : t('auth.toggle_have_account')}
             <button 
               type="button" 
               className="toggle-button" 
               onClick={toggleAuthMode}
             >
-              {isLogin ? 'Register Now' : 'Sign In'}
+              {isLogin ? t('auth.toggle_register_now') : t('auth.toggle_sign_in')}
             </button>
           </p>
         </div>
