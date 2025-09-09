@@ -150,11 +150,11 @@ class StripeService {
     }
     
     if (numAmount < 0.50) {
-      throw new Error('Minimum payment amount is $0.50');
+      throw new Error('Minimum payment amount is ₪0.50');
     }
     
     if (numAmount > 999999.99) {
-      throw new Error('Maximum payment amount is $999,999.99');
+      throw new Error('Maximum payment amount is ₪999,999.99');
     }
     
     return true;

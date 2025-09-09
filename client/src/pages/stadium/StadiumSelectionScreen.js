@@ -105,15 +105,6 @@ const StadiumSelectionScreen = () => {
 
               <div className="stadium-info">
                 <h3 className="stadium-name">{stadium.name}</h3>
-                <p className="stadium-location">{stadium.location}</p>
-                <div className="stadium-details">
-                  <span className="stadium-capacity">{t('stadium.capacity')}: {stadium.capacity}</span>
-                  <div className="stadium-teams">
-                    {stadium.teams.map((team, index) => (
-                      <span key={index} className="team-tag">{team}</span>
-                    ))}
-                  </div>
-                </div>
               </div>
               {selectedStadium?.id === stadium.id && (
                 <div className="selected-indicator">

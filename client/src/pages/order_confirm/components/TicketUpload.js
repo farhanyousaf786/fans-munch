@@ -32,7 +32,7 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="user"
+        capture="environment"
         onChange={onImageUpload}
         style={{ display: 'none' }}
       />

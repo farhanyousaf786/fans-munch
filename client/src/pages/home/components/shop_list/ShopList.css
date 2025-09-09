@@ -40,12 +40,16 @@
   height: 120px;
   background: #f8f8f8;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
 }
 
 .restaurant-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  transition: transform 0.2s ease;
 }
 
 .restaurant-details {
@@ -102,6 +106,7 @@
   margin: 4px 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

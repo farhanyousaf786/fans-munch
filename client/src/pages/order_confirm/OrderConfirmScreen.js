@@ -399,7 +399,7 @@ const OrderConfirmScreen = () => {
     <div className="order-confirm-screen">
       <div className="order-confirm-container">
         {/* Header */}
-        <ConfirmHeader onBack={handleBack} />
+        <ConfirmHeader />
 
         {/* Ticket Image Upload */}
         <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />

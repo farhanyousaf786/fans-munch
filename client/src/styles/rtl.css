@@ -1,0 +1,134 @@
+/* RTL Support for Hebrew Language */
+
+/* Global RTL styles when Hebrew is selected */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] * {
+  text-align: inherit;
+}
+
+/* Input fields RTL support - exclude card payment fields */
+[dir="rtl"] input:not([data-stripe]):not(.StripeElement),
+[dir="rtl"] textarea,
+[dir="rtl"] .field-input {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Keep card payment section in LTR */
+[dir="rtl"] .stripe-payment-form,
+[dir="rtl"] .stripe-payment-form *,
+[dir="rtl"] .StripeElement,
+[dir="rtl"] .card-payment-section,
+[dir="rtl"] .card-payment-section * {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Form labels RTL support */
+[dir="rtl"] .field-label,
+[dir="rtl"] label {
+  text-align: right;
+}
+
+/* Button text RTL support */
+[dir="rtl"] button {
+  text-align: center;
+}
+
+/* Navigation and layout RTL adjustments */
+[dir="rtl"] .back-button {
+  left: auto;
+  right: 0;
+}
+
+/* Flex layouts RTL support */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Grid layouts maintain their structure but text aligns right */
+[dir="rtl"] .form-row {
+  direction: rtl;
+}
+
+/* Specific form field RTL support */
+[dir="rtl"] .form-field {
+  text-align: right;
+}
+
+/* Placeholder text RTL */
+[dir="rtl"] input::placeholder,
+[dir="rtl"] textarea::placeholder {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Section titles and descriptions */
+[dir="rtl"] .section-title,
+[dir="rtl"] .section-description {
+  text-align: right;
+}
+
+/* Order summary RTL */
+[dir="rtl"] .summary-row {
+  flex-direction: row-reverse;
+}
+
+/* Upload options RTL */
+[dir="rtl"] .upload-options {
+  direction: rtl;
+}
+
+/* Cart items RTL */
+[dir="rtl"] .cart-item {
+  direction: rtl;
+}
+
+[dir="rtl"] .item-info {
+  text-align: right;
+}
+
+/* Menu items RTL */
+[dir="rtl"] .menu-item {
+  text-align: right;
+}
+
+/* Category list RTL */
+[dir="rtl"] .categories-container {
+  direction: rtl;
+}
+
+/* Search input RTL */
+[dir="rtl"] .search-input {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Toast messages RTL */
+[dir="rtl"] .toast {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Modal content RTL */
+[dir="rtl"] .modal-content {
+  text-align: right;
+}
+
+/* Profile page RTL */
+[dir="rtl"] .profile-item {
+  text-align: right;
+}
+
+/* Orders page RTL */
+[dir="rtl"] .order-item {
+  text-align: right;
+}
+
+/* Settings page RTL */
+[dir="rtl"] .settings-item {
+  text-align: right;
+}

@@ -226,9 +226,9 @@ const FoodDetailScreen = () => {
         
         console.log('✅ Added to cart successfully:', result.message);
         
-        // Navigate to Cart to match Stadium Food flow
+        // Navigate to PreCart page
         setTimeout(() => {
-          navigate('/cart');
+          navigate('/precart');
         }, 800);
       } else {
         // Show error popup

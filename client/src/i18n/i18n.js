@@ -106,7 +106,7 @@ const translations = {
       home: 'בית',
       menu: 'תפריט',
       orders: 'הזמנות',
-      cart: 'עגלה',
+      cart: 'סל',
       profile: 'פרופיל',
     },
     profile: {
@@ -223,6 +223,15 @@ export const I18nProvider = ({ children }) => {
     window.addEventListener('language-changed', handler);
     return () => window.removeEventListener('language-changed', handler);
   }, []);
+
+  // Apply RTL direction for Hebrew
+  useEffect(() => {
+    const isRTL = lang === 'he';
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+    document.body.setAttribute('lang', lang);
+    document.body.style.direction = isRTL ? 'rtl' : 'ltr';
+  }, [lang]);
 
   // Apply JSON overrides on top of defaults if present
   const dict = useMemo(() => {

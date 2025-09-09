@@ -62,10 +62,10 @@
   ,
   "order": {
     "confirm_title": "אישור הזמנה",
-    "ticket_image_title": "תמונת כרטיס (אופציונלי)",
+    "ticket_image_title": "צילום כרטיס מושב (אופציונלי)",
     "ticket_image_desc": "העלו תמונת כרטיס כדי למלא אוטומטית את פרטי המושב",
     "choose_from_gallery": "בחירה מהגלריה",
-    "front_camera": "מצלמה קדמית",
+    "front_camera": "מצלמה",
     "or": "או",
     "ticket_alt": "כרטיס",
 
@@ -89,7 +89,7 @@
     "total": "סה\"כ",
 
     "processing": "מעבד...",
-    "place_order_with_total": "בצע הזמנה - ${total}",
+    "place_order_with_total": "בצע הזמנה - {total}",
     "place_order": "בצע הזמנה",
     "card_payment_title": "תשלום בכרטיס",
     "confirm_card_payment": "אשר תשלום בכרטיס"

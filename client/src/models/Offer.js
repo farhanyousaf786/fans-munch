@@ -109,7 +109,7 @@ class Offer {
 
   // Get formatted price (matching Flutter app)
   getFormattedPrice() {
-    return `$${this.price.toFixed(2)}`;
+    return `₪${this.price.toFixed(2)}`;
   }
 
   // Get discounted price (matching Flutter app)
@@ -119,7 +119,7 @@ class Offer {
 
   // Get formatted discounted price
   getFormattedDiscountedPrice() {
-    return `$${this.getDiscountedPrice().toFixed(2)}`;
+    return `₪${this.getDiscountedPrice().toFixed(2)}`;
   }
 
   // Get primary image

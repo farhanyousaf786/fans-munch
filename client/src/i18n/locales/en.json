@@ -88,7 +88,7 @@
     "total": "Total",
 
     "processing": "Processing...",
-    "place_order_with_total": "Place Order - ${total}",
+    "place_order_with_total": "Place Order - ₪{total}",
     "place_order": "Place Order",
     "card_payment_title": "Card Payment",
     "confirm_card_payment": "Confirm Card Payment"

@@ -139,6 +139,18 @@
   box-sizing: border-box; /* prevent overflow from padding */
 }
 
+/* RTL support for Hebrew text in input fields */
+.field-input:lang(he) {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Also apply RTL when body has Hebrew language class */
+body[lang="he"] .field-input {
+  text-align: right;
+  direction: rtl;
+}
+
 .field-input:focus {
   outline: none;
   background: #F4F6FF;

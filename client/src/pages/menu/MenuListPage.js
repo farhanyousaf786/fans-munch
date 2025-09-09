@@ -33,7 +33,7 @@ export default function MenuListPage() {
   const { title, shopId } = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return {
-      title: params.get('shopName') || 'All Menu',
+      title: params.get('shopName') || 'כל התפריט',
       shopId: params.get('shopId') || null,
     };
   }, [location.search]);
@@ -106,7 +106,7 @@ export default function MenuListPage() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search all menu..."
+          placeholder="חפש בכל התפריט..."
         />
       </div>
 
@@ -132,7 +132,7 @@ export default function MenuListPage() {
               </div>
               <div className="menu-grid-content">
                 <h3 className="menu-grid-name">{food.name}</h3>
-                <p className="menu-grid-price">{food.getFormattedPrice()}</p>
+                <p className="menu-grid-price">₪{food.price.toFixed(2)}</p>
               </div>
             </div>
           ))}

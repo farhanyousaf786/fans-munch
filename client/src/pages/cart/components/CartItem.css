@@ -46,7 +46,10 @@
   -webkit-box-orient: vertical;
 }
 
-.item-price-section { margin: 2px 0 8px; }
+.item-price-section { 
+  margin: 2px 0 8px; 
+  text-align: center;
+}
 
 .item-price {
   background: transparent;
@@ -55,9 +58,11 @@
   border-radius: 0;
   font-size: 16px;
   font-weight: 600;
+  display: block;
+  text-align: center;
 }
 .item-price-section::before {
-  content: 'Price ';
+  content: 'מחיר ';
   color: #444;
   font-weight: 500;
   margin-right: 4px;

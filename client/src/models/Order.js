@@ -159,7 +159,7 @@ export class Order {
           nutritionalInfo: item.nutritionalInfo || {},
           preparationTime: item.preparationTime || 15,
           price: parseFloat((item.price || 0).toFixed(2)),
-           currency: item.currency || 'USD',
+           currency: item.currency || 'ILS',
           sauces: item.sauces || [],
           // Shops: include all shopIds exactly like menuItems schema; keep shopId for compatibility
           shopIds: Array.isArray(item.shopIds) ? [...item.shopIds] : (item.shopId ? [item.shopId] : []),

@@ -218,7 +218,7 @@ const OrdersScreen = () => {
                     <span className="meta-dot">•</span>
                     <span className="meta-item">{order.getFormattedDate()}</span>
                   </div>
-                  <div className="order-price">${order.total.toFixed(2)}</div>
+                  <div className="order-price">₪{order.total.toFixed(2)}</div>
                 </div>
 
                 {order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELED && (

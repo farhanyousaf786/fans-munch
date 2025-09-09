@@ -29,6 +29,7 @@
   font-size: 22px;
   font-weight: 700;
   color: #333;
+  text-align: center;
 }
 
 .menu-page-status {
@@ -80,7 +81,25 @@
 
 @media (max-width: 480px) {
   .menu-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  
+  .menu-grid-image {
+    height: 120px;
+  }
+  
+  .menu-grid-content {
+    padding: 10px;
+  }
+  
+  .menu-grid-name {
+    font-size: 13px;
+    margin: 0 0 4px 0;
+  }
+  
+  .menu-grid-price {
+    font-size: 13px;
   }
 }
 
@@ -136,6 +155,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #333;
+  text-align: center;
 }
 
 .menu-grid-price {
@@ -143,4 +163,5 @@
   font-size: 14px;
   font-weight: 600;
   color: #3D70FF;
+  text-align: center;
 }

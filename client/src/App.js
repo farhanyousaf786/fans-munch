@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import './styles/rtl.css';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';
 import { seatStorage, userStorage } from './utils/storage';
@@ -13,6 +14,7 @@ import StadiumSelectionScreen from './pages/stadium/StadiumSelectionScreen';
 import Home from './pages/home/Home';
 import OrdersScreen from './pages/orders/OrdersScreen';
 import CartScreen from './pages/cart/CartScreen';
+import PreCartPage from './pages/precart/PreCartPage';
 import ProfileScreen from './pages/profile/ProfileScreen';
 import FoodDetailScreen from './pages/food_detail/FoodDetailScreen';
 import TipScreen from './pages/tip/TipScreen';
@@ -83,6 +85,7 @@ function App() {
             <Route path="/menu" element={<MenuListPage />} />
             <Route path="/orders" element={<OrdersScreen />} />
             <Route path="/cart" element={<CartScreen />} />
+            <Route path="/precart" element={<PreCartPage />} />
             <Route path="/profile" element={<ProfileScreen />} />
             {/* Settings */}
             <Route path="/settings/about" element={<AboutAppScreen />} />

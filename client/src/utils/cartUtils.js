@@ -98,7 +98,7 @@ export const cartUtils = {
           descriptionMap: food.descriptionMap || {},
           allergens: food.allergens || [],
           category: food.category || '', // category ID
-          currency: food.currency || 'USD',
+          currency: food.currency || 'ILS',
           addedAt: new Date().toISOString()
         };
         

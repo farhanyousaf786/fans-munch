@@ -8,23 +8,12 @@ import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
 import { useTranslation } from '../../../../i18n/i18n';
 
-// Local asset images to use as random placeholders
-const assetPlaceholders = [
-  process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
-  process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
-  process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png',
-];
+// Single uniform image for all shops to ensure consistency
+const uniformShopImage = process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png';
 
-// Deterministic hash to pick a placeholder based on a key (e.g., shop id or name)
-function getPlaceholderByKey(key) {
-  const str = String(key || 'placeholder');
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0; // Convert to 32bit int
-  }
-  const idx = Math.abs(hash) % assetPlaceholders.length;
-  return assetPlaceholders[idx];
+// Use the same image for all shops to create uniform appearance
+function getUniformShopImage() {
+  return uniformShopImage;
 }
 
 // Sample data for shops with food items
@@ -36,7 +25,7 @@ const sampleShops = [
     rating: 4.5,
     reviewCount: 124,
     deliveryTime: '15-20 min',
-    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
+    image: uniformShopImage,
     items: ['Burgers', 'Fries', 'Chicken', 'Drinks']
   },
   {
@@ -46,7 +35,7 @@ const sampleShops = [
     rating: 4.2,
     reviewCount: 89,
     deliveryTime: '20-25 min',
-    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
+    image: uniformShopImage,
     items: ['Pizza', 'Pasta', 'Garlic Bread', 'Desserts']
   },
   {
@@ -56,7 +45,7 @@ const sampleShops = [
     rating: 4.0,
     reviewCount: 67,
     deliveryTime: '10-15 min',
-    image: process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png',
+    image: uniformShopImage,
     items: ['Subs', 'Salads', 'Cookies', 'Drinks']
   }
 ];
@@ -229,28 +218,19 @@ const ShopList = ({ onShopSelect }) => {
           >
             <div className="restaurant-image">
               <img 
-                src={shop.image || getPlaceholderByKey(shop.id || shop.name)} 
+                src={shop.image || getUniformShopImage()} 
                 alt={shop.name}
                 onError={(e) => {
-                  e.currentTarget.src = getPlaceholderByKey(shop.id || shop.name);
+                  e.currentTarget.src = getUniformShopImage();
                 }}
               />
             </div>
             <div className="restaurant-details">
               <div className="restaurant-header">
                 <h3 className="restaurant-name">{shop.name}</h3>
-                <div className="restaurant-rating">
-                  <FaStar className="star-icon" />
-                  <span>{shop.rating}</span>
-                  <span className="review-count">({shop.reviewCount})</span>
-                </div>
               </div>
               <p className="restaurant-description">{shop.description}</p>
               <div className="restaurant-footer">
-                <div className="delivery-time">
-                  <MdAccessTime className="time-icon" />
-                  <span>{shop.deliveryTime}</span>
-                </div>
                 <div className="food-items">
                   {shop.items.slice(0, 2).map((item, index) => (
                     <span key={index} className="food-tag">{item}</span>
