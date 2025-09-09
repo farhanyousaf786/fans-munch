@@ -19,26 +19,19 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 
-// Serve static files from React build with proper headers and cache policy
+// Debug: Log the build directory path
+console.log('Build directory:', path.join(__dirname, 'build'));
+
+// Serve static files from React build
 app.use(express.static(path.join(__dirname, 'build'), {
-  etag: true,
+  etag: false,
+  maxAge: 0,
   setHeaders: (res, filePath) => {
+    console.log('Serving static file:', filePath);
     if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
-      // Cache JS files aggressively since they're content-hashed
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
-      // Cache CSS files aggressively since they're content-hashed
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    } else if (filePath.endsWith('.html')) {
-      // Never cache HTML files to avoid stale references
-      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    } else {
-      // Default cache for other assets (images, etc.)
-      res.setHeader('Cache-Control', 'public, max-age=86400');
     }
   }
 }));
