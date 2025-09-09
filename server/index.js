@@ -19,15 +19,24 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, 'build')));
-
-// Catch all handler: send back React's index.html file for any non-API routes
-app.get('*', (req, res) => {
-  // Skip API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
+// Serve static files from React build with proper headers
+app.use(express.static(path.join(__dirname, 'build'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
   }
+}));
+
+// API routes only
+app.get('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// Catch all handler: send back React's index.html file for non-static routes
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 

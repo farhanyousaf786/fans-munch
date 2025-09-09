@@ -29,7 +29,7 @@ let messaging = null;
 try {
   messaging = getMessaging(app);
 } catch (error) {
-  console.warn('Firebase Messaging not supported in this environment:', error);
+  console.warn('Firebase Messaging not supported in this environment::', error);
 }
 
 // Request permission for notifications and get FCM token
