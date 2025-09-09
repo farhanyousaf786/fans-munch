@@ -21,17 +21,25 @@ app.use('/api/stripe', stripeRoutes);
 
 // Serve static files from React build with proper headers and cache policy
 app.use(express.static(path.join(__dirname, 'build'), {
-  // Cache static assets aggressively; they are content-hashed
-  maxAge: '1y',
   etag: true,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
+      // Cache JS files aggressively since they're content-hashed
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
+      // Cache CSS files aggressively since they're content-hashed
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (filePath.endsWith('.html')) {
+      // Never cache HTML files to avoid stale references
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else {
+      // Default cache for other assets (images, etc.)
+      res.setHeader('Cache-Control', 'public, max-age=86400');
     }
-    // Ensure hashed assets can be cached by browsers and CDNs
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   }
 }));
 
