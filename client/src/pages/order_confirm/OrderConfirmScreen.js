@@ -14,6 +14,7 @@ import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { sendNewOrderNotification } from '../../utils/notificationUtils';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -373,7 +374,26 @@ const OrderConfirmScreen = () => {
 
       const createdOrder = await orderRepository.createOrder(order);
 
-      // 3) Cleanup and notify
+      // 4) Send notification to delivery user if assigned (via utility)
+      if (nearestDeliveryUserId) {
+        try {
+          await sendNewOrderNotification(nearestDeliveryUserId, {
+            orderId: createdOrder.orderId,
+            customerName: `${userData.firstName} ${userData.lastName}`.trim(),
+            stadiumName: stadiumData.name || stadiumData.title || 'Stadium',
+            seatInfo: seatInfo,
+            totalAmount: finalTotal,
+            deliveryFee: fee,
+            customerLocation: customerLocation,
+            shopId: nearestShopId || cartItems[0].shopId || ''
+          });
+        } catch (notificationError) {
+          console.warn('⚠️ Error sending notification to delivery user:', notificationError);
+          // Don't fail the order creation if notification fails
+        }
+      }
+
+      // 5) Cleanup and notify
       cartUtils.clearCart();
       localStorage.removeItem('selectedTip');
 
