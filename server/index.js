@@ -19,14 +19,19 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 
-// Serve static files from React build with proper headers
+// Serve static files from React build with proper headers and cache policy
 app.use(express.static(path.join(__dirname, 'build'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
+  // Cache static assets aggressively; they are content-hashed
+  maxAge: '1y',
+  etag: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript');
-    } else if (path.endsWith('.css')) {
+    } else if (filePath.endsWith('.css')) {
       res.setHeader('Content-Type', 'text/css');
     }
+    // Ensure hashed assets can be cached by browsers and CDNs
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   }
 }));
 
@@ -37,6 +42,11 @@ app.get('/api/*', (req, res) => {
 
 // Catch all handler: send back React's index.html file for non-static routes
 app.get('*', (req, res) => {
+  // Prevent cache for HTML to avoid stale references to old bundles
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
