@@ -139,17 +139,16 @@ const OrderConfirmScreen = () => {
   }, [finalTotal, stripeIntent?.id, stripeIntent?.clientSecret]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log('[INPUT CHANGE]', { field, value, currentFormData: formData });
     
-    if (errors[field]) {
-      setErrors(prev => ({
+    setFormData(prev => {
+      const newData = {
         ...prev,
-        [field]: ''
-      }));
-    }
+        [field]: value
+      };
+      console.log('[INPUT CHANGE] New form data:', newData);
+      return newData;
+    });
     
     // Re-validate form after input change
     setTimeout(() => validateForm(), 0);
