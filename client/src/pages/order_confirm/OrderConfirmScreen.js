@@ -109,7 +109,7 @@ const OrderConfirmScreen = () => {
           // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
           // amount: finalTotal,
           body: JSON.stringify({ 
-            amount: 2,
+            amount: finalTotal,
             currency: 'ils',
             // vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc'
             vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo'
@@ -197,7 +197,7 @@ const OrderConfirmScreen = () => {
           // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
           // amount: finalTotal,
           body: JSON.stringify({ 
-            amount: 2, 
+            amount: finalTotal, 
             currency: 'ils',
             // vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc'
             vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo'
@@ -437,7 +437,7 @@ const OrderConfirmScreen = () => {
           intentId={stripeIntent?.id}
           clientSecret={stripeIntent?.clientSecret}
           mode={stripeIntent?.mode}
-          totalAmount={finalTotal || 500}
+          totalAmount={finalTotal}
           currency={'ils'}
           showConfirmButton={false}
         />
