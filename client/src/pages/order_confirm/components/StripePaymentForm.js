@@ -14,7 +14,7 @@ const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   : null;
 
 // Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
-const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils' }, ref) => {
+const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -52,7 +52,16 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               showToast(`Payment failed: ${error.message}`, 'error', 4000);
             } else if (paymentIntent?.status === 'succeeded') {
               ev.complete('success');
-              showToast('Payment successful!', 'success', 2500);
+              showToast('Payment successful! Placing order...', 'success', 2500);
+              // Call Firebase order placement after successful wallet payment
+              if (onWalletPaymentSuccess) {
+                try {
+                  await onWalletPaymentSuccess();
+                } catch (orderError) {
+                  console.error('Order placement failed after wallet payment:', orderError);
+                  showToast('Payment succeeded but order placement failed. Please contact support.', 'error', 5000);
+                }
+              }
               onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
             } else if (paymentIntent?.status === 'requires_action') {
               ev.complete('success');
@@ -163,7 +172,14 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
       {paymentRequest && (
         <div style={{ marginBottom: 12 }}>
-          <PaymentRequestButtonElement options={{ paymentRequest }} />
+          <div style={{ opacity: isFormValid ? 1 : 0.5, pointerEvents: isFormValid ? 'auto' : 'none' }}>
+            <PaymentRequestButtonElement options={{ paymentRequest }} />
+          </div>
+          {!isFormValid && (
+            <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 }}>
+              Please fill in all required fields to use Apple Pay/Google Pay
+            </div>
+          )}
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Or pay with card</div>
         </div>
       )}
@@ -198,7 +214,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
 });
 
 // Main component wrapper with Stripe Elements provider
-const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils' }, ref) => {
+const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
   const cardFormRef = useRef();
 
   // Forward ref methods to the inner CardForm
@@ -237,6 +253,8 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
         totalAmount={totalAmount}
         currency={currency}
         onConfirmed={onConfirmed}
+        isFormValid={isFormValid}
+        onWalletPaymentSuccess={onWalletPaymentSuccess}
       />
     </Elements>
   );

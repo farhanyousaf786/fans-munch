@@ -43,11 +43,15 @@ const OrderConfirmScreen = () => {
   const [errors, setErrors] = useState({});
   const [ticketImage, setTicketImage] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     // Initialize order data
     const cartItems = cartUtils.getCartItems();
     const cartTotal = cartUtils.getTotalPrice();
+    
+    // Initial form validation
+    validateForm();
     setOrderTotal(cartTotal);
     // Delivery fee = 2 ILS per item (sum of quantities)
     const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
@@ -146,6 +150,9 @@ const OrderConfirmScreen = () => {
         [field]: ''
       }));
     }
+    
+    // Re-validate form after input change
+    setTimeout(() => validateForm(), 0);
   };
 
   const validateForm = () => {
@@ -159,7 +166,9 @@ const OrderConfirmScreen = () => {
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    setIsFormValid(isValid);
+    return isValid;
   };
 
   const handleImageUpload = (event) => {
@@ -440,6 +449,8 @@ const OrderConfirmScreen = () => {
           totalAmount={finalTotal}
           currency={'ils'}
           showConfirmButton={false}
+          isFormValid={isFormValid}
+          onWalletPaymentSuccess={handlePayment}
         />
 
         {/* Place Order Button */}

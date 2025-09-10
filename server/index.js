@@ -24,22 +24,13 @@ app.use('/api/notifications', notificationRoutes);
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, 'build')));
 
-// SPA fallback: send index.html for app routes without a file extension.
-// IMPORTANT: Do NOT serve index.html for missing static assets (e.g., old hashed bundles),
-// otherwise the browser will receive HTML when it expects JS and crash with "Unexpected token '<'".
-app.get('*', (req, res, next) => {
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
   // Skip API routes
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
-
-  // If the request has a file extension (e.g., .js, .css, .png), let static middleware handle it
-  // and if it doesn't exist, return a 404 instead of index.html
-  const hasExtension = path.extname(req.path) !== '';
-  if (hasExtension) return res.status(404).end();
-
-  // Otherwise, return the SPA entry
-  return res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 const PORT = process.env.PORT || 5001;
