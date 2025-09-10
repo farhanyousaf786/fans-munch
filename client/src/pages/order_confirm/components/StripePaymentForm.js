@@ -44,9 +44,39 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
         if (!active || !pr) return;
         pr.on('paymentmethod', async (ev) => {
           try {
+            console.log('[STRIPE WALLET] Payment method selected:', {
+              type: ev.paymentMethod.type,
+              id: ev.paymentMethod.id,
+              card: ev.paymentMethod.card
+            });
+            
             const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
               payment_method: ev.paymentMethod.id,
             });
+            
+            console.log('[STRIPE WALLET] Payment confirmation response:', {
+              error: error ? {
+                type: error.type,
+                code: error.code,
+                message: error.message,
+                decline_code: error.decline_code
+              } : null,
+              paymentIntent: paymentIntent ? {
+                id: paymentIntent.id,
+                status: paymentIntent.status,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                charges: paymentIntent.charges?.data?.map(charge => ({
+                  id: charge.id,
+                  amount: charge.amount,
+                  currency: charge.currency,
+                  status: charge.status,
+                  outcome: charge.outcome,
+                  fee_details: charge.fee_details
+                }))
+              } : null
+            });
+            
             if (error) {
               ev.complete('fail');
               showToast(`Payment failed: ${error.message}`, 'error', 4000);
@@ -71,6 +101,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
             }
           } catch (err) {
+            console.error('[STRIPE WALLET] Payment error:', err);
             ev.complete('fail');
             showToast(`Payment error: ${err.message}`, 'error', 4000);
           }
@@ -92,10 +123,35 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
     try {
       const cardElement = elements.getElement(CardElement);
       
+      console.log('[STRIPE CARD] Attempting payment confirmation with clientSecret:', clientSecret?.substring(0, 20) + '...');
+      
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
         }
+      });
+      
+      console.log('[STRIPE CARD] Payment confirmation response:', {
+        error: error ? {
+          type: error.type,
+          code: error.code,
+          message: error.message,
+          decline_code: error.decline_code
+        } : null,
+        paymentIntent: paymentIntent ? {
+          id: paymentIntent.id,
+          status: paymentIntent.status,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          charges: paymentIntent.charges?.data?.map(charge => ({
+            id: charge.id,
+            amount: charge.amount,
+            currency: charge.currency,
+            status: charge.status,
+            outcome: charge.outcome,
+            fee_details: charge.fee_details
+          }))
+        } : null
       });
 
       if (error) {
