@@ -69,15 +69,27 @@ exports.createPaymentIntent = async (req, res) => {
       },
     };
 
-    // If vendor account provided, route funds and record vendor in metadata
+    // If vendor account provided, use application_fee_amount for clearer platform revenue
     if (vendorConnectedAccountId) {
+      const deliveryFeeInCents = Math.round((deliveryFee || 0) * 100);
+      const tipAmountInCents = Math.round((tipAmount || 0) * 100);
+      const platformFees = deliveryFeeInCents + tipAmountInCents;
+      
+      // Use application_fee_amount - platform keeps this amount explicitly
+      paymentIntentData.application_fee_amount = platformFees;
       paymentIntentData.transfer_data = {
         destination: vendorConnectedAccountId,
-        amount: vendorAmount,
       };
       paymentIntentData.metadata.vendorAccountId = vendorConnectedAccountId;
       paymentIntentData.metadata.deliveryFee = deliveryFee;
       paymentIntentData.metadata.tipAmount = tipAmount;
+      paymentIntentData.metadata.platformFee = platformFees / 100; // Store in original currency
+      
+      console.log('[Stripe] Platform fee structure:', {
+        totalAmount: amountInCents,
+        platformFee: platformFees,
+        vendorReceives: amountInCents - platformFees
+      });
     }
 
     // Create payment intent

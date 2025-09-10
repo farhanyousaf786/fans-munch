@@ -94,6 +94,12 @@ const OrderConfirmScreen = () => {
     }
   }, []);
 
+  // Calculate final total whenever order components change
+  useEffect(() => {
+    const total = orderTotal + deliveryFee + (tipData.amount || 0);
+    setFinalTotal(total);
+  }, [orderTotal, deliveryFee, tipData.amount]);
+
   // Pre-create payment intent on load so card UI can render immediately
   useEffect(() => {
     let cancelled = false;
@@ -110,13 +116,14 @@ const OrderConfirmScreen = () => {
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
-          // amount: finalTotal,
           body: JSON.stringify({ 
             amount: finalTotal,
             currency: 'ils',
-            vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc'
-            // vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo'
+            vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc',
+            // vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo',
+            // Send fee breakdown for payment splitting
+            deliveryFee: deliveryFee,
+            tipAmount: tipData.amount || 0
           })
         });
         const text = await res.text();

@@ -81,9 +81,24 @@ class FoodRepository {
   // Get all menu items (fallback)
   async getAllMenuItems() {
     try {
-      // This is a simplified version - in real app, you'd query across all stadiums
-      const menuItems = this.getMockMenuItems();
-      return { success: true, foods: menuItems };
+      // Query all menu items without stadium filter
+      const menuItemsRef = collection(db, 'menuItems');
+      const q = query(menuItemsRef, limit(50));
+      
+      const menuSnapshot = await getDocs(q);
+      console.log('Found all menu items:', menuSnapshot.size);
+      
+      const allMenuItems = [];
+      menuSnapshot.forEach((doc) => {
+        try {
+          const data = doc.data();
+          allMenuItems.push(Food.fromMap(doc.id, data));
+        } catch (error) {
+          console.error('Error processing document', doc.id, ':', error);
+        }
+      });
+      
+      return { success: true, foods: allMenuItems };
     } catch (error) {
       console.error('Error fetching all menu items:', error);
       return { success: false, error: 'Failed to fetch menu items' };
@@ -93,16 +108,28 @@ class FoodRepository {
   // Get menu items by category
   async getMenuItemsByCategory(category, stadiumId = null) {
     try {
-      let menuItems = this.getMockMenuItems();
-      
-      if (category !== 'all') {
-        menuItems = menuItems.filter(item => 
-          item.category.toLowerCase() === category.toLowerCase()
-        );
+      // First get all menu items for the stadium
+      let result;
+      if (stadiumId) {
+        result = await this.getStadiumMenu(stadiumId, 50);
+      } else {
+        result = await this.getAllMenuItems();
       }
       
-      if (stadiumId) {
-        menuItems = menuItems.filter(item => item.stadiumId === stadiumId);
+      if (!result.success) {
+        return result;
+      }
+      
+      let menuItems = result.foods;
+      
+      // Filter by category if not 'all'
+      if (category !== 'all') {
+        menuItems = menuItems.filter(item => {
+          // Check if item has category field that matches
+          return item.category === category || 
+                 (item.categoryMap && item.categoryMap[category]) ||
+                 (typeof item.category === 'string' && item.category.toLowerCase() === category.toLowerCase());
+        });
       }
       
       return { success: true, foods: menuItems };
@@ -115,18 +142,30 @@ class FoodRepository {
   // Search menu items
   async searchMenuItems(searchQuery, stadiumId = null) {
     try {
-      let menuItems = this.getMockMenuItems();
-      
-      const searchLower = searchQuery.toLowerCase();
-      menuItems = menuItems.filter(item => 
-        item.name.toLowerCase().includes(searchLower) ||
-        item.description.toLowerCase().includes(searchLower) ||
-        item.category.toLowerCase().includes(searchLower)
-      );
-      
+      // First get all menu items for the stadium
+      let result;
       if (stadiumId) {
-        menuItems = menuItems.filter(item => item.stadiumId === stadiumId);
+        result = await this.getStadiumMenu(stadiumId, 50);
+      } else {
+        result = await this.getAllMenuItems();
       }
+      
+      if (!result.success) {
+        return result;
+      }
+      
+      let menuItems = result.foods;
+      
+      // Filter by search query
+      const searchLower = searchQuery.toLowerCase();
+      menuItems = menuItems.filter(item => {
+        const name = (item.nameMap && (item.nameMap.he || item.nameMap.en)) || item.name || '';
+        const description = (item.descriptionMap && (item.descriptionMap.he || item.descriptionMap.en)) || item.description || '';
+        
+        return name.toLowerCase().includes(searchLower) ||
+               description.toLowerCase().includes(searchLower) ||
+               (item.category && item.category.toLowerCase().includes(searchLower));
+      });
       
       return { success: true, foods: menuItems };
     } catch (error) {
