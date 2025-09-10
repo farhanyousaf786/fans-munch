@@ -40,7 +40,7 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
       <div className="upload-options">
         <button type="button" className="upload-option" onClick={openGallery} aria-label={t('order.choose_from_gallery')}>
           <img
-            src={process.env.PUBLIC_URL + '/assets/images/choose-from-gallery.png'}
+            src="/assets/images/choose-from-gallery.png"
             alt={t('order.choose_from_gallery')}
             className="upload-icon-img"
           />
@@ -48,7 +48,7 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
 
         <button type="button" className="upload-option" onClick={openCamera} aria-label={t('order.front_camera')}>
           <img
-            src={process.env.PUBLIC_URL + '/assets/images/camera.png'}
+            src="/assets/images/camera.png"
             alt={t('order.front_camera')}
             className="upload-icon-img"
           />
