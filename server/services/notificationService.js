@@ -115,6 +115,14 @@ class NotificationService {
         throw new Error('FCM token is required');
       }
 
+      // Mask token for logs (show first 8 and last 6 chars)
+      const mask = (t) => {
+        if (!t || t.length < 20) return '[token]';
+        return `${t.slice(0, 8)}...${t.slice(-6)}`;
+      };
+
+      console.log(`[FCM] Sending to token: ${mask(fcmToken)}`);
+
       const message = {
         token: fcmToken,
         notification: {
