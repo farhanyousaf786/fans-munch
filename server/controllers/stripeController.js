@@ -47,7 +47,7 @@ exports.createPaymentIntent = async (req, res) => {
         vendorAmount = 0;
       }
       
-      console.log('[Stripe] Payment split calculation:', {
+      console.log('Stripe] Payment split calculation:', {
         totalAmount: amountInCents,
         deliveryFee: deliveryFeeInCents,
         tipAmount: tipAmountInCents,

@@ -2,8 +2,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-// Load env from project root .env
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+// Load env variables (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+}
 const airwallexRoutes = require('./routes/airwallexRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
