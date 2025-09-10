@@ -158,12 +158,24 @@ const OrderConfirmScreen = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.row.trim()) {
+    console.log('[VALIDATION] Checking form data:', {
+      row: formData.row,
+      seatNo: formData.seatNo,
+      rowTrimmed: formData.row?.trim(),
+      seatNoTrimmed: formData.seatNo?.trim()
+    });
+    
+    if (!formData.row || !formData.row.trim()) {
       newErrors.row = 'Please enter row number';
     }
-    if (!formData.seatNo.trim()) {
+    if (!formData.seatNo || !formData.seatNo.trim()) {
       newErrors.seatNo = 'Please enter seat number';
     }
+    
+    console.log('[VALIDATION] Validation result:', {
+      errors: newErrors,
+      isValid: Object.keys(newErrors).length === 0
+    });
     
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
@@ -189,9 +201,20 @@ const OrderConfirmScreen = () => {
     console.log('[WALLET ORDER] Starting Firebase order placement after successful wallet payment');
     
     try {
-      // Validate form first
-      if (!validateForm()) {
-        throw new Error('Form validation failed: Please fill in all required fields');
+      // Validate form first - only check required fields (row and seat number)
+      console.log('[WALLET ORDER] Current form data before validation:', formData);
+      
+      const validationErrors = {};
+      if (!formData.row || !formData.row.trim()) {
+        validationErrors.row = 'Row number is required';
+      }
+      if (!formData.seatNo || !formData.seatNo.trim()) {
+        validationErrors.seatNo = 'Seat number is required';
+      }
+      
+      if (Object.keys(validationErrors).length > 0) {
+        console.log('[WALLET ORDER] Validation failed:', validationErrors);
+        throw new Error(`Form validation failed: ${Object.values(validationErrors).join(', ')}`);
       }
       
       console.log('[WALLET ORDER] Form validation passed');
