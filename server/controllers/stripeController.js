@@ -19,8 +19,8 @@ exports.createPaymentIntent = async (req, res) => {
     
     console.log('[Stripe] Creating payment intent...');
     
-    // Get amount, currency, and optional vendor connected account from request
-    const { amount, currency = 'ils', vendorConnectedAccountId } = req.body;
+    // Get amount, currency, fees, and optional vendor connected account from request
+    const { amount, currency = 'ils', vendorConnectedAccountId, deliveryFee = 0, tipAmount = 0 } = req.body;
     
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -32,8 +32,29 @@ exports.createPaymentIntent = async (req, res) => {
     // Convert amount to the smallest currency unit (cents/agorot)
     const amountInCents = Math.round(amount * 100);
 
-    // Calculate vendor share (98%) if connected account provided
-    const vendorAmount = vendorConnectedAccountId ? Math.round(amountInCents * 0.98) : undefined;
+    // Calculate platform fees (delivery fee + tip) and vendor amount
+    let vendorAmount;
+    if (vendorConnectedAccountId) {
+      const deliveryFeeInCents = Math.round((deliveryFee || 0) * 100);
+      const tipAmountInCents = Math.round((tipAmount || 0) * 100);
+      const platformFees = deliveryFeeInCents + tipAmountInCents;
+      
+      // Vendor gets total amount minus platform fees (delivery + tip)
+      vendorAmount = amountInCents - platformFees;
+      
+      // Ensure vendor amount is not negative
+      if (vendorAmount < 0) {
+        vendorAmount = 0;
+      }
+      
+      console.log('[Stripe] Payment split calculation:', {
+        totalAmount: amountInCents,
+        deliveryFee: deliveryFeeInCents,
+        tipAmount: tipAmountInCents,
+        platformFees,
+        vendorAmount
+      });
+    }
 
     // Build intent payload
     const paymentIntentData = {
@@ -55,6 +76,8 @@ exports.createPaymentIntent = async (req, res) => {
         amount: vendorAmount,
       };
       paymentIntentData.metadata.vendorAccountId = vendorConnectedAccountId;
+      paymentIntentData.metadata.deliveryFee = deliveryFee;
+      paymentIntentData.metadata.tipAmount = tipAmount;
     }
 
     // Create payment intent
