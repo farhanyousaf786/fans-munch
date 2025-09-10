@@ -23,7 +23,9 @@ export async function buildPaymentRequest(stripe, {
     const paymentRequest = stripe.paymentRequest({
       country,
       currency,
-      total: { label, amount: Math.round(Number(amount)) || 0 }, // amount should already be in minor units (agorot for ILS)
+      // IMPORTANT: Stripe PaymentRequest expects amount in the smallest currency unit (e.g., cents/agorot)
+      // Our UI passes amount in major units (e.g., 41.00 ILS), so convert to minor units here.
+      total: { label, amount: Math.round(Number(amount) * 100) || 0 },
       requestPayerName,
       requestPayerEmail,
       requestPayerPhone,
