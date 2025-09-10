@@ -188,17 +188,33 @@ const OrderConfirmScreen = () => {
   const handleWalletPaymentSuccess = async () => {
     console.log('[WALLET ORDER] Starting Firebase order placement after successful wallet payment');
     
-    if (!validateForm()) {
-      throw new Error('Form validation failed');
-    }
-
     try {
+      // Validate form first
+      if (!validateForm()) {
+        throw new Error('Form validation failed: Please fill in all required fields');
+      }
+      
+      console.log('[WALLET ORDER] Form validation passed');
       // 1) Save order in Firebase (wallet payment already succeeded)
       const userData = userStorage.getUserData();
       const stadiumData = stadiumStorage.getSelectedStadium();
       const cartItems = cartUtils.getCartItems();
-      if (!userData || !stadiumData || cartItems.length === 0) {
-        throw new Error('Missing required data to create order');
+      
+      console.log('[WALLET ORDER] Data check:', {
+        hasUserData: !!userData,
+        hasStadiumData: !!stadiumData,
+        cartItemsCount: cartItems?.length || 0,
+        finalTotal
+      });
+      
+      if (!userData) {
+        throw new Error('User data not found. Please log in again.');
+      }
+      if (!stadiumData) {
+        throw new Error('Stadium data not found. Please select a stadium.');
+      }
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error('Cart is empty. Please add items to cart.');
       }
 
       const seatInfo = {
@@ -333,9 +349,19 @@ const OrderConfirmScreen = () => {
         deliveryUserId: nearestDeliveryUserId || null
       });
 
-      console.log('[WALLET ORDER] Creating order in Firebase:', order);
+      console.log('[WALLET ORDER] Creating order in Firebase:', {
+        orderData: order,
+        seatInfo,
+        totals,
+        nearestShopId,
+        nearestDeliveryUserId
+      });
+      
       const createdOrder = await orderRepository.createOrder(order);
-      console.log('[WALLET ORDER] Order created successfully:', createdOrder.orderId);
+      console.log('[WALLET ORDER] Order created successfully:', {
+        orderId: createdOrder.orderId,
+        orderData: createdOrder
+      });
 
       // 2) Send notification to delivery user if assigned (via utility)
       if (nearestDeliveryUserId) {
@@ -367,8 +393,25 @@ const OrderConfirmScreen = () => {
       setTimeout(() => navigate('/home', { replace: true }), 1200);
       
     } catch (error) {
-      console.error('[WALLET ORDER] Firebase order creation failed:', error);
-      throw error; // Re-throw so the wallet payment handler can show error
+      console.error('[WALLET ORDER] Firebase order creation failed:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name,
+        code: error?.code
+      });
+      
+      // Create a more descriptive error message
+      let errorMessage = 'Unknown error occurred';
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.code) {
+        errorMessage = `Firebase error: ${error.code}`;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      throw new Error(errorMessage); // Re-throw with clearer message
     }
   };
 

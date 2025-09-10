@@ -86,10 +86,19 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               // Call Firebase order placement after successful wallet payment
               if (onWalletPaymentSuccess) {
                 try {
+                  console.log('[WALLET] Calling onWalletPaymentSuccess...');
                   await onWalletPaymentSuccess();
+                  console.log('[WALLET] Order placement completed successfully');
                 } catch (orderError) {
-                  console.error('Order placement failed after wallet payment:', orderError);
-                  showToast('Payment succeeded but order placement failed. Please contact support.', 'error', 5000);
+                  console.error('[WALLET] Order placement failed:', {
+                    error: orderError,
+                    message: orderError?.message,
+                    stack: orderError?.stack,
+                    name: orderError?.name
+                  });
+                  // Show more specific error message
+                  const errorMsg = orderError?.message || 'Unknown error';
+                  showToast(`Payment succeeded but order failed: ${errorMsg}. Please contact support.`, 'error', 8000);
                 }
               }
               onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
