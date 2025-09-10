@@ -437,6 +437,8 @@ const OrderConfirmScreen = () => {
           intentId={stripeIntent?.id}
           clientSecret={stripeIntent?.clientSecret}
           mode={stripeIntent?.mode}
+          totalAmount={finalTotal || 500}
+          currency={'ils'}
           showConfirmButton={false}
         />
 

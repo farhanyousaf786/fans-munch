@@ -1,8 +1,9 @@
-import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { showToast } from '../../../components/toast/ToastContainer';
 import { useTranslation } from '../../../i18n/i18n';
+import { buildPaymentRequest } from '../../../utils/stripePaymentRequest';
 
 // Debug logging for environment variable (remove after testing)
 console.log('[DEBUG] REACT_APP_STRIPE_PUBLISHABLE_KEY:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
@@ -12,15 +13,64 @@ const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-// Card form component that uses Stripe Elements
-const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed }, ref) => {
+// Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
+const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils' }, ref) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
+  const [paymentRequest, setPaymentRequest] = useState(null);
   const { t } = useTranslation();
 
   // Debug logging
   console.log('[DEBUG] CardForm - stripe:', !!stripe, 'elements:', !!elements);
+
+  // Try to build a payment request (Apple Pay / Google Pay)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'clientSecret:', !!clientSecret, 'totalAmount:', totalAmount);
+        if (!stripe || !clientSecret || !totalAmount) {
+          console.log('[DEBUG] Payment Request - missing requirements, skipping');
+          return;
+        }
+        console.log('[DEBUG] Building payment request with amount:', totalAmount, 'currency:', currency);
+        const pr = await buildPaymentRequest(stripe, {
+          amount: totalAmount,
+          currency,
+          label: 'Fan Munch Order',
+        });
+        console.log('[DEBUG] Payment Request result:', !!pr);
+        if (!active || !pr) return;
+        pr.on('paymentmethod', async (ev) => {
+          try {
+            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+              payment_method: ev.paymentMethod.id,
+            });
+            if (error) {
+              ev.complete('fail');
+              showToast(`Payment failed: ${error.message}`, 'error', 4000);
+            } else if (paymentIntent?.status === 'succeeded') {
+              ev.complete('success');
+              showToast('Payment successful!', 'success', 2500);
+              onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
+            } else if (paymentIntent?.status === 'requires_action') {
+              ev.complete('success');
+              showToast('Additional authentication required', 'info', 3500);
+            } else {
+              ev.complete('fail');
+              showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
+            }
+          } catch (err) {
+            ev.complete('fail');
+            showToast(`Payment error: ${err.message}`, 'error', 4000);
+          }
+        });
+        setPaymentRequest(pr);
+      } catch (_) {}
+    })();
+    return () => { active = false; };
+  }, [stripe, clientSecret, totalAmount, currency]);
 
   const handleConfirm = async () => {
     if (!stripe || !elements || !clientSecret) {
@@ -111,6 +161,12 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed }, ref) => {
   return (
     <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
+      {paymentRequest && (
+        <div style={{ marginBottom: 12 }}>
+          <PaymentRequestButtonElement options={{ paymentRequest }} />
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Or pay with card</div>
+        </div>
+      )}
       
       <div style={{ 
         padding: '16px', 
@@ -142,7 +198,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed }, ref) => {
 });
 
 // Main component wrapper with Stripe Elements provider
-const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed }, ref) => {
+const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils' }, ref) => {
   const cardFormRef = useRef();
 
   // Forward ref methods to the inner CardForm
@@ -178,6 +234,8 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
         ref={cardFormRef}
         intentId={intentId}
         clientSecret={clientSecret}
+        totalAmount={totalAmount}
+        currency={currency}
         onConfirmed={onConfirmed}
       />
     </Elements>
