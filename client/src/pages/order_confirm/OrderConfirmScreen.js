@@ -102,6 +102,12 @@ const OrderConfirmScreen = () => {
 
   // Pre-create payment intent on load so card UI can render immediately
   useEffect(() => {
+    // Only create intent if we have a valid amount
+    if (!finalTotal || finalTotal <= 0) {
+      console.log('[OrderConfirm] Skipping intent creation - invalid amount:', finalTotal);
+      return;
+    }
+
     let cancelled = false;
     const createIntentIfNeeded = async () => {
       try {
@@ -113,14 +119,15 @@ const OrderConfirmScreen = () => {
         // Do not recreate if we already have a valid Stripe intent
         if (stripeIntent?.id && stripeIntent?.clientSecret) return;
 
+        console.log('[OrderConfirm] Creating payment intent with amount:', finalTotal);
+
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             amount: finalTotal,
             currency: 'ils',
-            vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc',
-            // vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo',
+            vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0
@@ -143,7 +150,7 @@ const OrderConfirmScreen = () => {
     createIntentIfNeeded();
     return () => { cancelled = true; };
     // Recreate if total changes significantly (e.g., tip change)
-  }, [finalTotal, stripeIntent?.id, stripeIntent?.clientSecret]);
+  }, [finalTotal, deliveryFee, tipData.amount]);
 
   const handleInputChange = (field, value) => {
     console.log('[INPUT CHANGE]', { field, value, currentFormData: formData });
@@ -469,8 +476,7 @@ const OrderConfirmScreen = () => {
           body: JSON.stringify({ 
             amount: finalTotal, 
             currency: 'ils',
-            vendorConnectedAccountId: 'acct_1S4nuc2zXMaebapc',
-            // vendorConnectedAccountId: 'acct_1S570jKWPD2pzAyo',
+            vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
             // Send fee breakdown for payment splitting
             
             deliveryFee: deliveryFee,
