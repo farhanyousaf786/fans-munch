@@ -45,6 +45,7 @@ const OrderConfirmScreen = () => {
   const [errors, setErrors] = useState({});
   const [ticketImage, setTicketImage] = useState(null);
   const [customerLocation, setCustomerLocation] = useState(null);
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [showErrors, setShowErrors] = useState(false); // hide red borders until submit or explicit show
 
@@ -87,12 +88,17 @@ const OrderConfirmScreen = () => {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude
           });
+          setLocationPermissionDenied(false);
         },
         (err) => {
-          console.log('ℹ️ Geolocation permission denied or unavailable:', err?.message);
+          console.log('ℹ️ Geolocation unavailable:', err?.message);
+          setLocationPermissionDenied(true);
         },
         { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
       );
+    } else {
+      console.log('ℹ️ Geolocation not supported by this browser');
+      setLocationPermissionDenied(true);
     }
 
     // Run an initial validation to set isFormValid (errors remain hidden until submit)
@@ -225,8 +231,35 @@ const OrderConfirmScreen = () => {
     console.log('📸 Camera capture requested');
   };
 
+  const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCustomerLocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          });
+          setLocationPermissionDenied(false);
+          showToast('Location access granted!', 'success', 2000);
+        },
+        (err) => {
+          console.log('ℹ️ Geolocation permission denied again:', err?.message);
+          setLocationPermissionDenied(true);
+          showToast('Location access is required for delivery. Please enable it in your browser settings.', 'error', 4000);
+        },
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
+      );
+    }
+  };
+
 
   const handlePayment = async () => {
+    // Check location permission first
+    if (locationPermissionDenied) {
+      showToast(t('order.location_required_desc'), 'error', 3000);
+      return;
+    }
+
     // Enable showing errors and validate all fields
     if (!showErrors) setShowErrors(true);
     if (!validateForm()) {
@@ -553,6 +586,45 @@ const OrderConfirmScreen = () => {
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
 
+        {/* Location Permission Warning */}
+        {locationPermissionDenied && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            padding: '16px',
+            margin: '16px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '20px' }}>📍</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
+                {t('order.location_required')}
+              </div>
+              <div style={{ fontSize: '14px', color: '#a16207', marginBottom: '12px' }}>
+                {t('order.location_required_desc')}
+              </div>
+              <button
+                onClick={requestLocationPermission}
+                style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                {t('order.enable_location')}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stripe Payment Form */}
         <StripePaymentForm
           ref={paymentRef}
@@ -562,12 +634,18 @@ const OrderConfirmScreen = () => {
           showConfirmButton={false}
           totalAmount={finalTotal}
           currency={'ils'}
-          isFormValid={isFormValid}
+          isFormValid={isFormValid && !locationPermissionDenied}
           onWalletPaymentSuccess={handleWalletPaymentSuccess}
+          disabled={locationPermissionDenied}
         />
 
         {/* Place Order CTA */}
-        <PlaceOrderBar loading={loading} finalTotal={finalTotal} onPlaceOrder={handlePayment} />
+        <PlaceOrderBar 
+          loading={loading} 
+          finalTotal={finalTotal} 
+          onPlaceOrder={handlePayment}
+          disabled={locationPermissionDenied}
+        />
       </div>
     </div>
   );

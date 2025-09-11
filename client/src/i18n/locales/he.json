@@ -102,7 +102,10 @@
     "seat": "מושב",
     "err_row_required": "נא להזין מספר שורה",
     "err_seat_required": "נא להזין מספר מושב",
-    "complete_required_fields_prefix": "נא להשלים את השדות החסרים:"
+    "complete_required_fields_prefix": "נא להשלים את השדות החסרים:",
+    "location_required": "נדרש גישה למיקום",
+    "location_required_desc": "אנא אפשרו גישה למיקום כדי שנוכל לעקוב אחר מיקום המושב שלכם למשלוח",
+    "enable_location": "אפשר מיקום"
   }
   ,
   "auth": {

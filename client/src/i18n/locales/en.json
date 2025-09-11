@@ -108,7 +108,10 @@
     "payment_status": "Payment status",
     "unknown": "unknown",
     "payment_error": "Payment error",
-    "unknown_error": "Unknown error"
+    "unknown_error": "Unknown error",
+    "location_required": "Location Access Required",
+    "location_required_desc": "Please enable location access so we can track your seat location for delivery",
+    "enable_location": "Enable Location"
   }
   ,
   "auth": {
