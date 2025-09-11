@@ -69,26 +69,58 @@ exports.createPaymentIntent = async (req, res) => {
       },
     };
 
-    // If vendor account provided, use application_fee_amount for clearer platform revenue
+    // If vendor account provided, calculate proportional Stripe fee sharing
     if (vendorConnectedAccountId) {
       const deliveryFeeInCents = Math.round((deliveryFee || 0) * 100);
       const tipAmountInCents = Math.round((tipAmount || 0) * 100);
-      const platformFees = deliveryFeeInCents + tipAmountInCents;
+      const basePlatformFees = deliveryFeeInCents + tipAmountInCents;
+      const vendorAmount = amountInCents - basePlatformFees;
       
-      // Use application_fee_amount - platform keeps this amount explicitly
-      paymentIntentData.application_fee_amount = platformFees;
+      // Calculate estimated Stripe fees (2.9% + 30¢ converted to agorot)
+      const stripePercentageFee = Math.round(amountInCents * 0.029); // 2.9%
+      const stripeFixedFee = Math.round(30 * 3.7); // ~30¢ in agorot (approximate conversion)
+      const totalStripeFees = stripePercentageFee + stripeFixedFee;
+      
+      // Calculate proportional fee sharing
+      const platformShare = basePlatformFees / amountInCents;
+      const vendorShare = vendorAmount / amountInCents;
+      
+      // Split Stripe fees proportionally
+      const platformStripeFee = Math.round(totalStripeFees * platformShare);
+      const vendorStripeFee = Math.round(totalStripeFees * vendorShare);
+      
+      // Platform gets: delivery + tip + vendor's portion of Stripe fees
+      const finalPlatformFee = basePlatformFees + vendorStripeFee;
+      
+      // Vendor gets: item amount - their portion of Stripe fees (deducted from transfer)
+      const finalVendorAmount = vendorAmount - vendorStripeFee;
+      
+      paymentIntentData.application_fee_amount = finalPlatformFee;
       paymentIntentData.transfer_data = {
         destination: vendorConnectedAccountId,
       };
       paymentIntentData.metadata.vendorAccountId = vendorConnectedAccountId;
       paymentIntentData.metadata.deliveryFee = deliveryFee;
       paymentIntentData.metadata.tipAmount = tipAmount;
-      paymentIntentData.metadata.platformFee = platformFees / 100; // Store in original currency
+      paymentIntentData.metadata.basePlatformFee = basePlatformFees / 100;
+      paymentIntentData.metadata.estimatedStripeFees = totalStripeFees / 100;
+      paymentIntentData.metadata.platformStripeFee = platformStripeFee / 100;
+      paymentIntentData.metadata.vendorStripeFee = vendorStripeFee / 100;
+      paymentIntentData.metadata.finalPlatformFee = finalPlatformFee / 100;
+      paymentIntentData.metadata.feeSharing = 'proportional_prededucted';
       
-      console.log('[Stripe] Platform fee structure:', {
-        totalAmount: amountInCents,
-        platformFee: platformFees,
-        vendorReceives: amountInCents - platformFees
+      console.log('[Stripe] Proportional fee pre-deduction structure:', {
+        totalAmount: amountInCents / 100,
+        basePlatformFee: basePlatformFees / 100,
+        baseVendorAmount: vendorAmount / 100,
+        estimatedStripeFees: totalStripeFees / 100,
+        platformShare: `${(platformShare * 100).toFixed(1)}%`,
+        vendorShare: `${(vendorShare * 100).toFixed(1)}%`,
+        platformStripeFee: platformStripeFee / 100,
+        vendorStripeFee: vendorStripeFee / 100,
+        finalPlatformFee: finalPlatformFee / 100,
+        finalVendorReceives: finalVendorAmount / 100,
+        note: 'Vendor Stripe fees pre-deducted and added to platform application fee'
       });
     }
 
@@ -115,6 +147,15 @@ exports.createPaymentIntent = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
+
+
 
 exports.confirmPayment = async (req, res) => {
   try {

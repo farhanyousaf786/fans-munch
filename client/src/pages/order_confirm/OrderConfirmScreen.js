@@ -481,56 +481,20 @@ const OrderConfirmScreen = () => {
   const handleWalletPaymentSuccess = async () => {
     setLoading(true);
     try {
-      // Ensure validation of required fields
-      if (!showErrors) setShowErrors(true);
-
-      // Merge with any saved seat data as fallback (in case state did not update)
+      console.log('[Wallet] Apple/Google Pay success - skipping form validation');
+      
+      // For wallet payments, we skip form validation entirely
+      // Users expect instant payment with Apple/Google Pay without form friction
+      // We'll use whatever seat info is available from storage + current form
       const savedSeat = seatStorage.getSeatInfo() || {};
-      console.log('[Wallet] Current formData:', formData, 'savedSeat:', savedSeat);
       const effectiveForm = {
         ...savedSeat,
         ...formData,
-        row: (formData.row ?? savedSeat.row ?? '').toString().trim(),
-        seatNo: (formData.seatNo ?? savedSeat.seatNo ?? '').toString().trim(),
+        row: (formData.row || savedSeat.row || '').toString().trim(),
+        seatNo: (formData.seatNo || savedSeat.seatNo || '').toString().trim(),
       };
-
-      // If our in-memory form is missing but fallback has data, apply it and revalidate
-      if ((!formData?.row || !formData.row.trim()) && effectiveForm.row) {
-        setFormData(prev => ({ ...prev, row: effectiveForm.row }));
-      }
-      if ((!formData?.seatNo || !formData.seatNo.trim()) && effectiveForm.seatNo) {
-        setFormData(prev => ({ ...prev, seatNo: effectiveForm.seatNo }));
-      }
-
-      // Local validation without relying only on state timing
-      const missing = [];
-      const missingFields = [];
-      if (!effectiveForm.row) {
-        missing.push('row');
-        missingFields.push(t('order.row'));
-      }
-      if (!effectiveForm.seatNo) {
-        missing.push('seatNo');
-        missingFields.push(t('order.seat'));
-      }
-      if (missing.length > 0) {
-        // Surface UI errors and stop
-        setErrors(prev => ({ 
-          ...prev, 
-          ...(missing.includes('row') ? { row: t('order.err_row_required') } : {}), 
-          ...(missing.includes('seatNo') ? { seatNo: t('order.err_seat_required') } : {}) 
-        }));
-        setIsFormValid(false);
-        console.warn('[Wallet] Missing required fields:', missing, 'effectiveForm:', effectiveForm);
-        const message = `${t('order.complete_required_fields_prefix')} ${missingFields.join(', ')}`;
-        const err = new Error(message);
-        err.code = 'VALIDATION';
-        throw err;
-      }
-
-      // Do NOT re-run validateForm here, it reads React state which may lag.
-      // We already validated effectiveForm above and set UI errors accordingly.
-      // Clear any stale errors now that we know the effective values are valid.
+      
+      // Clear any stale errors
       setErrors({});
       setIsFormValid(true);
 
