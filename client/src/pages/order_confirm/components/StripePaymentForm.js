@@ -24,103 +24,81 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
   // Debug logging
   console.log('[DEBUG] CardForm - stripe:', !!stripe, 'elements:', !!elements);
 
-  // COMMENTED OUT: Apple Pay / Google Pay functionality
   // Try to build a payment request (Apple Pay / Google Pay)
-  // useEffect(() => {
-  //   let active = true;
-  //   (async () => {
-  //     try {
-  //       console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'clientSecret:', !!clientSecret, 'totalAmount:', totalAmount);
-  //       if (!stripe || !clientSecret || !totalAmount) {
-  //         console.log('[DEBUG] Payment Request - missing requirements, skipping');
-  //         return;
-  //       }
-  //       console.log('[DEBUG] Building payment request with amount:', totalAmount, 'currency:', currency);
-  //       const pr = await buildPaymentRequest(stripe, {
-  //         amount: totalAmount,
-  //         currency,
-  //         label: 'Fan Munch Order',
-  //       });
-  //       console.log('[DEBUG] Payment Request result:', !!pr);
-  //       if (!active || !pr) return;
-  //       pr.on('paymentmethod', async (ev) => {
-  //         try {
-  //           console.log('[STRIPE WALLET] Payment method selected:', {
-  //             type: ev.paymentMethod.type,
-  //             id: ev.paymentMethod.id,
-  //             card: ev.paymentMethod.card
-  //           });
-  //           
-  //           const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-  //             payment_method: ev.paymentMethod.id,
-  //           });
-  //           
-  //           console.log('[STRIPE WALLET] Payment confirmation response:', {
-  //             error: error ? {
-  //               type: error.type,
-  //               code: error.code,
-  //               message: error.message,
-  //               decline_code: error.decline_code
-  //             } : null,
-  //             paymentIntent: paymentIntent ? {
-  //               id: paymentIntent.id,
-  //               status: paymentIntent.status,
-  //               amount: paymentIntent.amount,
-  //               currency: paymentIntent.currency,
-  //               charges: paymentIntent.charges?.data?.map(charge => ({
-  //                 id: charge.id,
-  //                 amount: charge.amount,
-  //                 currency: charge.currency,
-  //                 status: charge.status,
-  //                 outcome: charge.outcome,
-  //                 fee_details: charge.fee_details
-  //               }))
-  //             } : null
-  //           });
-  //           
-  //           if (error) {
-  //             ev.complete('fail');
-  //             showToast(`Payment failed: ${error.message}`, 'error', 4000);
-  //           } else if (paymentIntent?.status === 'succeeded') {
-  //             ev.complete('success');
-  //             showToast('Payment successful! Placing order...', 'success', 2500);
-  //             // Call Firebase order placement after successful wallet payment
-  //             if (onWalletPaymentSuccess) {
-  //               try {
-  //                 console.log('[WALLET] Calling onWalletPaymentSuccess...');
-  //                 await onWalletPaymentSuccess();
-  //                 console.log('[WALLET] Order placement completed successfully');
-  //               } catch (orderError) {
-  //                 console.error('[WALLET] Order placement failed:', {
-  //                   error: orderError,
-  //                   message: orderError?.message,
-  //                   stack: orderError?.stack,
-  //                   name: orderError?.name
-  //                 });
-  //                 // Show more specific error message
-  //                 const errorMsg = orderError?.message || 'Unknown error';
-  //                 showToast(`Payment succeeded but order failed: ${errorMsg}. Please contact support.`, 'error', 8000);
-  //               }
-  //             }
-  //             onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
-  //           } else if (paymentIntent?.status === 'requires_action') {
-  //             ev.complete('success');
-  //             showToast('Additional authentication required', 'info', 3500);
-  //           } else {
-  //             ev.complete('fail');
-  //             showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
-  //           }
-  //         } catch (err) {
-  //           console.error('[STRIPE WALLET] Payment error:', err);
-  //           ev.complete('fail');
-  //           showToast(`Payment error: ${err.message}`, 'error', 4000);
-  //         }
-  //       });
-  //       setPaymentRequest(pr);
-  //     } catch (_) {}
-  //   })();
-  //   return () => { active = false; };
-  // }, [stripe, clientSecret, totalAmount, currency]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'clientSecret:', !!clientSecret, 'totalAmount:', totalAmount);
+        if (!stripe || !clientSecret || !totalAmount) {
+          console.log('[DEBUG] Payment Request - missing requirements, skipping');
+          return;
+        }
+        console.log('[DEBUG] Building payment request with amount:', totalAmount, 'currency:', currency);
+        const pr = await buildPaymentRequest(stripe, {
+          amount: totalAmount,
+          currency,
+          label: 'Fan Munch Order',
+        });
+        console.log('[DEBUG] Payment Request result:', !!pr);
+        if (!active || !pr) return;
+        pr.on('paymentmethod', async (ev) => {
+          try {
+            console.log('[STRIPE WALLET] Payment method selected:', {
+              type: ev.paymentMethod.type,
+              id: ev.paymentMethod.id,
+              card: ev.paymentMethod.card
+            });
+            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+              payment_method: ev.paymentMethod.id,
+            });
+            console.log('[STRIPE WALLET] Payment confirmation response:', {
+              error: error ? {
+                type: error.type,
+                code: error.code,
+                message: error.message,
+                decline_code: error.decline_code
+              } : null,
+              paymentIntent: paymentIntent ? {
+                id: paymentIntent.id,
+                status: paymentIntent.status,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+              } : null
+            });
+            if (error) {
+              ev.complete('fail');
+              showToast(`Payment failed: ${error.message}`, 'error', 4000);
+            } else if (paymentIntent?.status === 'succeeded') {
+              ev.complete('success');
+              showToast('Payment successful! Placing order...', 'success', 2500);
+              if (onWalletPaymentSuccess) {
+                try {
+                  await onWalletPaymentSuccess();
+                } catch (orderError) {
+                  const errorMsg = orderError?.message || 'Unknown error';
+                  showToast(`Payment succeeded but order failed: ${errorMsg}. Please contact support.`, 'error', 8000);
+                }
+              }
+              onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
+            } else if (paymentIntent?.status === 'requires_action') {
+              ev.complete('success');
+              showToast('Additional authentication required', 'info', 3500);
+            } else {
+              ev.complete('fail');
+              showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
+            }
+          } catch (err) {
+            console.error('[STRIPE WALLET] Payment error:', err);
+            ev.complete('fail');
+            showToast(`Payment error: ${err.message}`, 'error', 4000);
+          }
+        });
+        setPaymentRequest(pr);
+      } catch (_) {}
+    })();
+    return () => { active = false; };
+  }, [stripe, clientSecret, totalAmount, currency, onWalletPaymentSuccess, onConfirmed]);
 
   const handleConfirm = async () => {
     if (!stripe || !elements || !clientSecret) {
@@ -236,8 +214,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
   return (
     <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
-      {/* COMMENTED OUT: Apple Pay / Google Pay buttons */}
-      {/* {paymentRequest && (
+      {paymentRequest && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ opacity: isFormValid ? 1 : 0.5, pointerEvents: isFormValid ? 'auto' : 'none' }}>
             <PaymentRequestButtonElement options={{ paymentRequest }} />
@@ -249,7 +226,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
           )}
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Or pay with card</div>
         </div>
-      )} */}
+      )}
       
       <div style={{ 
         padding: '16px', 

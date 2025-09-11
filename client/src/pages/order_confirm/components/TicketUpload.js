@@ -17,8 +17,7 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
 
   return (
     <div className="ticket-upload-section">
-      <h2 className="section-title">{t('order.ticket_image_title')}</h2>
-      <p className="section-description">{t('order.ticket_image_desc')}</p>
+      {/* Top title and description intentionally removed to keep UI clean */}
 
       {/* Hidden inputs */}
       <input
@@ -53,7 +52,20 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
             className="upload-icon-img"
           />
         </button>
+
       </div>
+
+      {/* Thumbnail shown AFTER the icon buttons */}
+      {ticketImage && (
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img
+            src={ticketImage}
+            alt={t('order.ticket_alt')}
+            style={{ width: 46, height: 46, borderRadius: 10, objectFit: 'cover', border: '1px solid #e5e7eb' }}
+          />
+          <span style={{ marginInlineStart: 8, fontSize: 12, color: '#6b7280' }}>{t('order.ticket_image_title')}</span>
+        </div>
+      )}
 
       <div className="upload-or-separator">
         <span className="line" />
@@ -61,11 +73,7 @@ const TicketUpload = ({ ticketImage, onImageUpload, onCameraCapture }) => {
         <span className="line" />
       </div>
 
-      {ticketImage && (
-        <div className="uploaded-image">
-          <img src={ticketImage} alt={t('order.ticket_alt') } className="ticket-preview" />
-        </div>
-      )}
+      {/* Large preview removed to keep layout compact */}
     </div>
   );
 };

@@ -14,7 +14,7 @@ const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, 
       </div>
 
       <div className="summary-row">
-        <span className="summary-label">Handling & Delivery</span>
+        <span className="summary-label">{t('cart.delivery')}</span>
         <span className="summary-value">{formatILS(deliveryFee)}</span>
       </div>
 
