@@ -92,6 +92,9 @@ exports.createPaymentIntent = async (req, res) => {
       });
     }
 
+    // Debug: Log final PaymentIntent data before creation
+    console.log('[DEBUG] Final PaymentIntent data:', JSON.stringify(paymentIntentData, null, 2));
+
     // Create payment intent
     const paymentIntent = await stripeClient.paymentIntents.create(paymentIntentData);
 

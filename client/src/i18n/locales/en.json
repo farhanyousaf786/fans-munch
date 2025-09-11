@@ -91,7 +91,24 @@
     "place_order_with_total": "Place Order - ₪{total}",
     "place_order": "Place Order",
     "card_payment_title": "Card Payment",
-    "confirm_card_payment": "Confirm Card Payment"
+    "confirm_card_payment": "Confirm Card Payment",
+
+    "order_placed": "Order placed successfully!",
+    "order_id": "Order ID",
+    "payment_failed_generic": "Payment failed. Please try again.",
+    "processing_full": "Processing payment and placing order…",
+    "row": "Row",
+    "seat": "Seat",
+    "err_row_required": "Please enter row number",
+    "err_seat_required": "Please enter seat number",
+    "complete_required_fields_prefix": "Please complete required fields:",
+    "wallet_payment_succeeded_order_failed_prefix": "Payment succeeded but order failed:",
+    "contact_support": "Please contact support.",
+    "additional_auth_required": "Additional authentication required",
+    "payment_status": "Payment status",
+    "unknown": "unknown",
+    "payment_error": "Payment error",
+    "unknown_error": "Unknown error"
   }
   ,
   "auth": {

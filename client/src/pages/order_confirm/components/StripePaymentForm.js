@@ -68,30 +68,35 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
             });
             if (error) {
               ev.complete('fail');
-              showToast(`Payment failed: ${error.message}`, 'error', 4000);
+              showToast(`${t('order.payment_failed_generic')} ${error.message || ''}`.trim(), 'error', 4000);
             } else if (paymentIntent?.status === 'succeeded') {
               ev.complete('success');
-              showToast('Payment successful! Placing order...', 'success', 2500);
+              showToast(t('order.processing_full'), 'success', 2500);
               if (onWalletPaymentSuccess) {
                 try {
                   await onWalletPaymentSuccess();
                 } catch (orderError) {
-                  const errorMsg = orderError?.message || 'Unknown error';
-                  showToast(`Payment succeeded but order failed: ${errorMsg}. Please contact support.`, 'error', 8000);
+                  const errorMsg = orderError?.message || t('order.unknown_error');
+                  // If it's a validation error from the screen, show only that message without the wallet prefix
+                  if (orderError && orderError.code === 'VALIDATION') {
+                    showToast(errorMsg, 'error', 8000);
+                  } else {
+                    showToast(`${t('order.wallet_payment_succeeded_order_failed_prefix')} ${errorMsg}. ${t('order.contact_support')}`, 'error', 8000);
+                  }
                 }
               }
               onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
             } else if (paymentIntent?.status === 'requires_action') {
               ev.complete('success');
-              showToast('Additional authentication required', 'info', 3500);
+              showToast(t('order.additional_auth_required'), 'info', 3500);
             } else {
               ev.complete('fail');
-              showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
+              showToast(`${t('order.payment_status')}: ${paymentIntent?.status || t('order.unknown')}`, 'warning', 3000);
             }
           } catch (err) {
             console.error('[STRIPE WALLET] Payment error:', err);
             ev.complete('fail');
-            showToast(`Payment error: ${err.message}`, 'error', 4000);
+            showToast(`${t('order.payment_error')}: ${err.message}`, 'error', 4000);
           }
         });
         setPaymentRequest(pr);

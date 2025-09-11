@@ -12,12 +12,14 @@ import PlaceOrderBar from './components/PlaceOrderBar';
 import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
+import { useTranslation } from '../../i18n/i18n';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { sendNewOrderNotification } from '../../utils/notificationUtils';
 import { placeOrderAfterWalletSuccess } from './utils/walletOrderHandler';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const paymentRef = useRef(null);
   const [stripeIntent, setStripeIntent] = useState(null); // { id, clientSecret, mode }
   
@@ -192,10 +194,10 @@ const OrderConfirmScreen = () => {
     });
     
     if (!formData.row || !formData.row.trim()) {
-      newErrors.row = 'Please enter row number';
+      newErrors.row = t('order.err_row_required');
     }
     if (!formData.seatNo || !formData.seatNo.trim()) {
-      newErrors.seatNo = 'Please enter seat number';
+      newErrors.seatNo = t('order.err_seat_required');
     }
     
     console.log('[VALIDATION] Validation result:', {
@@ -457,14 +459,14 @@ const OrderConfirmScreen = () => {
       setIsFormValid(false);
       setTicketImage(null);
 
-      const msg = 'Order placed successfully!';
-      showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
+      const msg = t('order.order_placed');
+      showToast(`${msg} ${t('order.order_id')}: ${createdOrder.orderId}`, 'success', 4000);
 
       // Navigate after a short delay
       setTimeout(() => navigate('/home', { replace: true }), 1200);
     } catch (error) {
       console.error('❌ Payment/Order creation failed:', error);
-      const errorMessage = error.message || 'Payment failed. Please try again.';
+      const errorMessage = error.message || t('order.payment_failed_generic');
       showToast(errorMessage, 'error', 5000);
     } finally {
       setLoading(false);
@@ -477,71 +479,107 @@ const OrderConfirmScreen = () => {
 
   // Handler passed to StripePaymentForm for Apple/Google Pay success
   const handleWalletPaymentSuccess = async () => {
-    // Ensure validation of required fields
-    if (!showErrors) setShowErrors(true);
+    setLoading(true);
+    try {
+      // Ensure validation of required fields
+      if (!showErrors) setShowErrors(true);
 
-    // Merge with any saved seat data as fallback (in case state did not update)
-    const savedSeat = seatStorage.getSeatInfo() || {};
-    console.log('[Wallet] Current formData:', formData, 'savedSeat:', savedSeat);
-    const effectiveForm = {
-      ...savedSeat,
-      ...formData,
-      row: (formData.row ?? savedSeat.row ?? '').toString().trim(),
-      seatNo: (formData.seatNo ?? savedSeat.seatNo ?? '').toString().trim(),
-    };
+      // Merge with any saved seat data as fallback (in case state did not update)
+      const savedSeat = seatStorage.getSeatInfo() || {};
+      console.log('[Wallet] Current formData:', formData, 'savedSeat:', savedSeat);
+      const effectiveForm = {
+        ...savedSeat,
+        ...formData,
+        row: (formData.row ?? savedSeat.row ?? '').toString().trim(),
+        seatNo: (formData.seatNo ?? savedSeat.seatNo ?? '').toString().trim(),
+      };
 
-    // If our in-memory form is missing but fallback has data, apply it and revalidate
-    if ((!formData?.row || !formData.row.trim()) && effectiveForm.row) {
-      setFormData(prev => ({ ...prev, row: effectiveForm.row }));
-    }
-    if ((!formData?.seatNo || !formData.seatNo.trim()) && effectiveForm.seatNo) {
-      setFormData(prev => ({ ...prev, seatNo: effectiveForm.seatNo }));
-    }
+      // If our in-memory form is missing but fallback has data, apply it and revalidate
+      if ((!formData?.row || !formData.row.trim()) && effectiveForm.row) {
+        setFormData(prev => ({ ...prev, row: effectiveForm.row }));
+      }
+      if ((!formData?.seatNo || !formData.seatNo.trim()) && effectiveForm.seatNo) {
+        setFormData(prev => ({ ...prev, seatNo: effectiveForm.seatNo }));
+      }
 
-    // Local validation without relying only on state timing
-    const missing = [];
-    if (!effectiveForm.row) missing.push('row');
-    if (!effectiveForm.seatNo) missing.push('seatNo');
-    if (missing.length > 0) {
-      // Surface UI errors and stop
-      setErrors(prev => ({ ...prev, ...(missing.includes('row') ? { row: 'Please enter row number' } : {}), ...(missing.includes('seatNo') ? { seatNo: 'Please enter seat number' } : {}) }));
+      // Local validation without relying only on state timing
+      const missing = [];
+      const missingFields = [];
+      if (!effectiveForm.row) {
+        missing.push('row');
+        missingFields.push(t('order.row'));
+      }
+      if (!effectiveForm.seatNo) {
+        missing.push('seatNo');
+        missingFields.push(t('order.seat'));
+      }
+      if (missing.length > 0) {
+        // Surface UI errors and stop
+        setErrors(prev => ({ 
+          ...prev, 
+          ...(missing.includes('row') ? { row: t('order.err_row_required') } : {}), 
+          ...(missing.includes('seatNo') ? { seatNo: t('order.err_seat_required') } : {}) 
+        }));
+        setIsFormValid(false);
+        console.warn('[Wallet] Missing required fields:', missing, 'effectiveForm:', effectiveForm);
+        const message = `${t('order.complete_required_fields_prefix')} ${missingFields.join(', ')}`;
+        const err = new Error(message);
+        err.code = 'VALIDATION';
+        throw err;
+      }
+
+      // Do NOT re-run validateForm here, it reads React state which may lag.
+      // We already validated effectiveForm above and set UI errors accordingly.
+      // Clear any stale errors now that we know the effective values are valid.
+      setErrors({});
+      setIsFormValid(true);
+
+      console.log('[Wallet] Placing order with effectiveForm, tipData, finalTotal:', { effectiveForm, tipAmount: tipData?.amount, finalTotal });
+      const createdOrder = await placeOrderAfterWalletSuccess({
+        formData: effectiveForm,
+        tipData,
+        ticketImage,
+        customerLocation,
+        finalTotal,
+      });
+
+      // Cleanup form inputs and notify & navigate
+      try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
+      setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
+      setErrors({});
+      setShowErrors(false);
       setIsFormValid(false);
-      console.warn('[Wallet] Missing required fields:', missing, 'effectiveForm:', effectiveForm);
-      throw new Error(`Please complete required fields: ${missing.join(', ')}`);
+      setTicketImage(null);
+
+      // Notify & navigate
+      const msg = 'Order placed successfully!';
+      showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
+      setTimeout(() => navigate('/home', { replace: true }), 1200);
+    } finally {
+      setLoading(false);
     }
-
-    // Do NOT re-run validateForm here, it reads React state which may lag.
-    // We already validated effectiveForm above and set UI errors accordingly.
-    // Clear any stale errors now that we know the effective values are valid.
-    setErrors({});
-    setIsFormValid(true);
-
-    console.log('[Wallet] Placing order with effectiveForm, tipData, finalTotal:', { effectiveForm, tipAmount: tipData?.amount, finalTotal });
-    const createdOrder = await placeOrderAfterWalletSuccess({
-      formData: effectiveForm,
-      tipData,
-      ticketImage,
-      customerLocation,
-      finalTotal,
-    });
-
-    // Cleanup form inputs and notify & navigate
-    try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-    setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
-    setErrors({});
-    setShowErrors(false);
-    setIsFormValid(false);
-    setTicketImage(null);
-
-    // Notify & navigate
-    const msg = 'Order placed successfully!';
-    showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
-    setTimeout(() => navigate('/home', { replace: true }), 1200);
   };
 
   return (
     <div className="order-confirm-screen">
       <div className="order-confirm-container">
+        {/* Full-screen loader overlay */}
+        {loading && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <div style={{ background: '#fff', padding: 20, borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center' }}>
+              <div className="spinner" style={{
+                width: 24, height: 24, border: '3px solid #eee', borderTopColor: '#3b82f6', borderRadius: '50%',
+                animation: 'spin 1s linear infinite', marginInlineEnd: 12
+              }} />
+              <div style={{ fontSize: 14, color: '#374151' }}>{t('order.processing_full')}</div>
+            </div>
+            {/* Simple keyframes for spinner */}
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          </div>
+        )}
         {/* Ticket Image Upload */}
         <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 

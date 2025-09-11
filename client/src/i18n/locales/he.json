@@ -92,7 +92,17 @@
     "place_order_with_total": "בצע הזמנה - {total}",
     "place_order": "בצע הזמנה",
     "card_payment_title": "תשלום בכרטיס",
-    "confirm_card_payment": "אשר תשלום בכרטיס"
+    "confirm_card_payment": "אשר תשלום בכרטיס",
+
+    "order_placed": "הזמנה בוצעה בהצלחה!",
+    "order_id": "מספר הזמנה",
+    "payment_failed_generic": "התשלום נכשל. נסו שוב.",
+    "processing_full": "מעבד תשלום ומבצע הזמנה…",
+    "row": "שורה",
+    "seat": "מושב",
+    "err_row_required": "נא להזין מספר שורה",
+    "err_seat_required": "נא להזין מספר מושב",
+    "complete_required_fields_prefix": "נא להשלים את השדות החסרים:"
   }
   ,
   "auth": {
