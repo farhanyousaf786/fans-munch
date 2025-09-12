@@ -229,7 +229,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               Please fill in all required fields to use Apple Pay/Google Pay
             </div>
           )}
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Or pay with card</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>Or pay with card</div>
         </div>
       )}
       
@@ -238,7 +238,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
         border: '2px solid #e5e7eb', 
         borderRadius: '8px', 
         backgroundColor: '#ffffff',
-        marginBottom: '16px',
+        marginBottom: '8px',
         minHeight: '44px',
         display: 'flex',
         alignItems: 'center',
@@ -249,7 +249,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
         </div>
       </div>
       
-      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+      <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
         Enter your card details above. All payments are processed securely through Stripe.
       </div>
 

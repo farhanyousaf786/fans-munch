@@ -625,7 +625,7 @@ const OrderConfirmScreen = () => {
           </div>
         )}
 
-        {/* Stripe Payment Form */}
+        {/* Stripe Payment Form with integrated Place Order button */}
         <StripePaymentForm
           ref={paymentRef}
           intentId={stripeIntent?.id}
@@ -639,7 +639,7 @@ const OrderConfirmScreen = () => {
           disabled={locationPermissionDenied}
         />
 
-        {/* Place Order CTA */}
+        {/* Place Order CTA - moved right after card input */}
         <PlaceOrderBar 
           loading={loading} 
           finalTotal={finalTotal} 
