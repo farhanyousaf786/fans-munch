@@ -24,10 +24,14 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
     (async () => {
       try {
         console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'clientSecret:', !!clientSecret, 'totalAmount:', totalAmount);
-        if (!stripe || !clientSecret || !totalAmount) {
+        if (!stripe || !clientSecret || !totalAmount || totalAmount <= 0) {
           console.log('[DEBUG] Payment Request - missing requirements, skipping');
           return;
         }
+        
+        // Add small delay to ensure Stripe is fully initialized
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         console.log('[DEBUG] Building payment request with amount:', totalAmount, 'currency:', currency);
         const pr = await buildPaymentRequest(stripe, {
           amount: totalAmount,
