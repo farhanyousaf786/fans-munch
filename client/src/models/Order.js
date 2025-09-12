@@ -88,7 +88,10 @@ export class Order {
    * Create Order from Firebase document data (matches Flutter fromMap)
    */
   static fromMap(id, data) {
-    return new Order({
+    try {
+      console.log('[Order.fromMap] id:', id, 'raw data:', data);
+    } catch (_) {}
+    const instance = new Order({
       id: id,
       cart: data.cart || [],
       subtotal: parseFloat(data.subtotal || 0),
@@ -112,14 +115,18 @@ export class Order {
       customerLocation: data.customerLocation || null,
       location: data.location || null
     });
+    try {
+      console.log('[Order.fromMap] instance:', instance);
+    } catch (_) {}
+    return instance;
   }
 
   /**
    * Convert Order to Firebase document data (matches Flutter toMap)
    */
   toMap() {
-    return {
-      cart: this.cart.map(item => {
+    try { console.log('[Order.toMap] Start. Order instance:', this); } catch (_) {}
+    const mappedCart = this.cart.map(item => {
         // Store complete food data like Flutter does
         // Ensure category is an ID and descriptionMap has content
         const resolvedCategory = item.categoryId || item.category || '';
@@ -174,8 +181,12 @@ export class Order {
           originalPrice: item.originalPrice || item.price || 0,
           discountedPrice: item.discountedPrice || null
         };
+        try { console.log('[Order.toMap] Cart item mapped:', { id: item.id, shopId: foodData.shopId, shopIds: foodData.shopIds, price: foodData.price }); } catch (_) {}
         return foodData;
-      }),
+      });
+
+    const result = {
+      cart: mappedCart,
       subtotal: parseFloat(this.subtotal.toFixed(2)),
       deliveryFee: parseFloat(this.deliveryFee.toFixed(2)),
       discount: parseFloat(this.discount.toFixed(2)),
@@ -221,6 +232,8 @@ export class Order {
         return loc;
       })()
     };
+    try { console.log('[Order.toMap] Result payload:', result); } catch (_) {}
+    return result;
   }
 
   /**
@@ -241,6 +254,22 @@ export class Order {
     location = null,
     deliveryUserId = null
   }) {
+    try {
+      console.log('[Order.createFromCart] Input:', {
+        cartItems,
+        subtotal,
+        deliveryFee,
+        discount,
+        tipAmount,
+        tipPercentage,
+        userData,
+        seatInfo,
+        stadiumId,
+        shopId,
+        customerLocation,
+        location
+      });
+    } catch (_) {}
     const total = subtotal + deliveryFee + tipAmount - discount;
     const orderId = Date.now().toString();
     const createdAt = new Date();
@@ -248,7 +277,7 @@ export class Order {
     // Generate 6-digit random order code
     const orderCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    return new Order({
+    const instance = new Order({
       cart: [...cartItems],
       subtotal,
       deliveryFee,
@@ -285,6 +314,8 @@ export class Order {
       customerLocation,
       location: location
     });
+    try { console.log('[Order.createFromCart] New Order instance:', instance); } catch (_) {}
+    return instance;
   }
 
   /**

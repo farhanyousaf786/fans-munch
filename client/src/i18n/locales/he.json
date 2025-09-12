@@ -106,6 +106,8 @@
     "seat": "מושב",
     "upload_ticket_header": "אנא השלם את הפרטים המושב שלך כדי להשלים את ההזמנה",
     "upload_ticket_subheader": "העלה את הכרטיסים שלך",
+    "stand_gallery": "גלריה",
+    "stand_main": "ראשי",
     "err_row_required": "נא להזין מספר שורה",
     "err_seat_required": "נא להזין מספר מושב",
     "complete_required_fields_prefix": "נא להשלים את השדות החסרים:",

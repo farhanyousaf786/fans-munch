@@ -13,8 +13,7 @@ import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { sendNewOrderNotification } from '../../utils/notificationUtils';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { placeOrderAfterWalletSuccess } from './utils/walletOrderHandler';
 
 const OrderConfirmScreen = () => {
@@ -315,7 +314,6 @@ const OrderConfirmScreen = () => {
         }
 
         const confirmRes = await paymentRef.current.confirm();
-        console.log('[OrderConfirm] Stripe confirm() result:', confirmRes);
         if (!confirmRes?.ok) {
           throw new Error(confirmRes?.error?.message || 'Stripe card confirmation failed');
         }
@@ -351,52 +349,19 @@ const OrderConfirmScreen = () => {
         0
       );
 
-      // Resolve nearest active delivery user (if we have customer location)
+      // Delivery assignment disabled — we no longer assign a delivery user here
       let nearestDeliveryUserId = null;
-      try {
-        if (customerLocation && typeof customerLocation.latitude === 'number' && typeof customerLocation.longitude === 'number') {
-          const snap = await getDocs(collection(db, 'deliveryUsers'));
-          let best = { id: null, dist: Number.POSITIVE_INFINITY };
-          const toRad = (x) => (x * Math.PI) / 180;
-          const haversine = (lat1, lon1, lat2, lon2) => {
-            const R = 6371; // km
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-          };
-          snap.forEach((doc) => {
-            const data = doc.data() || {};
-            if (data.isActive !== true) return; // only active drivers
-            const loc = data.location; // can be GeoPoint or [lat, lng]
-            let lat, lng;
-            if (loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number') {
-              lat = loc.latitude; lng = loc.longitude;
-            } else if (Array.isArray(loc) && loc.length === 2) {
-              lat = Number(loc[0]); lng = Number(loc[1]);
-            }
-            if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-              const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
-              if (d < best.dist) best = { id: data.id || doc.id, dist: d };
-            }
-          });
-          nearestDeliveryUserId = best.id;
-        }
-      } catch (e) {
-        console.warn('Could not resolve nearest delivery user:', e?.message || e);
-      }
 
-      // Resolve nearest shop among those that carry items (cart shopIds); fallback to all shops
+      // Resolve nearest available shop from shops collection (ignore cart shopIds)
       let nearestShopId = null;
+      // Fallback from cart if anything goes wrong or none found
+      const cartFirstShopId = (
+        (cartItems.find(it => it.shopId)?.shopId) ||
+        (cartItems.find(it => Array.isArray(it.shopIds) && it.shopIds.length > 0)?.shopIds[0]) ||
+        ''
+      );
       try {
-        // Collect candidate shop IDs from cart
-        const candidateIds = Array.from(new Set(
-          cartItems.flatMap(it => Array.isArray(it.shopIds) ? it.shopIds : (it.shopId ? [it.shopId] : []))
-        ));
-
+        try { console.log('[ShopSelect] User location:', customerLocation || null); } catch (_) {}
         const toRad = (x) => (x * Math.PI) / 180;
         const haversine = (lat1, lon1, lat2, lon2) => {
           const R = 6371; // km
@@ -410,22 +375,35 @@ const OrderConfirmScreen = () => {
         };
         const parseNum = (v) => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v.replace(/[^0-9+\-.]/g, '')) : NaN));
 
-        let shops = [];
-        if (candidateIds.length > 0) {
-          // Fetch only candidate shops
-          const docs = await Promise.all(candidateIds.map(id => getDoc(doc(db, 'shops', id))));
-          shops = docs.filter(d => d.exists()).map(d => ({ id: d.id, data: d.data() }));
-        } else {
-          // Fallback: all shops
-          const snap = await getDocs(collection(db, 'shops'));
-          shops = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+        // Query shops where shopAvailability == true and (if possible) stadiumId == current stadium
+        let shopSnap;
+        try {
+          if (stadiumData?.id) {
+            const q = query(
+              collection(db, 'shops'),
+              where('shopAvailability', '==', true),
+              where('stadiumId', '==', stadiumData.id)
+            );
+            shopSnap = await getDocs(q);
+          }
+        } catch (_) {}
+
+        if (!shopSnap) {
+          // Fallback to availability only
+          const qAvail = query(collection(db, 'shops'), where('shopAvailability', '==', true));
+          shopSnap = await getDocs(qAvail);
+        }
+
+        const shops = shopSnap.docs.map(d => ({ id: d.id, data: d.data() }));
+        try { console.log('[ShopSelect] Shops fetched (ids):', shops.map(s => s.id)); } catch (_) {}
+        if (shops.length === 0) {
+          nearestShopId = cartFirstShopId || null;
         }
 
         let bestShop = { id: null, dist: Number.POSITIVE_INFINITY };
         shops.forEach((entry) => {
           const s = entry.data || {};
           let lat, lng;
-          // Prefer explicit latitude/longitude fields if present
           if (s.latitude != null && s.longitude != null) {
             lat = parseNum(s.latitude);
             lng = parseNum(s.longitude);
@@ -434,15 +412,29 @@ const OrderConfirmScreen = () => {
           } else if (Array.isArray(s.location) && s.location.length === 2) {
             lat = parseNum(s.location[0]); lng = parseNum(s.location[1]);
           }
-          if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng) && customerLocation) {
-            const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
-            if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
+
+          if (
+            typeof lat === 'number' && typeof lng === 'number' &&
+            !Number.isNaN(lat) && !Number.isNaN(lng)
+          ) {
+            if (customerLocation) {
+              const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
+              try { console.log('[ShopSelect] Compare shop', entry.id, 'shopLocation:', { lat, lng }, 'distanceKm:', Number.isFinite(d) ? d.toFixed(3) : d); } catch (_) {}
+              if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
+            } else if (!bestShop.id) {
+              // No location available — pick the first available as fallback
+              bestShop = { id: entry.id, dist: 0 };
+              try { console.log('[ShopSelect] Compare (no user location) pick first:', entry.id, 'shopLocation:', { lat, lng }); } catch (_) {}
+            }
           }
         });
 
-        nearestShopId = bestShop.id || null;
+        nearestShopId = bestShop.id || (cartFirstShopId || null);
+        try { console.log('[ShopSelect] Nearest shop:', bestShop?.id || null, 'distanceKm:', Number.isFinite(bestShop?.dist) ? bestShop.dist.toFixed(3) : bestShop?.dist); } catch (_) {}
+        try { console.log('[ShopSelect] Done'); } catch (_) {}
       } catch (e) {
-        console.warn('Could not resolve nearest shop:', e?.message || e);
+        nearestShopId = cartFirstShopId || null;
+        try { console.log('[ShopSelect] Done'); } catch (_) {}
       }
 
       const order = Order.createFromCart({
@@ -463,26 +455,7 @@ const OrderConfirmScreen = () => {
 
       const createdOrder = await orderRepository.createOrder(order);
 
-      // 4) Send notification to delivery user if assigned (via utility)
-      if (nearestDeliveryUserId) {
-        try {
-          await sendNewOrderNotification(nearestDeliveryUserId, {
-            orderId: createdOrder.orderId,
-            customerName: `${userData.firstName} ${userData.lastName}`.trim(),
-            stadiumName: stadiumData.name || stadiumData.title || 'Stadium',
-            seatInfo: seatInfo,
-            totalAmount: finalTotal,
-            deliveryFee: fee,
-            customerLocation: customerLocation,
-            shopId: nearestShopId || cartItems[0].shopId || ''
-          });
-        } catch (notificationError) {
-          console.warn('⚠️ Error sending notification to delivery user:', notificationError);
-          // Don't fail the order creation if notification fails
-        }
-      }
-
-      // 5) Cleanup and reset UI
+      // 4) Cleanup and reset UI
       cartUtils.clearCart();
       localStorage.removeItem('selectedTip');
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}

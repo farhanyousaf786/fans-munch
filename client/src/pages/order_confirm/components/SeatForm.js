@@ -22,14 +22,15 @@ const SeatForm = ({ formData, errors, onChange }) => {
         </div>
 
         <div className="form-field">
-          <label className="field-label">{t('order.stand_number')}</label>
-          <input
-            type="text"
+          <label className="field-label">{t('order.stand')}</label>
+          <select
             className="field-input"
-            placeholder={t('order.stand_number_ph')}
-            value={formData.stand || ''}
+            value={formData.stand || 'Gallery'}
             onChange={(e) => onChange('stand', e.target.value)}
-          />
+          >
+            <option value="Gallery">{t('order.stand_gallery')}</option>
+            <option value="Main">{t('order.stand_main')}</option>
+          </select>
         </div>
       </div>
 
