@@ -2,6 +2,10 @@
   "home": {
     "select_stadium": "בחירת אצטדיון",
     "greeting": "בוקר טוב,",
+    "greeting_morning": "בוקר טוב,",
+    "greeting_afternoon": "צהריים טובים,",
+    "greeting_evening": "ערב טוב,",
+    "greeting_night": "לילה טוב,",
     "search_placeholder": "חפשו פריטי מזון...",
     "categories": "קטגוריות",
     "cat_all": "הכול",

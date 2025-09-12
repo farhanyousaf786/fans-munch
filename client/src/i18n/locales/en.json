@@ -2,6 +2,10 @@
   "home": {
     "select_stadium": "Stadium Selection",
     "greeting": "Good Morning,",
+    "greeting_morning": "Good Morning,",
+    "greeting_afternoon": "Good Afternoon,",
+    "greeting_evening": "Good Evening,",
+    "greeting_night": "Good Night,",
     "search_placeholder": "Search for food items...",
     "categories": "Categories",
     "cat_all": "All",

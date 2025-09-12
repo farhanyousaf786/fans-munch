@@ -12,6 +12,15 @@ const TopSection = (props) => {
   const [selectedStadium, setSelectedStadium] = useState(null);
   const [userData, setUserData] = useState(null);
   const { t, lang } = useTranslation();
+  
+  // Compute dynamic greeting based on local time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return t('home.greeting_morning');
+    if (hour >= 12 && hour < 17) return t('home.greeting_afternoon');
+    if (hour >= 17 && hour < 21) return t('home.greeting_evening');
+    return t('home.greeting_night');
+  };
 
   useEffect(() => {
     // Load selected stadium using storage utility
@@ -74,7 +83,7 @@ const TopSection = (props) => {
 
       {/* Welcome Message */}
       <div className="welcome-message">
-        <h1>{t('home.greeting')}</h1>
+        <h1>{getGreeting()}</h1>
         <h2>{userData ? `${userData.firstName} ${userData.lastName}!` : 'Guest!'}</h2>
       </div>
 
