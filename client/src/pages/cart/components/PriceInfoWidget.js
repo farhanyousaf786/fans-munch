@@ -16,7 +16,7 @@ const PriceInfoWidget = ({
     return null;
   }
 
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   // Lightweight client-side conversion. You can replace rates with a live API if desired.
   const FX_RATES = {
     // value is how many target currency units for 1 ILS

@@ -12,26 +12,29 @@ import { useTranslation } from '../../i18n/i18n';
 const TipScreen = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [selectedTipPercentage, setSelectedTipPercentage] = useState(10); // Default to 10%
+  const [selectedTipAmount, setSelectedTipAmount] = useState(0);
   const [tipAmount, setTipAmount] = useState(0);
   const [orderTotal, setOrderTotal] = useState(0);
   const [customTipController, setCustomTipController] = useState('');
   const customInputRef = useRef(null);
   
-  const tipPercentages = [6, 10, 14, 18];
+  // Fixed tip amounts in ILS
+  const tipAmounts = [2, 4, 6, 8];
 
   useEffect(() => {
-    // Get order total from cart and compute tip whenever selected percentage changes
+    // Get order total from cart
     const total = cartUtils.getTotalPrice();
     setOrderTotal(total);
-    const tipInAmount = (total * selectedTipPercentage / 100);
-    setTipAmount(Math.round(tipInAmount * 100) / 100);
-  }, [selectedTipPercentage]);
+    // Set default tip amount
+    const defaultTip = 4; // Default to 4 shekels
+    setSelectedTipAmount(defaultTip);
+    setTipAmount(defaultTip);
+  }, []);
 
-  const calculateTip = (percentage, total = orderTotal) => {
-    // Calculate tip amount (matches Flutter _calculateTip)
-    const tipInAmount = (total * percentage / 100);
-    setTipAmount(Math.round(tipInAmount * 100) / 100); // Round to 2 decimal places
+  const setTip = (amount) => {
+    // Set tip amount directly
+    setTipAmount(amount);
+    setSelectedTipAmount(amount);
   };
 
   const focusCustomTip = () => {
@@ -44,40 +47,38 @@ const TipScreen = () => {
     });
   };
 
-  const updateTip = (percentage) => {
-    setSelectedTipPercentage(percentage);
+  const updateTip = (amount) => {
+    setSelectedTipAmount(amount);
     setCustomTipController('');
-    calculateTip(percentage);
+    setTip(amount);
   };
 
   const handleCustomTipChange = (value) => {
     setCustomTipController(value);
-    const customPercentage = parseFloat(value) || 0;
-    if (customPercentage >= 0) {
-      setSelectedTipPercentage(customPercentage);
-      calculateTip(customPercentage);
+    const customAmount = parseFloat(value) || 0;
+    if (customAmount >= 0) {
+      setSelectedTipAmount(customAmount);
+      setTip(customAmount);
     }
   };
 
   const handleAddTip = () => {
-    console.log('💰 Adding tip:', tipAmount, `(${selectedTipPercentage}%)`);
+    console.log('💰 Adding tip:', tipAmount, 'ILS');
     
-    // Save tip amount to storage or context (matches Flutter UpdateTipEvent)
+    // Save tip amount to storage or context
     localStorage.setItem('selectedTip', JSON.stringify({
-      percentage: selectedTipPercentage,
       amount: tipAmount
     }));
     
-    // Navigate to order confirmation (matches Flutter navigation)
+    // Navigate to order confirmation
     navigate('/order/confirm');
   };
 
   const handleSkipTip = () => {
     console.log('⏭️ Skipping tip');
     
-    // Set tip to 0 (matches Flutter skip button)
+    // Set tip to 0
     localStorage.setItem('selectedTip', JSON.stringify({
-      percentage: 0,
       amount: 0
     }));
     
@@ -87,7 +88,7 @@ const TipScreen = () => {
 
   const handleBack = () => navigate(-1);
 
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
 
   return (
     <div className="tip-screen">
@@ -111,7 +112,7 @@ const TipScreen = () => {
         <TipSummary tipAmount={tipAmount} onCustomTip={focusCustomTip} />
 
         {/* Presets */}
-        <TipPresets options={tipPercentages} selected={selectedTipPercentage} onChange={updateTip} />
+        <TipPresets options={tipAmounts} selected={selectedTipAmount} onChange={updateTip} />
 
         {/* Custom input */}
         <TipCustomInput value={customTipController} onChange={handleCustomTipChange} inputRef={customInputRef} />

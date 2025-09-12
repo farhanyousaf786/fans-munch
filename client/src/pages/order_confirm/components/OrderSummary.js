@@ -3,7 +3,7 @@ import { useTranslation } from '../../../i18n/i18n';
 
 const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, percentage: 0 }, finalTotal = 0 }) => {
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="order-summary-section">
       <h2 className="section-title">{t('order.summary_title')}</h2>
@@ -19,7 +19,7 @@ const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, 
       </div>
 
       <div className="summary-row">
-        <span className="summary-label">{t('order.tip')} ({tipData.percentage}%)</span>
+        <span className="summary-label">{t('order.tip')}</span>
         <span className="summary-value">{formatILS(tipData.amount)}</span>
       </div>
 

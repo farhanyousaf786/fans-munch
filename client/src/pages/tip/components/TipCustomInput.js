@@ -13,7 +13,7 @@ const TipCustomInput = ({ value, onChange, inputRef }) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         min="0"
-        max="100"
+        max="500"
         ref={inputRef}
       />
     </div>

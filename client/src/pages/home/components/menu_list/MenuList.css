@@ -40,29 +40,20 @@
   color: #E53E3E;
 }
 
-/* Horizontal scrolling container - matching Flutter app */
-.menu-horizontal-container {
-  height: 200px;
-}
-
-.menu-horizontal-scroll {
-  display: flex;
-  gap: 16px;
+/* Vertical grid container - 2 items per row */
+.menu-grid-container {
   padding: 0 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  height: 100%;
 }
 
-.menu-horizontal-scroll::-webkit-scrollbar {
-  display: none;
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
 }
 
-/* Menu card - 160px width matching Flutter app */
-.menu-card-horizontal {
-  min-width: 160px;
-  width: 160px;
+/* Menu card - grid layout */
+.menu-card-grid {
   background-color: rgb(255, 255, 255);
   border-radius: 16px;
   border: 1px solid #E8E8E8;
@@ -75,13 +66,13 @@
   flex-direction: column;
 }
 
-.menu-card-horizontal:hover {
+.menu-card-grid:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* Food image - 120px height matching Flutter app */
-.menu-image-horizontal {
+/* Food image - grid layout */
+.menu-image-grid {
   width: 100%;
   height: 120px;
   position: relative;
@@ -89,14 +80,14 @@
   border-radius: 16px 16px 0 0;
 }
 
-.menu-image-horizontal img {
+.menu-image-grid img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.2s ease;
 }
 
-.menu-card-horizontal:hover .menu-image-horizontal img {
+.menu-card-grid:hover .menu-image-grid img {
   transform: scale(1.05);
 }
 
@@ -120,8 +111,8 @@
   backdrop-filter: blur(4px);
 }
 
-/* Content section - matching Flutter app padding (12px) */
-.menu-content-horizontal {
+/* Content section - grid layout */
+.menu-content-grid {
   padding: 12px;
   flex: 1;
   display: flex;
@@ -129,7 +120,7 @@
   justify-content: space-between;
 }
 
-.menu-name-horizontal {
+.menu-name-grid {
   font-size: 14px;
   font-weight: 600;
   color: #333;
@@ -140,7 +131,7 @@
   white-space: nowrap;
 }
 
-.menu-price-horizontal {
+.menu-price-grid {
   font-size: 14px;
   font-weight: 600;
   color: #3D70FF;
@@ -190,19 +181,17 @@
 
 /* Loading states */
 .menu-loading {
-  height: 200px;
-}
-
-.menu-shimmer-container {
-  display: flex;
-  gap: 16px;
   padding: 0 16px;
-  height: 100%;
 }
 
-.menu-shimmer-card {
-  min-width: 160px;
-  width: 160px;
+.menu-shimmer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.menu-shimmer-card-grid {
   background-color: white;
   border-radius: 16px;
   overflow: hidden;
@@ -245,7 +234,7 @@
 
 /* Empty state */
 .menu-empty {
-  height: 200px;
+  padding: 40px 16px;
   display: flex;
   align-items: center;
   justify-content: center;

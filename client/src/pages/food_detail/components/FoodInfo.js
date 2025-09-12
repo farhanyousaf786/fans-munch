@@ -5,7 +5,7 @@ import { useTranslation } from '../../../i18n/i18n';
 
 const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   // Check if this is an offer item with discount
   const hasDiscount = food?.discountPercentage && food.discountPercentage > 0;
   const discountedPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food?.price;

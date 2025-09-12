@@ -53,7 +53,7 @@
     "illustration_alt": "Add a tip",
     "tip_amount": "Tip Amount",
     "custom_tip": "Custom Tip",
-    "custom_tip_label": "Custom tip (%)",
+    "custom_tip_label": "Custom tip",
     "custom_tip_placeholder": "Enter custom percentage",
     "add_tip": "Add Tip",
     "skip": "Skip"
@@ -99,6 +99,8 @@
     "processing_full": "Processing payment and placing order…",
     "row": "Row",
     "seat": "Seat",
+    "upload_ticket_header": "Please complete the details so we can complete the order",
+    "upload_ticket_subheader": "Upload your tickets",
     "err_row_required": "Please enter row number",
     "err_seat_required": "Please enter seat number",
     "complete_required_fields_prefix": "Please complete required fields:",

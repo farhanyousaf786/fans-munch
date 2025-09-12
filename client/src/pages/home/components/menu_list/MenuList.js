@@ -25,7 +25,7 @@ function getPlaceholderByKey(key) {
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -51,9 +51,9 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
           <h2 className="section-title">{getSectionTitle()}</h2>
         </div>
         <div className="menu-loading">
-          <div className="menu-shimmer-container">
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="menu-shimmer-card">
+          <div className="menu-shimmer-grid">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="menu-shimmer-card-grid">
                 <div className="shimmer-image"></div>
                 <div className="shimmer-content">
                   <div className="shimmer-line"></div>
@@ -99,17 +99,17 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
         )}
       </div>
       
-      {/* Horizontal scrolling container - matching Flutter app */}
-      <div className="menu-horizontal-container">
-        <div className="menu-horizontal-scroll">
+      {/* Vertical grid container - 2 items per row */}
+      <div className="menu-grid-container">
+        <div className="menu-grid">
           {menuItems.map((food) => (
             <div 
               key={food.id} 
-              className="menu-card-horizontal"
+              className="menu-card-grid"
               onClick={() => handleFoodClick(food)}
             >
               {/* Food Image - 120px height like Flutter app */}
-              <div className="menu-image-horizontal">
+              <div className="menu-image-grid">
                 <img 
                   src={food.getPrimaryImage() || getPlaceholderByKey(food.id || food.name)} 
                   alt={food.name}
@@ -131,14 +131,14 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
               </div>
               
               {/* Food Details - matching Flutter app padding */}
-              <div className="menu-content-horizontal">
+              <div className="menu-content-grid">
                 {(() => {
                   const displayName = (food.nameMap && (food.nameMap[lang] || food.nameMap.en)) || food.name;
                   return (
-                    <h3 className="menu-name-horizontal">{displayName}</h3>
+                    <h3 className="menu-name-grid">{displayName}</h3>
                   );
                 })()}
-                <p className="menu-price-horizontal">{formatILS(food.price)}</p>
+                <p className="menu-price-grid">{formatILS(food.price)}</p>
                 
                 {/* Preparation time */}
                 <div className="menu-prep-time">

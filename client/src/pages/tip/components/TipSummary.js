@@ -3,7 +3,7 @@ import { useTranslation } from '../../../i18n/i18n';
 
 const TipSummary = ({ tipAmount = 0, onCustomTip }) => {
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="tip-amount-section">
       <div className="tip-amount-row">

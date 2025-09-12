@@ -59,7 +59,7 @@ export default function OrderTrackScreen() {
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
   const code = order?.orderCode || order?.orderId || order?.id || '';
 
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
 
   return (
     <div className="order-track-screen" dir={isRTL ? 'rtl' : 'ltr'}>

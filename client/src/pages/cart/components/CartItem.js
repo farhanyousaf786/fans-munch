@@ -3,7 +3,7 @@ import { MdAdd, MdRemove, MdDelete, MdShoppingCart } from 'react-icons/md';
 import './CartItem.css';
 
 const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => {
-  const formatILS = (val) => new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="cart-item-wrapper">
       {/* Cart Item (matches Flutter CartItem widget) */}
@@ -19,7 +19,7 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
               >
                 <MdRemove size={16} />
               </button>
-              <span className="quantity-display">{String(item.quantity).padStart(2, '0')}</span>
+              <span className="quantity-display">{item.quantity}</span>
               <button 
                 className="quantity-btn add"
                 onClick={() => onAddToCart(item.id)}

@@ -100,6 +100,8 @@
     "processing_full": "מעבד תשלום ומבצע הזמנה…",
     "row": "שורה",
     "seat": "מושב",
+    "upload_ticket_header": "אנא השלם את הפרטים המושב שלך כדי להשלים את ההזמנה",
+    "upload_ticket_subheader": "העלה את הכרטיסים שלך",
     "err_row_required": "נא להזין מספר שורה",
     "err_seat_required": "נא להזין מספר מושב",
     "complete_required_fields_prefix": "נא להשלים את השדות החסרים:",

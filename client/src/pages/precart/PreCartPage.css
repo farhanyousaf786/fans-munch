@@ -1,29 +1,46 @@
-/* PreCart Page Styles - Similar to Cart but with different actions */
+/* PreCart Page Styles - Modern Sleek UI */
 .precart-screen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+  position: relative;
+}
+
+.precart-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+  opacity: 0.03;
+  pointer-events: none;
 }
 
 .precart-container {
   flex: 1;
-  padding-bottom: 140px; /* More space for action buttons + bottom nav */
+  padding-bottom: 120px;
+  position: relative;
+  z-index: 1;
 }
 
-/* Action buttons at bottom - replaces price calculations */
+/* Action buttons at bottom - Modern glass design */
 .precart-actions {
   position: fixed;
-  bottom: 70px; /* Above bottom navigation */
-  left: 0;
-  right: 0;
-  background: white;
+  bottom: 70px;
+  left: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.9);
   padding: 16px;
-  border-top: 1px solid #e5e7eb;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 20px;
   display: flex;
   gap: 12px;
   z-index: 100;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .continue-shopping-btn,
@@ -31,40 +48,69 @@
   flex: 1;
   height: 48px;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .continue-shopping-btn {
-  background: #3D70FF;
+  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
   color: white;
+  border: 1px solid transparent;
+}
+
+.continue-shopping-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
 }
 
 .continue-shopping-btn:hover {
-  background: #2563eb;
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
+  transform: translateY(-1px);
+}
+
+.continue-shopping-btn:hover::before {
+  left: 100%;
 }
 
 .checkout-btn {
-  background: #f3f4f6;
-  color: #374151;
+  background: rgba(59, 130, 246, 0.05);
+  color: #1E293B;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .checkout-btn:hover {
-  background: #e5e7eb;
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3B82F6;
+  transform: translateY(-1px);
 }
 
 .checkout-btn:disabled {
-  background: #d1d5db;
-  color: #9ca3af;
+  background: rgba(148, 163, 184, 0.1);
+  color: #94A3B8;
+  border-color: rgba(148, 163, 184, 0.2);
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .precart-actions {
+    left: 12px;
+    right: 12px;
     padding: 12px;
   }
   
@@ -72,5 +118,22 @@
   .checkout-btn {
     height: 44px;
     font-size: 15px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .precart-actions {
+    left: 8px;
+    right: 8px;
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .continue-shopping-btn,
+  .checkout-btn {
+    height: 42px;
+    font-size: 14px;
+    border-radius: 12px;
   }
 }

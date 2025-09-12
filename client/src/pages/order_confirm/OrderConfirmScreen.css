@@ -330,6 +330,29 @@ body[lang="he"] .field-input {
   font-weight: 600;
 }
 
+/* Order Header Section */
+.order-header-section {
+  margin: 20px 0;
+  text-align: center;
+  padding: 16px;
+}
+
+.order-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.order-header-subtitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.3;
+}
+
 /* Place Order Section */
 .place-order-section {
   margin-top: auto;
@@ -340,23 +363,42 @@ body[lang="he"] .field-input {
 .place-order-button {
   width: 100%;
   height: 56px;
-  background: #3D70FF;
+  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.place-order-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
 }
 
 .place-order-button:hover:not(:disabled) {
-  background: #3161EA;
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
+  transform: translateY(-1px);
+}
+
+.place-order-button:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .place-order-button:disabled {
   background: #CCCCCC;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Mobile Responsiveness */

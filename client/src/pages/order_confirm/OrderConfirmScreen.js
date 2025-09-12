@@ -577,6 +577,12 @@ const OrderConfirmScreen = () => {
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           </div>
         )}
+        {/* Header Text Section */}
+        <div className="order-header-section">
+          <h2 className="order-header-title">{t('order.upload_ticket_header')}</h2>
+          <p className="order-header-subtitle">{t('order.upload_ticket_subheader')}</p>
+        </div>
+
         {/* Ticket Image Upload */}
         <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 
