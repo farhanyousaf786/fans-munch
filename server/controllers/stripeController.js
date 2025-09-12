@@ -1,14 +1,37 @@
 const stripe = require('stripe');
 
-// Initialize Stripe with secret key
+// Resolve runtime mode and keys based on STRIPE_ENV
+const getStripeRuntimeConfig = () => {
+  const mode = (process.env.STRIPE_ENV || 'live').toLowerCase() === 'test' ? 'test' : 'live';
+  const cfg = {
+    mode,
+    secretKey:
+      mode === 'test'
+        ? (process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY)
+        : (process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY),
+    publishableKey:
+      mode === 'test'
+        ? (process.env.STRIPE_PUBLISHABLE_KEY_TEST || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
+        : (process.env.STRIPE_PUBLISHABLE_KEY_LIVE || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY),
+    vendorConnectedAccountId:
+      mode === 'test'
+        ? process.env.STRIPE_VENDOR_ACCOUNT_ID_TEST
+        : process.env.STRIPE_VENDOR_ACCOUNT_ID_LIVE,
+  };
+  return cfg;
+};
+
+// Initialize Stripe with secret key, update if key changes
 let stripeInstance;
+let stripeSecretInUse;
 const initStripe = () => {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const { secretKey } = getStripeRuntimeConfig();
   if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is required');
+    throw new Error('Stripe secret key not configured. Set STRIPE_SECRET_KEY_{TEST|LIVE} or STRIPE_SECRET_KEY');
   }
-  if (!stripeInstance) {
+  if (!stripeInstance || stripeSecretInUse !== secretKey) {
     stripeInstance = stripe(secretKey);
+    stripeSecretInUse = secretKey;
   }
   return stripeInstance;
 };
@@ -16,11 +39,12 @@ const initStripe = () => {
 exports.createPaymentIntent = async (req, res) => {
   try {
     const stripeClient = initStripe();
+    const { mode, vendorConnectedAccountId: envVendorId } = getStripeRuntimeConfig();
     
-    console.log('[Stripe] Creating payment intent...');
+    console.log('[Stripe] Creating payment intent... (mode:', mode, ')');
     
     // Get amount, currency, fees, and optional vendor connected account from request
-    const { amount, currency = 'ils', vendorConnectedAccountId, deliveryFee = 0, tipAmount = 0 } = req.body;
+    const { amount, currency = 'ils', vendorConnectedAccountId: reqVendorId, deliveryFee = 0, tipAmount = 0 } = req.body;
     
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -28,6 +52,9 @@ exports.createPaymentIntent = async (req, res) => {
         error: 'Valid amount is required'
       });
     }
+
+    // Prefer request vendor ID, else server-side configured vendor per mode
+    const vendorConnectedAccountId = reqVendorId || envVendorId;
 
     // Convert amount to the smallest currency unit (cents/agorot)
     const amountInCents = Math.round(amount * 100);
@@ -66,6 +93,7 @@ exports.createPaymentIntent = async (req, res) => {
       metadata: {
         source: 'fans-munch-app',
         timestamp: new Date().toISOString(),
+        mode,
       },
     };
 
@@ -156,6 +184,23 @@ exports.createPaymentIntent = async (req, res) => {
 
 
 
+// Public config endpoint for client to fetch publishable key and mode at runtime
+exports.getStripePublicConfig = async (req, res) => {
+  try {
+    const { mode, publishableKey, vendorConnectedAccountId } = getStripeRuntimeConfig();
+    if (!publishableKey) {
+      return res.status(500).json({ success: false, error: 'Stripe publishable key not configured' });
+    }
+    return res.json({
+      success: true,
+      mode,
+      publishableKey,
+      vendorConnectedAccountId: vendorConnectedAccountId || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message || 'Failed to load Stripe config' });
+  }
+};
 
 exports.confirmPayment = async (req, res) => {
   try {

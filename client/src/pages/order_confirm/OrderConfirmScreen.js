@@ -270,10 +270,9 @@ const OrderConfirmScreen = () => {
     
     try {
       // Ensure we have an intent (pre-created in useEffect; if missing, create now)
-      const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
-        ? process.env.REACT_APP_API_BASE.trim()
-        : (window.location.port === '3000' ? 'http://localhost:5001' : '');
-      const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
+      // In production, always same-origin (''). In local dev, talk to server on 5001.
+      const isLocal = window.location.hostname === 'localhost' || window.location.port === '3000';
+      const API_BASE = isLocal ? 'http://localhost:5001' : '';
 
       // Stripe payment flow only
       if (!stripeIntent?.id || !stripeIntent?.clientSecret) {
@@ -285,9 +284,8 @@ const OrderConfirmScreen = () => {
           body: JSON.stringify({ 
             amount: finalTotal, 
             currency: 'ils',
-            vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
+            // vendorConnectedAccountId: (server selects based on STRIPE_ENV)
             // Send fee breakdown for payment splitting
-            
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0
           })

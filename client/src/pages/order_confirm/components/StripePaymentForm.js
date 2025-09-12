@@ -1,17 +1,11 @@
-import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { showToast } from '../../../components/toast/ToastContainer';
 import { useTranslation } from '../../../i18n/i18n';
 import { buildPaymentRequest } from '../../../utils/stripePaymentRequest';
 
-// Debug logging for environment variable (remove after testing)
-console.log('[DEBUG] REACT_APP_STRIPE_PUBLISHABLE_KEY:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-
-// Initialize Stripe - only if publishable key is available
-const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
-  : null;
+// Stripe publishable key is fetched at runtime from the server (/api/stripe/config)
 
 // Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
 const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
@@ -221,14 +215,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
       {paymentRequest && (
         <div style={{ marginBottom: 12 }}>
-          <div style={{ opacity: isFormValid ? 1 : 0.5, pointerEvents: isFormValid ? 'auto' : 'none' }}>
-            <PaymentRequestButtonElement options={{ paymentRequest }} />
-          </div>
-          {!isFormValid && (
-            <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 }}>
-              Please fill in all required fields to use Apple Pay/Google Pay
-            </div>
-          )}
+          <PaymentRequestButtonElement options={{ paymentRequest }} />
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>Or pay with card</div>
         </div>
       )}
@@ -265,6 +252,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
 // Main component wrapper with Stripe Elements provider
 const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
   const cardFormRef = useRef();
+  const [cfg, setCfg] = useState({ loading: true, error: null, publishableKey: null });
 
   // Forward ref methods to the inner CardForm
   useImperativeHandle(ref, () => ({
@@ -276,19 +264,46 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
     }
   }));
 
-  if (!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || !stripePromise) {
+  // Fetch Stripe public config at runtime
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        // In production, always use same-origin (''). In local dev, hit the server on 5001.
+        const isLocal = window.location.hostname === 'localhost' || window.location.port === '3000';
+        const base = isLocal ? 'http://localhost:5001' : '';
+        const res = await fetch(`${base}/api/stripe/config`);
+        const data = await res.json();
+        if (!active) return;
+        if (!res.ok || data.success !== true || !data.publishableKey) {
+          throw new Error(data.error || `Failed to load Stripe config (${res.status})`);
+        }
+        setCfg({ loading: false, error: null, publishableKey: data.publishableKey });
+      } catch (err) {
+        setCfg({ loading: false, error: err.message || 'Failed to load config', publishableKey: null });
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const stripePromise = useMemo(() => {
+    if (!cfg.publishableKey) return null;
+    return loadStripe(cfg.publishableKey);
+  }, [cfg.publishableKey]);
+
+  if (cfg.loading) {
+    return (
+      <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontSize: 14, color: '#6b7280' }}>Loading payment form…</div>
+      </div>
+    );
+  }
+
+  if (cfg.error || !stripePromise) {
     return (
       <div style={{ padding: 16, margin: '16px 0', border: '1px solid #fecaca', borderRadius: 8, background: '#fef2f2' }}>
-        <div style={{ color: '#dc2626', fontWeight: 600 }}>
-          Stripe Configuration Missing
-        </div>
-        <div style={{ color: '#7f1d1d', fontSize: 14, marginTop: 4 }}>
-          Please add your Stripe publishable key to the .env file:
-          <br />
-          <code style={{ background: '#f3f4f6', padding: '2px 4px', borderRadius: 3 }}>
-            REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-          </code>
-        </div>
+        <div style={{ color: '#dc2626', fontWeight: 600 }}>Stripe Configuration Error</div>
+        <div style={{ color: '#7f1d1d', fontSize: 14, marginTop: 4 }}>{cfg.error || 'Missing publishable key'}</div>
       </div>
     );
   }
