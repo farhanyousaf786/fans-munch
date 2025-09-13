@@ -23,7 +23,11 @@ class FoodRepository {
       const items = [];
       snap.forEach((d) => {
         try {
-          items.push(Food.fromMap(d.id, d.data()));
+          const food = Food.fromMap(d.id, d.data());
+          // Only include active/available menu items
+          if (food.isAvailable) {
+            items.push(food);
+          }
         } catch (e) {
           console.error('Error mapping food', d.id, e);
         }
@@ -57,7 +61,11 @@ class FoodRepository {
           console.log('Processing document:', doc.id);
           const data = doc.data();
           console.log('Document data:', data);
-          allMenuItems.push(Food.fromMap(doc.id, data));
+          const food = Food.fromMap(doc.id, data);
+          // Only include active/available menu items
+          if (food.isAvailable) {
+            allMenuItems.push(food);
+          }
         } catch (error) {
           console.error('Error processing document', doc.id, ':', error);
         }
@@ -92,7 +100,11 @@ class FoodRepository {
       menuSnapshot.forEach((doc) => {
         try {
           const data = doc.data();
-          allMenuItems.push(Food.fromMap(doc.id, data));
+          const food = Food.fromMap(doc.id, data);
+          // Only include active/available menu items
+          if (food.isAvailable) {
+            allMenuItems.push(food);
+          }
         } catch (error) {
           console.error('Error processing document', doc.id, ':', error);
         }

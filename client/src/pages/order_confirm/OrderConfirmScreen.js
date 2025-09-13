@@ -429,10 +429,17 @@ const OrderConfirmScreen = () => {
           }
         });
 
-        nearestShopId = bestShop.id || (cartFirstShopId || null);
+        nearestShopId = bestShop.id;
+        
+        // If no nearest shop found (no location or no valid coordinates), assign first available shop
+        if (!nearestShopId && shops.length > 0) {
+          nearestShopId = shops[0].id;
+          console.log('[Card] No nearest shop found, assigned first available shop:', nearestShopId);
+        }
         try { console.log('[ShopSelect] Nearest shop:', bestShop?.id || null, 'distanceKm:', Number.isFinite(bestShop?.dist) ? bestShop.dist.toFixed(3) : bestShop?.dist); } catch (_) {}
         try { console.log('[ShopSelect] Done'); } catch (_) {}
       } catch (e) {
+        console.warn('Could not resolve nearest shop:', e?.message || e);
         nearestShopId = cartFirstShopId || null;
         try { console.log('[ShopSelect] Done'); } catch (_) {}
       }
@@ -447,7 +454,7 @@ const OrderConfirmScreen = () => {
         userData,
         seatInfo,
         stadiumId: stadiumData.id,
-        shopId: nearestShopId || cartItems[0].shopId || '',
+        shopId: nearestShopId || cartItems[0]?.shopId || '',
         customerLocation,
         location: null,
         deliveryUserId: "",
@@ -496,6 +503,7 @@ const OrderConfirmScreen = () => {
       const effectiveForm = {
         ...savedSeat,
         ...formData,
+        // Ensure we have string values for required fields
         row: (formData.row || savedSeat.row || '').toString().trim(),
         seatNo: (formData.seatNo || savedSeat.seatNo || '').toString().trim(),
       };
@@ -504,27 +512,36 @@ const OrderConfirmScreen = () => {
       setErrors({});
       setIsFormValid(true);
 
-      console.log('[Wallet] Placing order with effectiveForm, tipData, finalTotal:', { effectiveForm, tipAmount: tipData?.amount, finalTotal });
-      const createdOrder = await placeOrderAfterWalletSuccess({
-        formData: effectiveForm,
-        tipData,
-        ticketImage,
-        customerLocation,
-        finalTotal,
-      });
+      try {
+        const createdOrder = await placeOrderAfterWalletSuccess({
+          formData: effectiveForm,
+          tipData,
+          ticketImage,
+          customerLocation,
+          finalTotal,
+        });
 
-      // Cleanup form inputs and notify & navigate
-      try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-      setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
-      setErrors({});
-      setShowErrors(false);
-      setIsFormValid(false);
-      setTicketImage(null);
+        // Cleanup form inputs and notify & navigate
+        try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
+        setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
+        setErrors({});
+        setShowErrors(false);
+        setIsFormValid(false);
+        setTicketImage(null);
 
-      // Notify & navigate
-      const msg = 'Order placed successfully!';
-      showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
-      setTimeout(() => navigate('/home', { replace: true }), 1200);
+        // Notify & navigate
+        const msg = 'Order placed successfully!';
+        showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
+        setTimeout(() => navigate('/home', { replace: true }), 1200);
+      } catch (orderError) {
+        // Handle "shops are closed" error
+        if (orderError.message && orderError.message.includes('Shops are closed today')) {
+          showToast('Shops are closed today. Please try again later.', 'error', 5000);
+        } else {
+          showToast(orderError.message || 'Order failed. Please try again.', 'error', 4000);
+        }
+        console.error('[Wallet] Order placement failed:', orderError);
+      }
     } finally {
       setLoading(false);
     }

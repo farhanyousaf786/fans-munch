@@ -4,7 +4,7 @@
 import { cartUtils } from '../../../utils/cartUtils';
 import { userStorage, stadiumStorage } from '../../../utils/storage';
 import orderRepository from '../../../repositories/orderRepository';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { Order } from '../../../models/Order';
 import { sendNewOrderNotification } from '../../../utils/notificationUtils';
@@ -92,13 +92,9 @@ export async function placeOrderAfterWalletSuccess({
     console.warn('Could not resolve nearest delivery user:', e?.message || e);
   }
 
-  // Resolve nearest shop among those that carry items (cart shopIds); fallback to all shops
+  // Resolve nearest available shop from shops collection - only use available shops
   let nearestShopId = null;
   try {
-    const candidateIds = Array.from(new Set(
-      cartItems.flatMap(it => Array.isArray(it.shopIds) ? it.shopIds : (it.shopId ? [it.shopId] : []))
-    ));
-
     const toRad = (x) => (x * Math.PI) / 180;
     const haversine = (lat1, lon1, lat2, lon2) => {
       const R = 6371; // km
@@ -112,13 +108,30 @@ export async function placeOrderAfterWalletSuccess({
     };
     const parseNum = (v) => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v.replace(/[^0-9+\-.]/g, '')) : NaN));
 
-    let shops = [];
-    if (candidateIds.length > 0) {
-      const docs = await Promise.all(candidateIds.map(id => getDoc(doc(db, 'shops', id))));
-      shops = docs.filter(d => d.exists()).map(d => ({ id: d.id, data: d.data() }));
-    } else {
-      const snap = await getDocs(collection(db, 'shops'));
-      shops = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+    // Query shops where shopAvailability == true and (if possible) stadiumId == current stadium
+    let shopSnap;
+    try {
+      if (stadiumData?.id) {
+        const q = query(
+          collection(db, 'shops'),
+          where('shopAvailability', '==', true),
+          where('stadiumId', '==', stadiumData.id)
+        );
+        shopSnap = await getDocs(q);
+      }
+    } catch (_) {}
+
+    if (!shopSnap) {
+      // Fallback to availability only
+      const qAvail = query(collection(db, 'shops'), where('shopAvailability', '==', true));
+      shopSnap = await getDocs(qAvail);
+    }
+
+    const shops = shopSnap.docs.map(d => ({ id: d.id, data: d.data() }));
+    
+    // Check if any shops are available
+    if (shops.length === 0) {
+      throw new Error('Shops are closed today. Please try again later.');
     }
 
     let bestShop = { id: null, dist: Number.POSITIVE_INFINITY };
@@ -133,15 +146,31 @@ export async function placeOrderAfterWalletSuccess({
       } else if (Array.isArray(s.location) && s.location.length === 2) {
         lat = parseNum(s.location[0]); lng = parseNum(s.location[1]);
       }
-      if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng) && customerLocation) {
-        const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
-        if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
+
+      if (
+        typeof lat === 'number' && typeof lng === 'number' &&
+        !Number.isNaN(lat) && !Number.isNaN(lng)
+      ) {
+        if (customerLocation) {
+          const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
+          if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
+        } else if (!bestShop.id) {
+          // No location available — pick the first available as fallback
+          bestShop = { id: entry.id, dist: 0 };
+        }
       }
     });
 
-    nearestShopId = bestShop.id || null;
+    nearestShopId = bestShop.id;
+    
+    // If no nearest shop found (no location or no valid coordinates), assign first available shop
+    if (!nearestShopId && shops.length > 0) {
+      nearestShopId = shops[0].id;
+      console.log('[Wallet] No nearest shop found, assigned first available shop:', nearestShopId);
+    }
   } catch (e) {
     console.warn('Could not resolve nearest shop:', e?.message || e);
+    throw e; // Re-throw to let caller handle the "shops closed" error
   }
 
   const order = Order.createFromCart({
@@ -154,10 +183,10 @@ export async function placeOrderAfterWalletSuccess({
     userData,
     seatInfo,
     stadiumId: stadiumData.id,
-    shopId: nearestShopId || cartItems[0].shopId || '',
+    shopId: nearestShopId || '',
     customerLocation,
     location: null,
-    deliveryUserId: nearestDeliveryUserId || null
+    deliveryUserId: ""
   });
 
   const createdOrder = await orderRepository.createOrder(order);

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
+import { stadiumStorage } from '../../utils/storage';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import CartHeader from './components/CartHeader';
 import CartLoadingState from './components/CartLoadingState';
 import CartEmptyState from './components/CartEmptyState';
@@ -115,12 +118,58 @@ const CartScreen = ({ isFromHome = false }) => {
     return subtotal + deliveryFee + tip - discount;
   };
 
+  // Check if any shops are available before allowing order
+  const checkShopAvailability = async () => {
+    try {
+      const stadiumData = stadiumStorage.getSelectedStadium();
+      
+      // Query shops where shopAvailability == true
+      let shopSnap;
+      try {
+        if (stadiumData?.id) {
+          const q = query(
+            collection(db, 'shops'),
+            where('shopAvailability', '==', true),
+            where('stadiumId', '==', stadiumData.id)
+          );
+          shopSnap = await getDocs(q);
+        }
+      } catch (_) {}
+
+      if (!shopSnap || shopSnap.empty) {
+        // Fallback to availability only
+        const qAvail = query(collection(db, 'shops'), where('shopAvailability', '==', true));
+        shopSnap = await getDocs(qAvail);
+      }
+
+      const availableShops = shopSnap.docs.map(d => ({ id: d.id, data: d.data() }));
+      
+      if (availableShops.length === 0) {
+        showToast('No shops are open right now. Please try again later.', 'error', 5000);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error checking shop availability:', error);
+      showToast('Unable to check shop availability. Please try again.', 'error', 4000);
+      return false;
+    }
+  };
+
   // Handle place order (matches Flutter navigation to tip screen)
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
-      showToast('error', 'Cart is empty');
+      showToast('Cart is empty', 'error', 3000);
       return;
     }
+    
+    // Check if any shops are available before proceeding
+    const shopsAvailable = await checkShopAvailability();
+    if (!shopsAvailable) {
+      return; // Stop here if no shops are available
+    }
+    
     // Navigate to tip/checkout screen (matches Flutter)
     navigate('/tip');
   };
