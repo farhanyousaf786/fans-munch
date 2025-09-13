@@ -450,7 +450,7 @@ const OrderConfirmScreen = () => {
         shopId: nearestShopId || cartItems[0].shopId || '',
         customerLocation,
         location: null,
-        deliveryUserId: nearestDeliveryUserId || null
+        deliveryUserId: "",
       });
 
       const createdOrder = await orderRepository.createOrder(order);

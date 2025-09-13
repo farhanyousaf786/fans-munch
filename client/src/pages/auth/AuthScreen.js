@@ -11,6 +11,7 @@ const AuthScreen = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -51,9 +52,16 @@ const AuthScreen = () => {
         // Navigate to onboarding
         navigate('/onboarding');
       } else {
-        // Validate required fields for registration
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+        // Validate required fields for registration (phone is mandatory)
+        if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.password || !formData.confirmPassword) {
           setError(t('auth.fill_required'));
+          return;
+        }
+
+        // Basic phone validation (at least 7 digits)
+        const digits = String(formData.phone || '').replace(/\D/g, '');
+        if (digits.length < 7) {
+          setError('Please enter a valid phone number');
           return;
         }
         
@@ -97,6 +105,7 @@ const AuthScreen = () => {
     setFormData({
       firstName: '',
       lastName: '',
+      phone: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -151,6 +160,19 @@ const AuthScreen = () => {
                   required
                 />
               </div>
+
+              <div className="form-group">
+                <label htmlFor="phone">{t('auth.phone') || 'Phone'}</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder={t('auth.phone_ph') || '+972 50-123-4567'}
+                  required
+                />
+              </div>
             </>
           )}
 
@@ -178,9 +200,11 @@ const AuthScreen = () => {
               placeholder={t('auth.password_ph')}
               required
             />
-            <a href="#forgot-password" className="forgot-password">
-              {t('auth.forgot_password')}
-            </a>
+            {isLogin && (
+              <a href="#forgot-password" className="forgot-password">
+                {t('auth.forgot_password')}
+              </a>
+            )}
           </div>
 
           {!isLogin && (

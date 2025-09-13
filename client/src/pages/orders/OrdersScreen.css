@@ -2,31 +2,40 @@
 .orders-screen {
   min-height: 100vh;
   background: var(--theme-bg, #F5F5F5);
-  padding-bottom: 80px; /* Space for bottom nav */
+  padding-bottom: 100px; /* extra space for bottom nav overlap */
+  overflow-y: auto; /* allow scrolling to the end */
+  -webkit-overflow-scrolling: touch; /* smooth iOS scrolling */
 }
 
 .orders-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 100vh; /* ensure page can scroll beyond list */
+  box-sizing: border-box;
 }
 
 /* Header */
 .orders-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
+  background: linear-gradient(180deg, #F7F9FF 0%, #FFFFFF 100%);
+  border: 1px solid #EEF1F6;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(16,24,40,0.06);
 }
 
 .orders-title {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: var(--theme-primary, #3D70FF);
-  margin: 0 0 8px 0;
+  color: #1F2937; /* soften from bright primary */
+  margin: 0 0 6px 0;
 }
 
 .orders-subtitle {
-  font-size: 1rem;
-  color: var(--text-secondary, #666);
+  font-size: 0.95rem;
+  color: #6B7280;
   margin: 0;
 }
 
@@ -230,6 +239,32 @@
   font-size: 14px;
 }
 .shop-name { color: #1F2937; font-weight: 600; font-size: 15px; }
+
+.order-tip-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F0F7FF;
+  border: 1px solid #D6E6FF;
+  color: #0B5FFF;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 10px 0 12px;
+}
+
+.order-tip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #E6F0FF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-tip-texts { display: flex; flex-direction: column; }
+.order-tip-title { font-weight: 700; font-size: 14px; color: #0B5FFF; }
+.order-tip-sub { font-size: 12px; color: #3B82F6; }
 
 .order-meta {
   display: flex;

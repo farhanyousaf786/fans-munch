@@ -86,6 +86,7 @@ export default function OrderTrackScreen() {
               ) : (
                 <div className="qr-placeholder">{t('track.no_code')}</div>
               )}
+              <div className="qr-hint">Show this screen to the delivery person</div>
             </div>
 
             <div className="timeline">
@@ -140,6 +141,13 @@ export default function OrderTrackScreen() {
           </>
         )}
       </div>
+
+      {/* Sticky CTA when the order is on the way */}
+      {order && order.status === OrderStatus.DELIVERING && (
+        <div className="footer-cta">
+          <button className="cta-button" type="button">Show this screen to the delivery person</button>
+        </div>
+      )}
     </div>
   );
 }

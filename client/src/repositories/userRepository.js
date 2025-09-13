@@ -30,7 +30,15 @@ class UserRepository {
    */
   async registerUser(userData) {
     try {
-      const { email, password, firstName, lastName } = userData;
+      const { email, password, firstName, lastName, phone } = userData;
+      // Normalize phone: keep leading + and digits only
+      const normalizedPhone = (() => {
+        if (!phone) return '';
+        const raw = String(phone).trim();
+        const plus = raw.startsWith('+') ? '+' : '';
+        const digits = raw.replace(/\D/g, '');
+        return (plus + digits) || raw;
+      })();
 
       // Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -47,7 +55,7 @@ class UserRepository {
         email: firebaseUser.email,
         firstName,
         lastName,
-        phone: '', // Optional field, can be added later
+        phone: normalizedPhone,
         fcmToken: '', // Will be updated when FCM token is available
         favoriteFoods: [],
         favoriteRestaurants: [],

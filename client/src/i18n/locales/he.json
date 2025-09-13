@@ -136,7 +136,10 @@
     "toggle_sign_in": "התחבר",
     "please_wait": "אנא המתן...",
     "fill_required": "נא למלא את כל השדות הנדרשים.",
-    "passwords_no_match": "הסיסמאות אינן תואמות."
+    "passwords_no_match": "הסיסמאות אינן תואמות.",
+    "phone": "טלפון",
+    "phone_ph": "הכנס מספר טלפון",
+    "phone_invalid": "נא להזין מספר טלפון תקין"
   }
   ,
   "onboarding": {
