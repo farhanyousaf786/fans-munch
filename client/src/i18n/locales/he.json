@@ -139,7 +139,13 @@
     "passwords_no_match": "הסיסמאות אינן תואמות.",
     "phone": "טלפון",
     "phone_ph": "הכנס מספר טלפון",
-    "phone_invalid": "נא להזין מספר טלפון תקין"
+    "phone_invalid": "נא להזין מספר טלפון תקין",
+    "email_invalid": "אנא הזן כתובת אימייל תקינה",
+    "reset_instructions": "הזן את כתובת האימייל ונשלח לך קישור לאיפוס סיסמה.",
+    "send_reset_link": "שלח קישור לאיפוס",
+    "reset_sent": "אם קיים חשבון עבור אימייל זה, נשלח קישור לאיפוס סיסמה. אנא בדוק גם את תיקיית הספאם/דואר זבל.",
+    "reset_failed": "שליחת הקישור נכשלה. אנא נסה שוב.",
+    "back_to_login": "חזרה להתחברות"
   }
   ,
   "onboarding": {
@@ -162,12 +168,51 @@
   }
   ,
   "stadium": {
-    "title": "בחרו אצטדיון",
-    "subtitle": "בחרו מאיפה תרצו להזמין אוכל",
+    "title": "בחר את האצטדיון שלך",
+    "subtitle": "בחר מאיפה אתה רוצה להזמין אוכל",
     "loading": "טוען אצטדיונים...",
     "retry": "נסה שוב",
     "capacity": "קיבולת",
-    "select_button": "בחרו אצטדיון",
+    "select_button": "בחר אצטדיון",
     "continue_to": "המשך אל"
+  }
+  ,
+  "orders": {
+    "my_orders": "ההזמנות שלי",
+    "subtitle": "עקוב אחר הזמנות האוכל שלך",
+    "active": "פעיל",
+    "completed": "הושלם",
+    "loading": "טוען הזמנות...",
+    "error_loading": "שגיאה בטעינת הזמנות",
+    "try_again": "נסה שוב",
+    "no_orders": "אין הזמנות עדיין",
+    "empty_hint": "ההזמנות שלך יופיעו כאן",
+    "order": "הזמנה",
+    "items": "פריטים",
+    "track": "עקוב אחר הזמנה",
+    "pending": "ממתין",
+    "preparing": "בהכנה",
+    "delivering": "בדרך",
+    "delivered": "נמסר",
+    "cancelled": "בוטל",
+    "track_for_qr": "לחץ על 'עקוב אחר הזמנה' להצגת קוד QR לשליח"
+  }
+  ,
+  "track": {
+    "order": "מעקב הזמנה",
+    "loading": "טוען הזמנה...",
+    "no_code": "אין קוד QR זמין",
+    "order_received": "הזמנה התקבלה",
+    "preparing": "בהכנה",
+    "on_the_way": "בדרך אליך",
+    "delivered": "נמסר",
+    "items": "פריטי ההזמנה",
+    "qty": "כמות",
+    "item": "פריט",
+    "no_items": "אין פריטים בהזמנה זו",
+    "delivery_contact": "פרטי שליח",
+    "loading_contact": "טוען פרטי קשר...",
+    "delivery_person": "שליח",
+    "contact_unavailable": "פרטי קשר לא זמינים"
   }
 }

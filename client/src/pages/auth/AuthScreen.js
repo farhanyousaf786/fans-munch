@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
-import { userStorage, storageManager } from '../../utils/storage';
+import { userStorage, storageManager, settingsStorage } from '../../utils/storage';
 import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
 const AuthScreen = () => {
-  const { t, lang } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -16,6 +17,8 @@ const AuthScreen = () => {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -116,6 +119,18 @@ const AuthScreen = () => {
     <div className="auth-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Upper Section */}
       <div className="auth-upper-section">
+        {/* Language Toggle */}
+        <button
+          type="button"
+          className="lang-toggle"
+          onClick={() => {
+            const next = lang === 'he' ? 'en' : 'he';
+            setLang(next);
+            try { settingsStorage.setLanguagePreference(next); } catch (_) {}
+          }}
+        >
+          {lang === 'he' ? 'EN' : 'HE'}
+        </button>
         <div className="auth-header">
           <img 
             src="/app_icon.png" 
@@ -191,34 +206,58 @@ const AuthScreen = () => {
 
           <div className="form-group">
             <label htmlFor="password">{t('auth.password')}</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder={t('auth.password_ph')}
-              required
-            />
+            <div className="password-input-wrap">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={t('auth.password_ph')}
+                required
+              />
+              <button
+                type="button"
+                className="toggle-visibility"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setShowPassword(prev => !prev)}
+              >
+                {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+              </button>
+            </div>
             {isLogin && (
-              <a href="#forgot-password" className="forgot-password">
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={() => navigate('/forgot-password')}
+              >
                 {t('auth.forgot_password')}
-              </a>
+              </button>
             )}
           </div>
 
           {!isLogin && (
             <div className="form-group">
               <label htmlFor="confirmPassword">{t('auth.confirm_password')}</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder={t('auth.confirm_password_ph')}
-                required
-              />
+              <div className="password-input-wrap">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder={t('auth.confirm_password_ph')}
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-visibility"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowConfirmPassword(prev => !prev)}
+                >
+                  {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                </button>
+              </div>
             </div>
           )}
 

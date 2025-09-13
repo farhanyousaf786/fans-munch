@@ -135,6 +135,7 @@
     "confirm_password": "Re-enter Password",
     "confirm_password_ph": "Re-enter your password",
     "forgot_password": "Forgot Password?",
+    "back_to_login": "Back to Login",
     "sign_in": "Sign In",
     "create_account": "Create Account",
     "toggle_no_account": "Don't have an account? ",
@@ -146,7 +147,12 @@
     "passwords_no_match": "Passwords do not match.",
     "phone": "Phone",
     "phone_ph": "Enter your phone number",
-    "phone_invalid": "Please enter a valid phone number"
+    "phone_invalid": "Please enter a valid phone number",
+    "email_invalid": "Please enter a valid email address",
+    "reset_instructions": "Enter your email and we'll send you a password reset link.",
+    "send_reset_link": "Send Reset Link",
+    "reset_sent": "If an account exists for this email, a reset link has been sent. Please also check your Spam/Junk folder.",
+    "reset_failed": "Failed to send reset link. Please try again."
   }
   ,
   "onboarding": {
@@ -176,5 +182,44 @@
     "capacity": "Capacity",
     "select_button": "Select a Stadium",
     "continue_to": "Continue to"
+  }
+  ,
+  "orders": {
+    "my_orders": "My Orders",
+    "subtitle": "Track your food orders",
+    "active": "Active",
+    "completed": "Completed",
+    "loading": "Loading orders...",
+    "error_loading": "Error loading orders",
+    "try_again": "Try Again",
+    "no_orders": "No orders yet",
+    "empty_hint": "Your orders will appear here",
+    "order": "Order",
+    "items": "Items",
+    "track": "Track Order",
+    "pending": "Pending",
+    "preparing": "Preparing",
+    "delivering": "Delivering",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "track_for_qr": "Click 'Track Order' to show QR code to delivery person"
+  }
+  ,
+  "track": {
+    "order": "Order Tracking",
+    "loading": "Loading order...",
+    "no_code": "No QR code available",
+    "order_received": "Order Received",
+    "preparing": "Preparing",
+    "on_the_way": "On the Way",
+    "delivered": "Delivered",
+    "items": "Order Items",
+    "qty": "Qty",
+    "item": "Item",
+    "no_items": "No items in this order",
+    "delivery_contact": "Delivery Contact",
+    "loading_contact": "Loading contact info...",
+    "delivery_person": "Delivery Person",
+    "contact_unavailable": "Contact information unavailable"
   }
 }

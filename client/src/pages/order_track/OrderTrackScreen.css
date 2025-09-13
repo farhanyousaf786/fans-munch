@@ -105,6 +105,88 @@
   box-shadow: 0 6px 16px rgba(47,107,255,0.35);
 }
 
+/* Delivery Contact Section */
+.delivery-contact-section {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #EEF1F6;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(16,24,40,0.06);
+}
+
+.delivery-contact-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.delivery-contact-title .phone-icon {
+  color: #2563eb;
+  font-size: 18px;
+}
+
+.delivery-contact-loading {
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+}
+
+.delivery-contact-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.delivery-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delivery-person-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.delivery-phone-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 12px;
+  background: #dbeafe;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.delivery-phone-link:hover {
+  background: #bfdbfe;
+}
+
+.delivery-phone-link .phone-icon-small {
+  font-size: 16px;
+}
+
+.delivery-contact-unavailable {
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
 @media (max-width: 400px) {
   .qr-wrap { padding: 8px; }
   .content { padding: 12px; }

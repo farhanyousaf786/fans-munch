@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { OrderStatus } from '../../models/Order';
 import QRCode from 'react-qr-code';
 import './OrderTrackScreen.css';
 import { useTranslation } from '../../i18n/i18n';
-import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle } from 'react-icons/md';
+import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle, MdPhone } from 'react-icons/md';
 
 const baseSteps = [
   { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
@@ -23,6 +23,8 @@ export default function OrderTrackScreen() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deliveryUser, setDeliveryUser] = useState(null);
+  const [loadingDeliveryUser, setLoadingDeliveryUser] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -36,14 +38,49 @@ export default function OrderTrackScreen() {
         return;
       }
       setError('');
-      setOrder({ id: snap.id, ...snap.data() });
+      const orderData = { id: snap.id, ...snap.data() };
+      setOrder(orderData);
       setLoading(false);
+      
+      // Fetch delivery user info if order is delivering and has deliveryUserId
+      console.log('Order status:', orderData.status, 'DELIVERING constant:', OrderStatus.DELIVERING);
+      console.log('DeliveryUserId:', orderData.deliveryUserId);
+      if (orderData.status === OrderStatus.DELIVERING && orderData.deliveryUserId) {
+        fetchDeliveryUser(orderData.deliveryUserId);
+      } else {
+        setDeliveryUser(null);
+      }
     }, (e) => {
       setError(e?.message || 'Failed to load order');
       setLoading(false);
     });
     return () => unsub();
   }, [orderId]);
+
+  // Fetch delivery user details from deliveryUsers collection
+  const fetchDeliveryUser = async (deliveryUserId) => {
+    if (!deliveryUserId) return;
+    
+    setLoadingDeliveryUser(true);
+    try {
+      const deliveryUserRef = doc(db, 'deliveryUsers', deliveryUserId);
+      const deliveryUserSnap = await getDoc(deliveryUserRef);
+      
+      if (deliveryUserSnap.exists()) {
+        const userData = { id: deliveryUserSnap.id, ...deliveryUserSnap.data() };
+        console.log('Delivery user data:', userData);
+        setDeliveryUser(userData);
+      } else {
+        console.warn('Delivery user not found:', deliveryUserId);
+        setDeliveryUser(null);
+      }
+    } catch (error) {
+      console.error('Error fetching delivery user:', error);
+      setDeliveryUser(null);
+    } finally {
+      setLoadingDeliveryUser(false);
+    }
+  };
 
   const iconFor = (key) => {
     switch (key) {
@@ -111,6 +148,35 @@ export default function OrderTrackScreen() {
                 );
               })}
             </div>
+
+            {/* Delivery Contact Information */}
+            {order?.status === OrderStatus.DELIVERING && (
+              <div className="delivery-contact-section">
+                <div className="delivery-contact-title">
+                  <MdPhone className="phone-icon" />
+                  {t('track.delivery_contact')}
+                </div>
+                {loadingDeliveryUser ? (
+                  <div className="delivery-contact-loading">{t('track.loading_contact')}</div>
+                ) : (console.log('Delivery user in render:', deliveryUser, 'Phone:', deliveryUser?.phone), deliveryUser?.phone) ? (
+                  <div className="delivery-contact-card">
+                    <div className="delivery-contact-info">
+                      <div className="delivery-person-name">
+                        {deliveryUser.name || t('track.delivery_person')}
+                      </div>
+                      <a href={`tel:${deliveryUser.phone}`} className="delivery-phone-link">
+                        <MdPhone className="phone-icon-small" />
+                        {deliveryUser.phone}
+                      </a>
+                    </div>
+                  </div>
+                ) : order?.deliveryUserId ? (
+                  <div className="delivery-contact-unavailable">
+                    {t('track.contact_unavailable')}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <div className="items-section">
               <div className="items-title">{t('track.items')}</div>

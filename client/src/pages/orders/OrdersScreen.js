@@ -224,6 +224,13 @@ const OrdersScreen = () => {
                   <div className="order-price">₪{order.total.toFixed(2)}</div>
                 </div>
 
+                {/* Instruction text for delivery orders */}
+                {order.status === OrderStatus.DELIVERING && (
+                  <div className="order-delivery-instruction">
+                    <span className="delivery-instruction-text">{t('orders.track_for_qr')}</span>
+                  </div>
+                )}
+
                 {order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELED && (
                   <div className="order-actions">
                     <button className="track-button" onClick={() => handleTrackOrder(order)}>{t('orders.track')}</button>

@@ -61,7 +61,7 @@ const SeatForm = ({ formData, errors, onChange }) => {
       </div>
 
       {/* Third row: Area & (spacer) */}
-      <div className="form-row">
+      {/* <div className="form-row">
         <div className="form-field">
           <label className="field-label">{t('order.area')}</label>
           <input
@@ -73,10 +73,9 @@ const SeatForm = ({ formData, errors, onChange }) => {
           />
         </div>
         <div className="form-field" />
-      </div>
+      </div> */}
 
-      {/* Additional Details */}
-      <div className="form-field">
+      {/* <div className="form-field">
         <label className="field-label">{t('order.additional_details')}</label>
         <textarea
           className="field-input textarea"
@@ -85,7 +84,7 @@ const SeatForm = ({ formData, errors, onChange }) => {
           onChange={(e) => onChange('seatDetails', e.target.value)}
           rows={3}
         />
-      </div>
+      </div> */}
     </div>
   );
 };
