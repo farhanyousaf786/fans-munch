@@ -6,6 +6,7 @@
 import { 
   collection, 
   addDoc, 
+  updateDoc,
   getDocs, 
   query, 
   where, 
@@ -48,10 +49,16 @@ class OrderRepository {
         deliveryTime: orderData.deliveryTime ? Timestamp.fromDate(orderData.deliveryTime) : null
       };
 
-      // Add to Firebase orders collection
+      // Add to Firebase orders collection (first pass without ID)
       const docRef = await addDoc(collection(db, this.collectionName), orderWithTimestamp);
       
       console.log('✅ Order created successfully with ID:', docRef.id);
+
+      // Update the document to include its own ID
+      await updateDoc(docRef, { 
+        id: docRef.id,
+        updatedAt: Timestamp.fromDate(new Date())
+      });
 
       // Return the order with the Firebase document ID
       const createdOrder = new Order({

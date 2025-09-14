@@ -493,8 +493,9 @@ const OrderConfirmScreen = () => {
       const msg = t('order.order_placed');
       showToast(`${msg} ${t('order.order_id')}: ${createdOrder.orderId}`, 'success', 4000);
 
-      // Navigate after a short delay
-      setTimeout(() => navigate('/home', { replace: true }), 1200);
+      // Navigate to order tracking screen after a short delay
+      console.log('Order Doc ID:', createdOrder.id);
+      setTimeout(() => navigate(`/order/${createdOrder.id}`, { replace: true }), 1200);
     } catch (error) {
       console.error('❌ Payment/Order creation failed:', error);
       const errorMessage = error.message || t('order.payment_failed_generic');
@@ -550,7 +551,7 @@ const OrderConfirmScreen = () => {
         // Notify & navigate
         const msg = 'Order placed successfully!';
         showToast(`${msg} Order ID: ${createdOrder.orderId}`, 'success', 4000);
-        setTimeout(() => navigate('/home', { replace: true }), 1200);
+        setTimeout(() => navigate(`/order/${createdOrder.id}`, { replace: true }), 1200);
       } catch (orderError) {
         // Handle "shops are closed" error
         if (orderError.message && orderError.message.includes('Shops are closed today')) {

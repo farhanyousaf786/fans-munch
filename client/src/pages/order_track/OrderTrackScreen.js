@@ -123,7 +123,7 @@ export default function OrderTrackScreen() {
               ) : (
                 <div className="qr-placeholder">{t('track.no_code')}</div>
               )}
-              <div className="qr-hint">Show this screen to the delivery person</div>
+              <div className="qr-hint"><strong>{t('track.present_qr')}</strong></div>
             </div>
 
             <div className="timeline">

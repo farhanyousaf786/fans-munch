@@ -31,6 +31,7 @@
 .qr-card { background: #fff; border-radius: 14px; border: 1px solid #EEF1F6; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(16,24,40,0.06); }
 .qr-wrap { padding: 10px; border: 1px solid #2F6BFF; border-radius: 10px; display: inline-block; background: #f3f7ff; }
 .qr-hint { margin-top: 4px; font-size: 13px; color: #475569; text-align: center; }
+.qr-hint strong { font-weight: 800; color: #1e293b; }
 .timeline { margin-top: 14px; background: #fff; border: 1px solid #EEF1F6; border-radius: 14px; padding: 6px 0; position: relative; box-shadow: 0 1px 6px rgba(16,24,40,0.05); }
 /* Base vertical line centered to the dots */
 .timeline::before {

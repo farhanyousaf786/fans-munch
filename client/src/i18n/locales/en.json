@@ -212,6 +212,7 @@
     "order": "Order Tracking",
     "loading": "Loading order...",
     "no_code": "No QR code available",
+    "present_qr": "Present QR Code to receive your order",
     "order_received": "Order Received",
     "preparing": "Preparing",
     "on_the_way": "On the Way",

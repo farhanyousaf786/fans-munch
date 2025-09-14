@@ -3,7 +3,7 @@ import React from 'react';
 const backdropStyle = {
   position: 'fixed',
   inset: 0,
-  background: 'rgba(76, 143, 237, 0.9)',
+  background: 'rgba(250, 250, 250, 0.37)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -47,6 +47,7 @@ const buttonPrimary = {
   padding: '10px 16px',
   fontWeight: 600,
   cursor: 'pointer',
+  borderColor: '#111827',
 };
 
 const buttonSecondary = {
