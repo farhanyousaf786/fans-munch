@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { userStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
 import { stadiumStorage } from '../../utils/storage';
@@ -10,12 +11,14 @@ import CartLoadingState from './components/CartLoadingState';
 import CartEmptyState from './components/CartEmptyState';
 import CartItemsList from './components/CartItemsList';
 import PriceInfoWidget from './components/PriceInfoWidget';
+import AuthRequiredModal from './components/AuthRequiredModal';
 import './CartScreen.css';
 
 const CartScreen = ({ isFromHome = false }) => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Load cart data from cartUtils (matches Flutter OrderRepository.cart)
   useEffect(() => {
@@ -163,6 +166,11 @@ const CartScreen = ({ isFromHome = false }) => {
       showToast('Cart is empty', 'error', 3000);
       return;
     }
+    // Require sign in before proceeding to checkout flow
+    if (!userStorage.isLoggedIn || !userStorage.isLoggedIn()) {
+      setShowAuthModal(true);
+      return;
+    }
     
     // Check if any shops are available before proceeding
     const shopsAvailable = await checkShopAvailability();
@@ -172,6 +180,16 @@ const CartScreen = ({ isFromHome = false }) => {
     
     // Navigate to tip/checkout screen (matches Flutter)
     navigate('/tip');
+  };
+
+  const handleAuthModalConfirm = () => {
+    try { localStorage.setItem('postLoginNext', '/cart'); } catch (_) {}
+    setShowAuthModal(false);
+    navigate('/auth?next=%2Fcart');
+  };
+
+  const handleAuthModalCancel = () => {
+    setShowAuthModal(false);
   };
 
   if (loading) {
@@ -206,6 +224,12 @@ const CartScreen = ({ isFromHome = false }) => {
         calculateDiscount={calculateDiscount}
         calculateTotal={calculateTotal}
         onPlaceOrder={handlePlaceOrder}
+      />
+
+      <AuthRequiredModal 
+        open={showAuthModal}
+        onCancel={handleAuthModalCancel}
+        onConfirm={handleAuthModalConfirm}
       />
     </div>
   );

@@ -13,7 +13,7 @@ const StadiumSelectionScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { applyStadiumTheme } = useTheme();
+  // const { } = useTheme(); // Unused for now
   const { t, lang } = useTranslation();
 
   // Fetch stadiums from Firebase on component mount
@@ -50,8 +50,18 @@ const StadiumSelectionScreen = () => {
       const stadiumModel = Stadium.fromMap(selectedStadium);
       stadiumStorage.setSelectedStadium(stadiumModel.toMap());
       
-      // Navigate to home
-      navigate('/home');
+      // Check if there's a post-stadium destination (from auth flow)
+      let nextPath = '/home';
+      try {
+        const postStadiumNext = localStorage.getItem('postStadiumNext');
+        if (postStadiumNext && postStadiumNext.startsWith('/')) {
+          nextPath = postStadiumNext;
+          localStorage.removeItem('postStadiumNext');
+        }
+      } catch (_) {}
+      
+      // Navigate to final destination
+      navigate(nextPath);
     }
   };
 

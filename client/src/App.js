@@ -66,8 +66,8 @@ function App() {
         <Router>
           <div className="App">
           <Routes>
-            {/* Authentication - redirect to Home if already logged in */}
-            <Route path="/" element={userStorage.isLoggedIn() ? <Navigate to="/home" replace /> : <AuthScreen />} />
+            {/* Landing page goes to Home regardless of auth */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
             
             {/* Splash Screen - After auth */}
             <Route path="/splash" element={<SplashScreen />} />

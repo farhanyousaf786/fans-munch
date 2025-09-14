@@ -269,7 +269,7 @@ const OrderConfirmScreen = () => {
       const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
         ? process.env.REACT_APP_API_BASE.trim()
         : (window.location.port === '3000' ? 'http://localhost:5001' : '');
-      const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
+      // const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
 
       // Stripe payment flow only
       if (!stripeIntent?.id || !stripeIntent?.clientSecret) {
@@ -320,8 +320,29 @@ const OrderConfirmScreen = () => {
       const userData = userStorage.getUserData();
       const stadiumData = stadiumStorage.getSelectedStadium();
       const cartItems = cartUtils.getCartItems();
-      if (!userData || !stadiumData || cartItems.length === 0) {
-        throw new Error('Missing required data to create order');
+      
+      // Debug what data we have
+      console.log('[ORDER DEBUG] userData:', !!userData, 'stadiumData:', !!stadiumData, 'cartItems:', cartItems.length);
+      console.log('[ORDER DEBUG] stadiumData details:', stadiumData);
+      
+      // Check auth first - redirect to login if not authenticated
+      if (!userData) {
+        showToast('Please sign in to complete your order', 'error', 3000);
+        try { localStorage.setItem('postLoginNext', '/order/confirm'); } catch (_) {}
+        navigate('/auth?next=%2Forder%2Fconfirm');
+        return;
+      }
+      
+      if (!stadiumData) {
+        showToast('Please select a stadium first', 'error', 3000);
+        navigate('/stadium-selection');
+        return;
+      }
+      
+      if (cartItems.length === 0) {
+        showToast('Cart is empty', 'error', 3000);
+        navigate('/home');
+        return;
       }
 
       const seatInfo = {
@@ -347,7 +368,7 @@ const OrderConfirmScreen = () => {
       );
 
       // Delivery assignment disabled — we no longer assign a delivery user here
-      let nearestDeliveryUserId = null;
+      // let nearestDeliveryUserId = null;
 
       // Resolve nearest available shop from shops collection (ignore cart shopIds)
       let nearestShopId = null;
@@ -483,9 +504,9 @@ const OrderConfirmScreen = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  // const handleBack = () => {
+  //   navigate(-1);
+  // };
 
   // Handler passed to StripePaymentForm for Apple/Google Pay success
   const handleWalletPaymentSuccess = async () => {

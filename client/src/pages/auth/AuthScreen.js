@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
-import { userStorage, storageManager, settingsStorage } from '../../utils/storage';
+import { userStorage, stadiumStorage, settingsStorage } from '../../utils/storage';
 import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
@@ -37,11 +37,34 @@ const AuthScreen = () => {
     setError('');
 
     try {
+      // Resolve post-login redirect target from ?next or localStorage
+      const params = new URLSearchParams(window.location.search);
+      const nextParam = params.get('next');
+      let redirectTo = nextParam && nextParam.startsWith('/') ? nextParam : null;
+      if (!redirectTo) {
+        try {
+          const stored = localStorage.getItem('postLoginNext');
+          if (stored && stored.startsWith('/')) {
+            redirectTo = stored;
+          }
+        } catch (_) {}
+      }
+      const finishAuthRedirect = (path) => {
+        try { localStorage.removeItem('postLoginNext'); } catch (_) {}
+        
+        // Check if stadium is selected - if not, go to stadium selection first
+        const hasStadium = stadiumStorage.getSelectedStadium();
+        if (!hasStadium && (path === '/cart' || path === '/order/confirm' || path?.includes('/cart') || path?.includes('/order'))) {
+          // Save the final destination and go to stadium selection first
+          try { localStorage.setItem('postStadiumNext', path); } catch (_) {}
+          navigate('/stadium-selection', { replace: true });
+          return;
+        }
+        
+        navigate(path || '/home', { replace: true });
+      };
       if (isLogin) {
         console.log('🔑 User signing in...');
-        
-        // Clear all previous storage data for fresh session
-        storageManager.initializeFreshSession();
         
         // Sign in user
         const user = await userRepository.signInUser(formData.email, formData.password);
@@ -50,10 +73,8 @@ const AuthScreen = () => {
         userStorage.setUserData(user.toMap());
         userStorage.setUserToken(`token_${user.id || Date.now()}`);
         
-        console.log('✅ Sign in completed, navigating to onboarding');
-        
-        // Navigate to onboarding
-        navigate('/onboarding');
+        console.log('✅ Sign in completed');
+        finishAuthRedirect(redirectTo || '/home');
       } else {
         // Validate required fields for registration (phone is mandatory)
         if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email || !formData.password || !formData.confirmPassword) {
@@ -76,23 +97,18 @@ const AuthScreen = () => {
         
         console.log('📝 User registering...');
         
-        // Clear all previous storage data for fresh session
-        storageManager.initializeFreshSession();
-        
         // Register new user
-        const result = await userRepository.registerUser(formData);
+        const user = await userRepository.registerUser(formData);
         
-        if (result.success) {
+        if (user.success) {
           // Save user data and token to localStorage
-          userStorage.setUserData(result.user.toMap());
-          userStorage.setUserToken(`token_${result.user.id || Date.now()}`);
+          userStorage.setUserData(user.user.toMap());
+          userStorage.setUserToken(`token_${user.user.id || Date.now()}`);
           
-          console.log('✅ Registration completed, navigating to onboarding');
-          
-          // Navigate to onboarding
-          navigate('/onboarding');
+          console.log('✅ Registration completed');
+          finishAuthRedirect(redirectTo || '/home');
         } else {
-          setError(result.error);
+          setError(user.error);
         }
       }
     } catch (err) {

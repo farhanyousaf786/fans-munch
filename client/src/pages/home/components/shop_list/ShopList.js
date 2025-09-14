@@ -74,11 +74,12 @@ const ShopList = ({ onShopSelect }) => {
       if (selectedStadium && selectedStadium.id) {
         console.log('🔍 Fetching shops for stadium ID:', selectedStadium.id);
         
-        // Match Flutter ShopRepository.fetchShopsByStadium exactly
+        // Match Flutter ShopRepository.fetchShopsByStadium exactly, but only include available shops
         const shopsRef = collection(db, 'shops');
         const q = query(
           shopsRef,
-          where('stadiumId', '==', selectedStadium.id)
+          where('stadiumId', '==', selectedStadium.id),
+          where('shopAvailability', '==', true)
         );
         
         const querySnapshot = await getDocs(q);

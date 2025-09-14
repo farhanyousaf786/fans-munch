@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getAnalytics, isSupported as isAnalyticsSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
@@ -21,11 +21,23 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services with error handling
 let analytics = null;
-try {
-  analytics = getAnalytics(app);
-} catch (error) {
-  console.warn('Firebase Analytics not supported in this environment:', error);
-}
+// Initialize Analytics only when supported and online to avoid
+// "Installations: Application offline" noisy errors (e.g., Brave, offline)
+(async () => {
+  try {
+    const isBrowser = typeof window !== 'undefined';
+    const isOnline = isBrowser ? navigator.onLine : false;
+    const supported = isBrowser ? await isAnalyticsSupported().catch(() => false) : false;
+    const httpsOrLocalhost = isBrowser && (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+    if (isBrowser && isOnline && supported && httpsOrLocalhost && firebaseConfig.measurementId) {
+      analytics = getAnalytics(app);
+    } else {
+      console.warn('Analytics not initialized (supported:', supported, 'online:', isOnline, 'https/local:', httpsOrLocalhost, ')');
+    }
+  } catch (error) {
+    console.warn('Firebase Analytics not supported in this environment:', error);
+  }
+})();
 
 const auth = getAuth(app);
 const db = getFirestore(app);
