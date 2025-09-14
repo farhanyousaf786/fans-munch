@@ -2,10 +2,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-// Load env variables (only in development)
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-}
+// Load env variables from root .env unconditionally (useful if NODE_ENV is set to 'production' locally)
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+// Debug (do not print secrets)
+console.log('[ENV] STRIPE key present:', process.env.STRIPE_SECRET_KEY ? 'yes' : 'no');
 const airwallexRoutes = require('./routes/airwallexRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');

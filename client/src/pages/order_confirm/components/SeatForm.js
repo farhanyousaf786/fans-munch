@@ -25,9 +25,10 @@ const SeatForm = ({ formData, errors, onChange }) => {
           <label className="field-label">{t('order.stand')}</label>
           <select
             className="field-input"
-            value={formData.stand || 'Gallery'}
+            value={formData.stand || ''}
             onChange={(e) => onChange('stand', e.target.value)}
           >
+            <option value="" disabled>{t('order.select_stand')}</option>
             <option value="Gallery">{t('order.stand_gallery')}</option>
             <option value="Main">{t('order.stand_main')}</option>
           </select>
@@ -52,11 +53,12 @@ const SeatForm = ({ formData, errors, onChange }) => {
           <label className="field-label">{t('order.entrance')}</label>
           <input
             type="text"
-            className="field-input"
+            className={`field-input ${errors.entrance ? 'error' : ''}`}
             placeholder={t('order.entrance_ph')}
             value={formData.entrance || ''}
             onChange={(e) => onChange('entrance', e.target.value)}
           />
+          {errors.entrance && <span className="error-text">{errors.entrance}</span>}
         </div>
       </div>
 

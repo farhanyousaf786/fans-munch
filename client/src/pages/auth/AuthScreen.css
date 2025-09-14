@@ -115,6 +115,10 @@
   color: var(--primary-color);
   text-decoration: none;
   font-size: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .auth-button {

@@ -26,11 +26,8 @@ const OrderConfirmScreen = () => {
   const [formData, setFormData] = useState({
     row: '',
     seatNo: '',
-    section: '',
-    seatDetails: '',
-    area: '',
     entrance: '',
-    stand: ''
+    stand: '' // No default - user must select
   });
   
   // Order state
@@ -171,13 +168,10 @@ const OrderConfirmScreen = () => {
         [field]: value
       };
       console.log('[INPUT CHANGE] New form data:', newData);
-      // Persist to storage so wallet flow can read latest even if state lags
+      // Save to storage
       try { seatStorage.setSeatInfo({
         row: field === 'row' ? value : newData.row,
         seatNo: field === 'seatNo' ? value : newData.seatNo,
-        section: field === 'section' ? value : newData.section,
-        seatDetails: field === 'seatDetails' ? value : newData.seatDetails,
-        area: field === 'area' ? value : newData.area,
         entrance: field === 'entrance' ? value : newData.entrance,
         stand: field === 'stand' ? value : newData.stand,
       }); } catch (e) { console.warn('seatStorage set error', e); }
@@ -194,8 +188,8 @@ const OrderConfirmScreen = () => {
     console.log('[VALIDATION] Checking form data:', {
       row: formData.row,
       seatNo: formData.seatNo,
-      rowTrimmed: formData.row?.trim(),
-      seatNoTrimmed: formData.seatNo?.trim()
+      entrance: formData.entrance,
+      stand: formData.stand
     });
     
     if (!formData.row || !formData.row.trim()) {
@@ -203,6 +197,9 @@ const OrderConfirmScreen = () => {
     }
     if (!formData.seatNo || !formData.seatNo.trim()) {
       newErrors.seatNo = t('order.err_seat_required');
+    }
+    if (!formData.entrance || !formData.entrance.trim()) {
+      newErrors.entrance = t('order.err_entrance_required');
     }
     
     console.log('[VALIDATION] Validation result:', {
