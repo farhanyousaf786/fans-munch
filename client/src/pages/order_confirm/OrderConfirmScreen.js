@@ -10,6 +10,7 @@ import TicketUpload from './components/TicketUpload';
 import OrderSummary from './components/OrderSummary';
 import PlaceOrderBar from './components/PlaceOrderBar';
 import StripePaymentForm from './components/StripePaymentForm';
+import { LocationInlineBanner, LocationPermissionModal } from './components/LocationPermissionUI';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
@@ -46,6 +47,8 @@ const OrderConfirmScreen = () => {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [showErrors, setShowErrors] = useState(false); // hide red borders until submit or explicit show
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [geoPermissionState, setGeoPermissionState] = useState('unknown'); // 'granted' | 'denied' | 'prompt' | 'unknown'
 
   // Phone state (for delivery contact)
   const [customerPhone, setCustomerPhone] = useState('');
@@ -97,6 +100,16 @@ const OrderConfirmScreen = () => {
 
     // Try to capture geolocation
     if (navigator.geolocation) {
+      // Check permission state first (where supported)
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query({ name: 'geolocation' }).then((res) => {
+            setGeoPermissionState(res.state);
+            res.onchange = () => setGeoPermissionState(res.state);
+          }).catch(() => {});
+        }
+      } catch (_) {}
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setCustomerLocation({
@@ -261,8 +274,16 @@ const OrderConfirmScreen = () => {
     await new Promise(res => setTimeout(res, 60));
     // First, ensure location permission is granted
     if (locationPermissionDenied) {
-      showToast(t('order.location_required_desc'), 'error', 3000);
+      // Instead of only toasting, show our in-app popup that triggers native prompt
+      setShowLocationModal(true);
       try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      return false;
+    }
+
+    // Also require we actually have a location fix (lat/lng), not just permission flag
+    if (!customerLocation || typeof customerLocation.latitude !== 'number' || typeof customerLocation.longitude !== 'number') {
+      setShowLocationModal(true);
+      showToast(t('order.location_required_desc'), 'error', 3000);
       return false;
     }
 
@@ -365,10 +386,16 @@ const OrderConfirmScreen = () => {
           });
           setLocationPermissionDenied(false);
           showToast('Location access granted!', 'success', 2000);
+          setShowLocationModal(false);
         },
         (err) => {
           console.log('ℹ️ Geolocation permission denied again:', err?.message);
           setLocationPermissionDenied(true);
+          try {
+            if (navigator.permissions && navigator.permissions.query) {
+              navigator.permissions.query({ name: 'geolocation' }).then((res) => setGeoPermissionState(res.state)).catch(() => {});
+            }
+          } catch (_) {}
           showToast('Location access is required for delivery. Please enable it in your browser settings.', 'error', 4000);
         },
         { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
@@ -704,44 +731,18 @@ const OrderConfirmScreen = () => {
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
 
-        {/* Location Permission Warning */}
+        {/* Location Permission Warning (inline banner) */}
         {locationPermissionDenied && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: '8px',
-            padding: '16px',
-            margin: '16px 0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{ fontSize: '20px' }}>📍</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
-                {t('order.location_required')}
-              </div>
-              <div style={{ fontSize: '14px', color: '#a16207', marginBottom: '12px' }}>
-                {t('order.location_required_desc')}
-              </div>
-              <button
-                onClick={requestLocationPermission}
-                style={{
-                  background: '#f59e0b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: 'pointer'
-                }}
-              >
-                {t('order.enable_location')}
-              </button>
-            </div>
-          </div>
+          <LocationInlineBanner onOpenModal={() => setShowLocationModal(true)} />
         )}
+
+        {/* Modal: Ask for location and trigger native prompt */}
+        <LocationPermissionModal
+          visible={showLocationModal}
+          onClose={() => setShowLocationModal(false)}
+          onRequestPermission={requestLocationPermission}
+          geoPermissionState={geoPermissionState}
+        />
 
         {/* Stripe Payment Form with integrated Place Order button */}
         <StripePaymentForm
@@ -752,7 +753,7 @@ const OrderConfirmScreen = () => {
           showConfirmButton={false}
           totalAmount={finalTotal}
           currency={'ils'}
-          isFormValid={isFormValid && !locationPermissionDenied}
+          isFormValid={isFormValid && !!customerLocation && !locationPermissionDenied}
           onWalletPaymentSuccess={handleWalletPaymentSuccess}
           validateBeforeWalletPay={validateAndToast}
           disabled={locationPermissionDenied}
@@ -763,7 +764,7 @@ const OrderConfirmScreen = () => {
           loading={loading} 
           finalTotal={finalTotal} 
           onPlaceOrder={handlePayment}
-          disabled={locationPermissionDenied}
+          disabled={locationPermissionDenied || !customerLocation}
         />
       </div>
     </div>
