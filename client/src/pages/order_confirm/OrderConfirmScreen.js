@@ -28,7 +28,7 @@ const OrderConfirmScreen = () => {
     row: '',
     seatNo: '',
     entrance: '',
-    stand: '' // No default - user must select
+    stand: 'Main' // Default to Main stand
   });
   
   // Order state
@@ -405,27 +405,36 @@ const OrderConfirmScreen = () => {
         return;
       }
 
+      // Build effective form exactly like wallet flow (merge savedSeat + current form, prefer non-empty)
+      const savedSeatForCard = seatStorage.getSeatInfo() || {};
+      const pickTrimCard = (primary, fallback) => {
+        const p = (primary ?? '').toString().trim();
+        if (p.length > 0) return p;
+        return (fallback ?? '').toString().trim();
+      };
+      const effectiveFormForCard = {
+        row: pickTrimCard(formData.row, savedSeatForCard.row),
+        seatNo: pickTrimCard(formData.seatNo, savedSeatForCard.seatNo),
+        entrance: pickTrimCard(formData.entrance, savedSeatForCard.entrance),
+        stand: pickTrimCard(formData.stand, savedSeatForCard.stand),
+        section: pickTrimCard(formData.section, savedSeatForCard.section),
+        seatDetails: pickTrimCard(formData.seatDetails, savedSeatForCard.seatDetails),
+        area: pickTrimCard(formData.area, savedSeatForCard.area),
+      };
+
       const createdOrder = await placeOrderAfterPayment({
-        formData: {
-          row: formData.row,
-          seatNo: formData.seatNo,
-          section: formData.section,
-          seatDetails: formData.seatDetails,
-          area: formData.area,
-          entrance: formData.entrance,
-          stand: formData.stand,
-        },
+        formData: effectiveFormForCard,
         tipData,
         ticketImage,
         customerLocation,
         finalTotal,
         notifyDelivery: false,
-        strictShopAvailability: false,
+        strictShopAvailability: true,
       });
 
       // 4) Cleanup and reset UI (cart/tip already cleared in helper)
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-      setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
+      setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
       setErrors({});
       setShowErrors(false);
       setIsFormValid(false);
@@ -488,7 +497,7 @@ const OrderConfirmScreen = () => {
 
         // Cleanup form inputs and notify & navigate
         try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-        setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
+        setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
         setErrors({});
         setShowErrors(false);
         setIsFormValid(false);
