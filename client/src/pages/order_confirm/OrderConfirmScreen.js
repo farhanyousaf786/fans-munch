@@ -14,7 +14,6 @@ import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
-import { placeOrderAfterWalletSuccess } from './utils/walletOrderHandler';
 import { placeOrderAfterPayment } from './utils/placeOrderCommon';
 
 const OrderConfirmScreen = () => {
@@ -487,12 +486,14 @@ const OrderConfirmScreen = () => {
       setIsFormValid(true);
 
       try {
-        const createdOrder = await placeOrderAfterWalletSuccess({
+        const createdOrder = await placeOrderAfterPayment({
           formData: effectiveForm,
           tipData,
           ticketImage,
           customerLocation,
           finalTotal,
+          notifyDelivery: false,
+          strictShopAvailability: true,
         });
 
         // Cleanup form inputs and notify & navigate

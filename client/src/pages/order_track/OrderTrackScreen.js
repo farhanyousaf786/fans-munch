@@ -26,6 +26,11 @@ export default function OrderTrackScreen() {
   const [deliveryUser, setDeliveryUser] = useState(null);
   const [loadingDeliveryUser, setLoadingDeliveryUser] = useState(false);
 
+  // Ensure page starts at the top after navigating here
+  useEffect(() => {
+    try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'auto' }); } catch (_) {}
+  }, [orderId]);
+
   useEffect(() => {
     if (!orderId) return;
     setLoading(true);
