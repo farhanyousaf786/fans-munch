@@ -371,6 +371,22 @@ body[lang="he"] .field-input {
   line-height: 1.3;
 }
 
+/* Phone section alignment */
+.phone-section .section-title {
+  text-align: left;
+}
+.phone-section .helper-text {
+  text-align: left;
+}
+.phone-section .field-input {
+  text-align: left;
+}
+.phone-section .phone-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* Place Order Section */
 .place-order-section {
   margin-top: auto;

@@ -8,7 +8,6 @@ import orderRepository from '../../../repositories/orderRepository';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { Order } from '../../../models/Order';
-import { sendNewOrderNotification } from '../../../utils/notificationUtils';
 
 function toRad(x) { return (x * Math.PI) / 180; }
 function haversine(lat1, lon1, lat2, lon2) {
@@ -106,6 +105,7 @@ export async function placeOrderAfterPayment({
   finalTotal,
   notifyDelivery = false,
   strictShopAvailability = false,
+  customerPhone,
 }) {
   // Minimal validation
   if (!formData?.row || !String(formData.row).trim()) {
@@ -116,6 +116,7 @@ export async function placeOrderAfterPayment({
   }
 
   const userData = userStorage.getUserData();
+  const userDataWithPhone = { ...userData, phone: customerPhone || userData?.phone };
   const stadiumData = stadiumStorage.getSelectedStadium();
   const cartItems = cartUtils.getCartItems();
 
@@ -168,7 +169,7 @@ export async function placeOrderAfterPayment({
     discount: totals.discount,
     tipAmount: totals.tipAmount,
     tipPercentage: tipData?.percentage || 0,
-    userData,
+    userData: userDataWithPhone,
     seatInfo,
     stadiumId: stadiumData.id,
     shopId: nearestShopId || '',

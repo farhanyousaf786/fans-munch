@@ -28,6 +28,10 @@
     "more_suffix": "more"
   }
   ,
+  "common": {
+    "edit": "Edit"
+  }
+  ,
   "cart": {
     "add_to_cart": "Add to Cart",
     "empty": "Cart is empty",
@@ -123,7 +127,11 @@
     "unknown_error": "Unknown error",
     "location_required": "Location Access Required",
     "location_required_desc": "Please enable location access so we can track your seat location for delivery",
-    "enable_location": "Enable Location"
+    "enable_location": "Enable Location",
+    "phone_contact_title": "Delivery contact phone",
+    "phone_contact_hint": "This number will be used by the delivery person if they need help finding you.",
+    "phone_input_ph": "+972501234567",
+    "err_phone_required": "Please enter a valid phone number (digits, with optional +)."
   }
   ,
   "auth": {

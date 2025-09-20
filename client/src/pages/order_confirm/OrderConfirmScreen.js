@@ -13,13 +13,15 @@ import StripePaymentForm from './components/StripePaymentForm';
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
-import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query } from 'firebase/firestore';
 import { placeOrderAfterPayment } from './utils/placeOrderCommon';
+import { fetchCustomerPhone, validatePhone, saveCustomerPhoneIfMissing, normalizePhone } from './utils/phoneHelper';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const paymentRef = useRef(null);
+  const phoneInputRef = useRef(null);
   const [stripeIntent, setStripeIntent] = useState(null); // { id, clientSecret, mode }
   
   // Form state
@@ -44,6 +46,11 @@ const OrderConfirmScreen = () => {
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const [showErrors, setShowErrors] = useState(false); // hide red borders until submit or explicit show
+
+  // Phone state (for delivery contact)
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [hasPhoneInCustomer, setHasPhoneInCustomer] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
 
   useEffect(() => {
     // Initialize order data
@@ -76,6 +83,18 @@ const OrderConfirmScreen = () => {
       }));
     }
 
+    // Load phone from customers collection
+    try {
+      const u = userStorage.getUserData();
+      if (u?.id) {
+        fetchCustomerPhone(u.id).then(({ phone, exists }) => {
+          setCustomerPhone(normalizePhone(phone));
+          setHasPhoneInCustomer(!!exists && !!normalizePhone(phone));
+          setEditingPhone(!exists || !normalizePhone(phone));
+        });
+      }
+    } catch (_) {}
+
     // Try to capture geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -99,6 +118,8 @@ const OrderConfirmScreen = () => {
 
     // Run an initial validation to set isFormValid (errors remain hidden until submit)
     setTimeout(() => validateForm(), 0);
+    // We intentionally run this only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculate final total whenever order components change
@@ -121,7 +142,7 @@ const OrderConfirmScreen = () => {
         const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
           ? process.env.REACT_APP_API_BASE.trim()
           : (window.location.port === '3000' ? 'http://localhost:5001' : '');
-        const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
+        
 
         // Do not recreate if we already have a valid Stripe intent
         if (stripeIntent?.id && stripeIntent?.clientSecret) return;
@@ -157,6 +178,7 @@ const OrderConfirmScreen = () => {
     createIntentIfNeeded();
     return () => { cancelled = true; };
     // Recreate if total changes significantly (e.g., tip change)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTotal, deliveryFee, tipData.amount]);
 
   const handleInputChange = (field, value) => {
@@ -183,6 +205,16 @@ const OrderConfirmScreen = () => {
   };
 
   const validateForm = () => {
+    // Read the freshest phone directly from the input (avoids React state lag on mobile)
+    let effectivePhone = customerPhone;
+    try {
+      const domVal = phoneInputRef.current?.value;
+      if (typeof domVal === 'string') {
+        effectivePhone = normalizePhone(domVal);
+        if (effectivePhone !== customerPhone) setCustomerPhone(effectivePhone);
+      }
+    } catch (_) {}
+
     const newErrors = {};
     
     console.log('[VALIDATION] Checking form data:', {
@@ -200,6 +232,13 @@ const OrderConfirmScreen = () => {
     }
     if (!formData.entrance || !formData.entrance.trim()) {
       newErrors.entrance = t('order.err_entrance_required');
+    }
+    // Require phone only if it's missing in customer profile
+    if (!hasPhoneInCustomer) {
+      const ok = validatePhone(effectivePhone);
+      if (!ok) {
+        newErrors.customerPhone = t('order.err_phone_required');
+      }
     }
     
     console.log('[VALIDATION] Validation result:', {
@@ -245,10 +284,24 @@ const OrderConfirmScreen = () => {
       entrance: pick(formData.entrance, savedSeat.entrance),
     };
 
+    // Read freshest phone directly from input
+    let effectivePhone = customerPhone;
+    try {
+      const domVal = phoneInputRef.current?.value;
+      if (typeof domVal === 'string') {
+        effectivePhone = normalizePhone(domVal);
+        if (effectivePhone !== customerPhone) setCustomerPhone(effectivePhone);
+      }
+    } catch (_) {}
+
     const newErrors = {};
     if (!effective.row.trim()) newErrors.row = t('order.err_row_required');
     if (!effective.seatNo.trim()) newErrors.seatNo = t('order.err_seat_required');
     if (!effective.entrance.trim()) newErrors.entrance = t('order.err_entrance_required');
+    if (!hasPhoneInCustomer) {
+      const okPhone = validatePhone(effectivePhone);
+      if (!okPhone) newErrors.customerPhone = t('order.err_phone_required');
+    }
 
     try {
       console.log('[VALIDATE WALLET] effective values:', effective, 'errors:', newErrors);
@@ -264,6 +317,7 @@ const OrderConfirmScreen = () => {
       if (newErrors.row) missing.push(t('order.row'));
       if (newErrors.seatNo) missing.push(t('order.seat'));
       if (newErrors.entrance) missing.push(t('order.entrance'));
+      if (newErrors.customerPhone) missing.push(t('auth.phone'));
 
       const prefix = t('order.complete_required_fields_prefix');
       const msg = `${prefix} ${missing.join(', ')}`.trim();
@@ -273,7 +327,7 @@ const OrderConfirmScreen = () => {
       return false;
     }
     return true;
-  }, [locationPermissionDenied, showErrors, formData, t]);
+  }, [locationPermissionDenied, showErrors, formData, t, hasPhoneInCustomer]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -286,6 +340,19 @@ const OrderConfirmScreen = () => {
 
   const handleCameraCapture = () => {
     console.log('📸 Camera capture requested');
+  };
+
+  // Phone change handler
+  const handlePhoneChange = (value) => {
+    // Normalize as the user types so validation matches the visible value
+    try {
+      const normalized = normalizePhone(value);
+      setCustomerPhone(normalized);
+    } catch (_) {
+      setCustomerPhone(value);
+    }
+    // Re-validate to surface or clear phone errors live
+    setTimeout(() => validateForm(), 0);
   };
 
   const requestLocationPermission = () => {
@@ -421,6 +488,16 @@ const OrderConfirmScreen = () => {
         area: pickTrimCard(formData.area, savedSeatForCard.area),
       };
 
+      // Capture the freshest phone value at the moment of placing the order
+      let effectivePhoneForCard = customerPhone;
+      try {
+        const domVal = phoneInputRef.current?.value;
+        if (typeof domVal === 'string') {
+          effectivePhoneForCard = normalizePhone(domVal);
+          if (effectivePhoneForCard !== customerPhone) setCustomerPhone(effectivePhoneForCard);
+        }
+      } catch (_) {}
+
       const createdOrder = await placeOrderAfterPayment({
         formData: effectiveFormForCard,
         tipData,
@@ -429,7 +506,17 @@ const OrderConfirmScreen = () => {
         finalTotal,
         notifyDelivery: false,
         strictShopAvailability: true,
+        customerPhone: effectivePhoneForCard || undefined,
       });
+
+      // Save phone to customer profile only if it was missing and provided now
+      try {
+        const u = userStorage.getUserData();
+        if (u?.id && !hasPhoneInCustomer && validatePhone(effectivePhoneForCard)) {
+          await saveCustomerPhoneIfMissing(u.id, effectivePhoneForCard);
+          setHasPhoneInCustomer(true);
+        }
+      } catch (_) {}
 
       // 4) Cleanup and reset UI (cart/tip already cleared in helper)
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
@@ -438,6 +525,7 @@ const OrderConfirmScreen = () => {
       setShowErrors(false);
       setIsFormValid(false);
       setTicketImage(null);
+      setEditingPhone(false);
 
       const msg = t('order.order_placed');
       showToast(`${msg} ${t('order.order_id')}: ${createdOrder.orderId}`, 'success', 4000);
@@ -485,6 +573,16 @@ const OrderConfirmScreen = () => {
       setErrors({});
       setIsFormValid(true);
 
+      // Capture the freshest phone value at the moment of placing the order (wallet)
+      let effectivePhoneForWallet = customerPhone;
+      try {
+        const domVal = phoneInputRef.current?.value;
+        if (typeof domVal === 'string') {
+          effectivePhoneForWallet = normalizePhone(domVal);
+          if (effectivePhoneForWallet !== customerPhone) setCustomerPhone(effectivePhoneForWallet);
+        }
+      } catch (_) {}
+
       try {
         const createdOrder = await placeOrderAfterPayment({
           formData: effectiveForm,
@@ -494,7 +592,17 @@ const OrderConfirmScreen = () => {
           finalTotal,
           notifyDelivery: false,
           strictShopAvailability: true,
+          customerPhone: effectivePhoneForWallet || undefined,
         });
+
+        // Save phone to customer profile only if it was missing and provided now
+        try {
+          const u = userStorage.getUserData();
+          if (u?.id && !hasPhoneInCustomer && validatePhone(effectivePhoneForWallet)) {
+            await saveCustomerPhoneIfMissing(u.id, effectivePhoneForWallet);
+            setHasPhoneInCustomer(true);
+          }
+        } catch (_) {}
 
         // Cleanup form inputs and notify & navigate
         try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
@@ -503,6 +611,7 @@ const OrderConfirmScreen = () => {
         setShowErrors(false);
         setIsFormValid(false);
         setTicketImage(null);
+        setEditingPhone(false);
 
         // Notify & navigate
         const msg = 'Order placed successfully!';
@@ -553,6 +662,44 @@ const OrderConfirmScreen = () => {
 
         {/* Seat Information Form */}
         <SeatForm formData={formData} errors={errors} onChange={handleInputChange} />
+
+        {/* Customer Phone for Delivery Contact */}
+        <div className="seat-info-section phone-section">
+          <h2 className="section-title">{t('order.phone_contact_title') || 'Delivery Contact Phone'}</h2>
+          <p className="helper-text" style={{ margin: '6px 0 10px', color: '#6b7280', fontSize: 14 }}>
+            {t('order.phone_contact_hint') || 'This number will be used by the delivery person if they need help finding you.'}
+          </p>
+          {(!editingPhone && customerPhone) ? (
+            <div className="phone-row">
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{customerPhone}</div>
+              <button
+                type="button"
+                onClick={() => setEditingPhone(true)}
+                style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}
+              >
+                {t('common.edit') || 'Edit'}
+              </button>
+            </div>
+          ) : (
+            <div style={{ maxWidth: 360 }}>
+              <input
+                type="tel"
+                inputMode="tel"
+                placeholder={t('order.phone_input_ph') || '+972501234567'}
+                className={`field-input ${errors.customerPhone ? 'error' : ''}`}
+                value={customerPhone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                ref={phoneInputRef}
+                style={{ width: '100%' }}
+              />
+              {errors.customerPhone && (
+                <div className="error-text" style={{ color: '#dc2626', fontSize: 12, marginTop: 6 }}>
+                  {errors.customerPhone}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />

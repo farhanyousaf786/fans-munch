@@ -82,6 +82,7 @@ export class Order {
     this.customerLocation = customerLocation; // { latitude, longitude } or array
     this.location = location; // optional secondary location
     this.updatedAt = updatedAt;
+    this.platform = (typeof arguments[0]?.platform === 'string' && arguments[0].platform.trim()) ? arguments[0].platform : 'Web';
   }
 
   /**
@@ -115,6 +116,7 @@ export class Order {
       customerLocation: data.customerLocation || null,
       location: data.location || null
     });
+    instance.platform = data.platform || 'Web';
     try {
       console.log('[Order.fromMap] instance:', instance);
     } catch (_) {}
@@ -231,6 +233,8 @@ export class Order {
         if (Array.isArray(loc) && loc.length === 2) return new GeoPoint(Number(loc[0]), Number(loc[1]));
         return loc;
       })()
+      ,
+      platform: (typeof this.platform === 'string' && this.platform.trim()) ? this.platform : 'Web'
     };
     try { console.log('[Order.toMap] Result payload:', result); } catch (_) {}
     return result;
@@ -314,6 +318,7 @@ export class Order {
       customerLocation,
       location: location
     });
+    instance.platform = 'Web';
     try { console.log('[Order.createFromCart] New Order instance:', instance); } catch (_) {}
     return instance;
   }
