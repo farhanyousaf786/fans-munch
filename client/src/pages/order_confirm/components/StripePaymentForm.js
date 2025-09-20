@@ -14,7 +14,7 @@ const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   : null;
 
 // Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
-const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
+const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -44,6 +44,14 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
         if (!active || !pr) return;
         pr.on('paymentmethod', async (ev) => {
           try {
+            // Optional pre-validation hook from parent (e.g., seat info required)
+            if (typeof validateBeforeWalletPay === 'function') {
+              const ok = await validateBeforeWalletPay();
+              if (!ok) {
+                ev.complete('fail');
+                return;
+              }
+            }
             console.log('[STRIPE WALLET] Payment method selected:', {
               type: ev.paymentMethod.type,
               id: ev.paymentMethod.id,
@@ -103,7 +111,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       } catch (_) {}
     })();
     return () => { active = false; };
-  }, [stripe, clientSecret, totalAmount, currency, onWalletPaymentSuccess, onConfirmed]);
+  }, [stripe, clientSecret, totalAmount, currency, onWalletPaymentSuccess, onConfirmed, validateBeforeWalletPay, t]);
 
   const handleConfirm = async () => {
     if (!stripe || !elements || !clientSecret) {
@@ -221,14 +229,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
       {paymentRequest && (
         <div style={{ marginBottom: 12 }}>
-          <div style={{ opacity: isFormValid ? 1 : 0.5, pointerEvents: isFormValid ? 'auto' : 'none' }}>
-            <PaymentRequestButtonElement options={{ paymentRequest }} />
-          </div>
-          {!isFormValid && (
-            <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4, marginBottom: 8 }}>
-              Please fill in all required fields to use Apple Pay/Google Pay
-            </div>
-          )}
+          <PaymentRequestButtonElement options={{ paymentRequest }} />
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>Or pay with card</div>
         </div>
       )}
@@ -263,7 +264,7 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
 });
 
 // Main component wrapper with Stripe Elements provider
-const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess }, ref) => {
+const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
   const cardFormRef = useRef();
 
   // Forward ref methods to the inner CardForm
@@ -304,6 +305,7 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
         onConfirmed={onConfirmed}
         isFormValid={isFormValid}
         onWalletPaymentSuccess={onWalletPaymentSuccess}
+        validateBeforeWalletPay={validateBeforeWalletPay}
       />
     </Elements>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
 import { userStorage, stadiumStorage, seatStorage } from '../../utils/storage';
@@ -15,6 +15,7 @@ import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { placeOrderAfterWalletSuccess } from './utils/walletOrderHandler';
+import { placeOrderAfterPayment } from './utils/placeOrderCommon';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -214,6 +215,67 @@ const OrderConfirmScreen = () => {
     return isValid;
   };
 
+  // Unified validation with user feedback for both wallet and card flows
+  const validateAndToast = useCallback(async () => {
+    // Ensure any focused input commits its latest value (mobile keyboards)
+    try { if (document && document.activeElement && typeof document.activeElement.blur === 'function') { document.activeElement.blur(); } } catch (_) {}
+    // Give the browser a moment to commit input value after blur (helps on mobile)
+    await new Promise(res => setTimeout(res, 60));
+    // First, ensure location permission is granted
+    if (locationPermissionDenied) {
+      showToast(t('order.location_required_desc'), 'error', 3000);
+      try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      return false;
+    }
+
+    // Surface errors in UI
+    if (!showErrors) setShowErrors(true);
+
+    // Run the same validation used by the form
+    // Use a merged snapshot to avoid last-keystroke race when user taps Wallet immediately
+    const savedSeat = seatStorage.getSeatInfo() || {};
+    const pick = (primary, fallback) => {
+      const p = (primary ?? '').toString();
+      if (p.trim().length > 0) return p;
+      const f = (fallback ?? '').toString();
+      return f;
+    };
+    const effective = {
+      row: pick(formData.row, savedSeat.row),
+      seatNo: pick(formData.seatNo, savedSeat.seatNo),
+      entrance: pick(formData.entrance, savedSeat.entrance),
+    };
+
+    const newErrors = {};
+    if (!effective.row.trim()) newErrors.row = t('order.err_row_required');
+    if (!effective.seatNo.trim()) newErrors.seatNo = t('order.err_seat_required');
+    if (!effective.entrance.trim()) newErrors.entrance = t('order.err_entrance_required');
+
+    try {
+      console.log('[VALIDATE WALLET] effective values:', effective, 'errors:', newErrors);
+    } catch (_) {}
+
+    setErrors(newErrors);
+    const ok = Object.keys(newErrors).length === 0;
+    setIsFormValid(ok);
+
+    if (!ok) {
+      // Build a succinct message of missing fields
+      const missing = [];
+      if (newErrors.row) missing.push(t('order.row'));
+      if (newErrors.seatNo) missing.push(t('order.seat'));
+      if (newErrors.entrance) missing.push(t('order.entrance'));
+
+      const prefix = t('order.complete_required_fields_prefix');
+      const msg = `${prefix} ${missing.join(', ')}`.trim();
+      showToast(msg, 'error', 4000);
+      // Ensure the user sees the form at the top where the inputs live
+      try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      return false;
+    }
+    return true;
+  }, [locationPermissionDenied, showErrors, formData, t]);
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -256,11 +318,9 @@ const OrderConfirmScreen = () => {
       return;
     }
 
-    // Enable showing errors and validate all fields
-    if (!showErrors) setShowErrors(true);
-    if (!validateForm()) {
-      return;
-    }
+    // Validate required fields with feedback
+    const valid = await validateAndToast();
+    if (!valid) return;
 
     setLoading(true);
     
@@ -345,144 +405,25 @@ const OrderConfirmScreen = () => {
         return;
       }
 
-      const seatInfo = {
-        row: formData.row,
-        seatNo: formData.seatNo,
-        section: formData.section,
-        seatDetails: formData.seatDetails,
-        area: formData.area,
-        entrance: formData.entrance,
-        stand: formData.stand,
-        ticketImage: ticketImage || ''
-      };
-
-      // Recompute delivery fee from cart at payment time (2 ILS per item)
-      const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
-      const fee = totalQty * 2;
-
-      const totals = orderRepository.calculateOrderTotals(
-        cartItems,
-        fee, // deliveryFee in ILS
-        tipData.amount,
-        0
-      );
-
-      // Delivery assignment disabled — we no longer assign a delivery user here
-      // let nearestDeliveryUserId = null;
-
-      // Resolve nearest available shop from shops collection (ignore cart shopIds)
-      let nearestShopId = null;
-      // Fallback from cart if anything goes wrong or none found
-      const cartFirstShopId = (
-        (cartItems.find(it => it.shopId)?.shopId) ||
-        (cartItems.find(it => Array.isArray(it.shopIds) && it.shopIds.length > 0)?.shopIds[0]) ||
-        ''
-      );
-      try {
-        try { console.log('[ShopSelect] User location:', customerLocation || null); } catch (_) {}
-        const toRad = (x) => (x * Math.PI) / 180;
-        const haversine = (lat1, lon1, lat2, lon2) => {
-          const R = 6371; // km
-          const dLat = toRad(lat2 - lat1);
-          const dLon = toRad(lon2 - lon1);
-          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          return R * c;
-        };
-        const parseNum = (v) => (typeof v === 'number' ? v : (typeof v === 'string' ? Number(v.replace(/[^0-9+\-.]/g, '')) : NaN));
-
-        // Query shops where shopAvailability == true and (if possible) stadiumId == current stadium
-        let shopSnap;
-        try {
-          if (stadiumData?.id) {
-            const q = query(
-              collection(db, 'shops'),
-              where('shopAvailability', '==', true),
-              where('stadiumId', '==', stadiumData.id)
-            );
-            shopSnap = await getDocs(q);
-          }
-        } catch (_) {}
-
-        if (!shopSnap) {
-          // Fallback to availability only
-          const qAvail = query(collection(db, 'shops'), where('shopAvailability', '==', true));
-          shopSnap = await getDocs(qAvail);
-        }
-
-        const shops = shopSnap.docs.map(d => ({ id: d.id, data: d.data() }));
-        try { console.log('[ShopSelect] Shops fetched (ids):', shops.map(s => s.id)); } catch (_) {}
-        if (shops.length === 0) {
-          nearestShopId = cartFirstShopId || null;
-        }
-
-        let bestShop = { id: null, dist: Number.POSITIVE_INFINITY };
-        shops.forEach((entry) => {
-          const s = entry.data || {};
-          let lat, lng;
-          if (s.latitude != null && s.longitude != null) {
-            lat = parseNum(s.latitude);
-            lng = parseNum(s.longitude);
-          } else if (s.location && typeof s.location.latitude === 'number' && typeof s.location.longitude === 'number') {
-            lat = s.location.latitude; lng = s.location.longitude;
-          } else if (Array.isArray(s.location) && s.location.length === 2) {
-            lat = parseNum(s.location[0]); lng = parseNum(s.location[1]);
-          }
-
-          if (
-            typeof lat === 'number' && typeof lng === 'number' &&
-            !Number.isNaN(lat) && !Number.isNaN(lng)
-          ) {
-            if (customerLocation) {
-              const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
-              try { console.log('[ShopSelect] Compare shop', entry.id, 'shopLocation:', { lat, lng }, 'distanceKm:', Number.isFinite(d) ? d.toFixed(3) : d); } catch (_) {}
-              if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
-            } else if (!bestShop.id) {
-              // No location available — pick the first available as fallback
-              bestShop = { id: entry.id, dist: 0 };
-              try { console.log('[ShopSelect] Compare (no user location) pick first:', entry.id, 'shopLocation:', { lat, lng }); } catch (_) {}
-            }
-          }
-        });
-
-        nearestShopId = bestShop.id;
-        
-        // If no nearest shop found (no location or no valid coordinates), assign first available shop
-        if (!nearestShopId && shops.length > 0) {
-          nearestShopId = shops[0].id;
-          console.log('[Card] No nearest shop found, assigned first available shop:', nearestShopId);
-        }
-        try { console.log('[ShopSelect] Nearest shop:', bestShop?.id || null, 'distanceKm:', Number.isFinite(bestShop?.dist) ? bestShop.dist.toFixed(3) : bestShop?.dist); } catch (_) {}
-        try { console.log('[ShopSelect] Done'); } catch (_) {}
-      } catch (e) {
-        console.warn('Could not resolve nearest shop:', e?.message || e);
-        nearestShopId = cartFirstShopId || null;
-        try { console.log('[ShopSelect] Done'); } catch (_) {}
-      }
-
-      const order = Order.createFromCart({
-        cartItems,
-        subtotal: totals.subtotal,
-        deliveryFee: totals.deliveryFee,
-        discount: totals.discount,
-        tipAmount: totals.tipAmount,
-        tipPercentage: tipData.percentage || 0,
-        userData,
-        seatInfo,
-        stadiumId: stadiumData.id,
-        shopId: nearestShopId || cartItems[0]?.shopId || '',
+      const createdOrder = await placeOrderAfterPayment({
+        formData: {
+          row: formData.row,
+          seatNo: formData.seatNo,
+          section: formData.section,
+          seatDetails: formData.seatDetails,
+          area: formData.area,
+          entrance: formData.entrance,
+          stand: formData.stand,
+        },
+        tipData,
+        ticketImage,
         customerLocation,
-        location: null,
-        deliveryUserId: "",
+        finalTotal,
+        notifyDelivery: false,
+        strictShopAvailability: false,
       });
 
-      const createdOrder = await orderRepository.createOrder(order);
-
-      // 4) Cleanup and reset UI
-      cartUtils.clearCart();
-      localStorage.removeItem('selectedTip');
+      // 4) Cleanup and reset UI (cart/tip already cleared in helper)
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
       setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: '' });
       setErrors({});
@@ -511,20 +452,25 @@ const OrderConfirmScreen = () => {
 
   // Handler passed to StripePaymentForm for Apple/Google Pay success
   const handleWalletPaymentSuccess = async () => {
+    // Validation for wallet is already handled before payment via validateBeforeWalletPay
+    // Here we proceed to place the order after successful wallet charge
     setLoading(true);
     try {
-      console.log('[Wallet] Apple/Google Pay success - skipping form validation');
-      
-      // For wallet payments, we skip form validation entirely
-      // Users expect instant payment with Apple/Google Pay without form friction
-      // We'll use whatever seat info is available from storage + current form
+      // We'll use a merged snapshot of storage + current form for ALL fields
       const savedSeat = seatStorage.getSeatInfo() || {};
+      const pickTrim = (primary, fallback) => {
+        const p = (primary ?? '').toString().trim();
+        if (p.length > 0) return p;
+        return (fallback ?? '').toString().trim();
+      };
       const effectiveForm = {
-        ...savedSeat,
-        ...formData,
-        // Ensure we have string values for required fields
-        row: (formData.row || savedSeat.row || '').toString().trim(),
-        seatNo: (formData.seatNo || savedSeat.seatNo || '').toString().trim(),
+        row: pickTrim(formData.row, savedSeat.row),
+        seatNo: pickTrim(formData.seatNo, savedSeat.seatNo),
+        entrance: pickTrim(formData.entrance, savedSeat.entrance),
+        stand: pickTrim(formData.stand, savedSeat.stand),
+        section: pickTrim(formData.section, savedSeat.section),
+        seatDetails: pickTrim(formData.seatDetails, savedSeat.seatDetails),
+        area: pickTrim(formData.area, savedSeat.area),
       };
       
       // Clear any stale errors
@@ -651,6 +597,7 @@ const OrderConfirmScreen = () => {
           currency={'ils'}
           isFormValid={isFormValid && !locationPermissionDenied}
           onWalletPaymentSuccess={handleWalletPaymentSuccess}
+          validateBeforeWalletPay={validateAndToast}
           disabled={locationPermissionDenied}
         />
 
