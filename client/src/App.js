@@ -23,6 +23,7 @@ import ShopMenuScreen from './pages/shop_menu/ShopMenuScreen';
 import OrderConfirmScreen from './pages/order_confirm/OrderConfirmScreen';
 import OrderTrackScreen from './pages/order_track/OrderTrackScreen';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
+import Footer from './components/footer/Footer';
 import MenuListPage from './pages/menu/MenuListPage';
 import ToastContainer from './components/toast/ToastContainer';
 // Settings screens
@@ -113,7 +114,9 @@ function App() {
             
             {/* Bottom Navigation - Shows on main app screens */}
             <BottomNavigation />
-            
+
+            {/* Global footer */}
+
             {/* Toast Container - Shows cart notifications */}
             <ToastContainer />
           </div>

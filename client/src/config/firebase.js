@@ -61,9 +61,34 @@ export const requestNotificationPermission = async () => {
     if (permission === 'granted') {
       console.log('Notification permission granted.');
       
-      // Get FCM token
+      // Get FCM token using Web Push certificate key from env
+      const vapidKey = (process.env.REACT_APP_FIREBASE_VAPID_KEY || '').trim();
+      if (!vapidKey) {
+        console.warn('[FCM] Missing REACT_APP_FIREBASE_VAPID_KEY. Set it in client/.env to enable web push.');
+      }
+
+      // Explicitly register our service worker to avoid default SW ambiguity
+      let swReg = undefined;
+      try {
+        if ('serviceWorker' in navigator) {
+          swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          // Wait for activation if needed
+          if (swReg.installing) {
+            await new Promise((res) => {
+              swReg.installing.addEventListener('statechange', function onState() {
+                if (this.state === 'activated') res();
+              });
+            });
+          }
+          console.log('[FCM] Service worker registered for messaging.');
+        }
+      } catch (e) {
+        console.warn('[FCM] SW registration failed, will try default:', e?.message || e);
+      }
+
       const token = await getToken(messaging, {
-        vapidKey: 'YOUR_VAPID_KEY' // You'll need to generate this in Firebase Console
+        vapidKey: vapidKey || undefined,
+        serviceWorkerRegistration: swReg
       });
       
       if (token) {

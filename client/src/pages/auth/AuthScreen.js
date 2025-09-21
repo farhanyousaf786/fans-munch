@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
+import { requestNotificationPermission } from '../../config/firebase';
 import { userStorage, stadiumStorage, settingsStorage } from '../../utils/storage';
 import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import Footer from '../../components/footer/Footer';
 
 const AuthScreen = () => {
   const { t, lang, setLang } = useTranslation();
@@ -72,6 +74,18 @@ const AuthScreen = () => {
         // Save user data and token to localStorage
         userStorage.setUserData(user.toMap());
         userStorage.setUserToken(`token_${user.id || Date.now()}`);
+
+        // Request FCM token and persist it
+        try {
+          const fcmToken = await requestNotificationPermission();
+          if (fcmToken) {
+            await userRepository.updateUserProfile(user.id, { fcmToken });
+            try { userStorage.setUserData({ ...user.toMap(), fcmToken }); } catch (_) {}
+          }
+        } catch (e) {
+          // Non-blocking: continue even if notifications are denied or fail
+          console.warn('[Auth] FCM token not saved:', e?.message || e);
+        }
         
         console.log('✅ Sign in completed');
         finishAuthRedirect(redirectTo || '/home');
@@ -104,6 +118,17 @@ const AuthScreen = () => {
           // Save user data and token to localStorage
           userStorage.setUserData(user.user.toMap());
           userStorage.setUserToken(`token_${user.user.id || Date.now()}`);
+
+          // Request FCM token and persist it
+          try {
+            const fcmToken = await requestNotificationPermission();
+            if (fcmToken) {
+              await userRepository.updateUserProfile(user.user.id, { fcmToken });
+              try { userStorage.setUserData({ ...user.user.toMap(), fcmToken }); } catch (_) {}
+            }
+          } catch (e) {
+            console.warn('[Auth] FCM token not saved (register):', e?.message || e);
+          }
           
           console.log('✅ Registration completed');
           finishAuthRedirect(redirectTo || '/home');
@@ -306,6 +331,8 @@ const AuthScreen = () => {
           </p>
         </div>
       </div>
+      <Footer />
+
     </div>
   );
 };
