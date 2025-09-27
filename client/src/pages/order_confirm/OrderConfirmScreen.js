@@ -10,7 +10,7 @@ import TicketUpload from './components/TicketUpload';
 import OrderSummary from './components/OrderSummary';
 import PlaceOrderBar from './components/PlaceOrderBar';
 import StripePaymentForm from './components/StripePaymentForm';
-import { LocationInlineBanner, LocationPermissionModal } from './components/LocationPermissionUI';
+// Location permission UI removed; location no longer required
 import './OrderConfirmScreen.css';
 import { db } from '../../config/firebase';
 import { useTranslation } from '../../i18n/i18n';
@@ -183,36 +183,7 @@ const OrderConfirmScreen = () => {
       }
     })();
 
-    // Try to capture geolocation (still collected but not used for shop selection anymore)
-    if (navigator.geolocation) {
-      // Check permission state first (where supported)
-      try {
-        if (navigator.permissions && navigator.permissions.query) {
-          navigator.permissions.query({ name: 'geolocation' }).then((res) => {
-            setGeoPermissionState(res.state);
-            res.onchange = () => setGeoPermissionState(res.state);
-          }).catch(() => {});
-        }
-      } catch (_) {}
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCustomerLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude
-          });
-          setLocationPermissionDenied(false);
-        },
-        (err) => {
-          console.log('ℹ️ Geolocation unavailable:', err?.message);
-          setLocationPermissionDenied(true);
-        },
-        { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
-      );
-    } else {
-      console.log('ℹ️ Geolocation not supported by this browser');
-      setLocationPermissionDenied(true);
-    }
+    // Geolocation collection removed: location is not required for placing orders
 
     // Run an initial validation to set isFormValid (errors remain hidden until submit)
     setTimeout(() => validateForm(), 0);
@@ -377,20 +348,7 @@ const OrderConfirmScreen = () => {
     try { if (document && document.activeElement && typeof document.activeElement.blur === 'function') { document.activeElement.blur(); } } catch (_) {}
     // Give the browser a moment to commit input value after blur (helps on mobile)
     await new Promise(res => setTimeout(res, 60));
-    // First, ensure location permission is granted
-    if (locationPermissionDenied) {
-      // Instead of only toasting, show our in-app popup that triggers native prompt
-      setShowLocationModal(true);
-      try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
-      return false;
-    }
-
-    // Also require we actually have a location fix (lat/lng), not just permission flag
-    if (!customerLocation || typeof customerLocation.latitude !== 'number' || typeof customerLocation.longitude !== 'number') {
-      setShowLocationModal(true);
-      showToast(t('order.location_required_desc'), 'error', 3000);
-      return false;
-    }
+    // Location is no longer required
 
     // Surface errors in UI
     if (!showErrors) setShowErrors(true);
@@ -453,7 +411,7 @@ const OrderConfirmScreen = () => {
       return false;
     }
     return true;
-  }, [locationPermissionDenied, showErrors, formData, t, hasPhoneInCustomer]);
+  }, [showErrors, formData, t, hasPhoneInCustomer]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -481,40 +439,11 @@ const OrderConfirmScreen = () => {
     setTimeout(() => validateForm(), 0);
   };
 
-  const requestLocationPermission = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCustomerLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude
-          });
-          setLocationPermissionDenied(false);
-          showToast('Location access granted!', 'success', 2000);
-          setShowLocationModal(false);
-        },
-        (err) => {
-          console.log('ℹ️ Geolocation permission denied again:', err?.message);
-          setLocationPermissionDenied(true);
-          try {
-            if (navigator.permissions && navigator.permissions.query) {
-              navigator.permissions.query({ name: 'geolocation' }).then((res) => setGeoPermissionState(res.state)).catch(() => {});
-            }
-          } catch (_) {}
-          showToast('Location access is required for delivery. Please enable it in your browser settings.', 'error', 4000);
-        },
-        { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
-      );
-    }
-  };
+  // Location permission workflow removed
 
 
   const handlePayment = async () => {
-    // Check location permission first
-    if (locationPermissionDenied) {
-      showToast(t('order.location_required_desc'), 'error', 3000);
-      return;
-    }
+    // Location permission no longer required
 
     // Validate required fields with feedback
     const valid = await validateAndToast();
@@ -722,7 +651,7 @@ const OrderConfirmScreen = () => {
           formData: effectiveForm,
           tipData,
           ticketImage,
-          customerLocation,
+          customerLocation: null,
           finalTotal,
           notifyDelivery: false,
           strictShopAvailability: true,
@@ -838,19 +767,6 @@ const OrderConfirmScreen = () => {
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
 
-        {/* Location Permission Warning (inline banner) */}
-        {locationPermissionDenied && (
-          <LocationInlineBanner onOpenModal={() => setShowLocationModal(true)} />
-        )}
-
-        {/* Modal: Ask for location and trigger native prompt */}
-        <LocationPermissionModal
-          visible={showLocationModal}
-          onClose={() => setShowLocationModal(false)}
-          onRequestPermission={requestLocationPermission}
-          geoPermissionState={geoPermissionState}
-        />
-
         {/* Stripe Payment Form with integrated Place Order button */}
         <StripePaymentForm
           ref={paymentRef}
@@ -860,10 +776,10 @@ const OrderConfirmScreen = () => {
           showConfirmButton={false}
           totalAmount={finalTotal}
           currency={'ils'}
-          isFormValid={isFormValid && !!customerLocation && !locationPermissionDenied}
+          isFormValid={isFormValid}
           onWalletPaymentSuccess={handleWalletPaymentSuccess}
           validateBeforeWalletPay={validateAndToast}
-          disabled={locationPermissionDenied}
+          disabled={false}
         />
 
         {/* Place Order CTA - moved right after card input */}
@@ -871,7 +787,7 @@ const OrderConfirmScreen = () => {
           loading={loading} 
           finalTotal={finalTotal} 
           onPlaceOrder={handlePayment}
-          disabled={locationPermissionDenied || !customerLocation}
+          disabled={!isFormValid}
         />
       </div>
     </div>
