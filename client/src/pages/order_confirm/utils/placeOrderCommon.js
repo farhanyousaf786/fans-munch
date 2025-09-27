@@ -5,83 +5,30 @@
 import { cartUtils } from '../../../utils/cartUtils';
 import { userStorage, stadiumStorage } from '../../../utils/storage';
 import orderRepository from '../../../repositories/orderRepository';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDoc, getDocs, doc, query, where } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import { Order } from '../../../models/Order';
 
-function toRad(x) { return (x * Math.PI) / 180; }
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371; // km
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-function parseNum(v) {
-  return (typeof v === 'number') ? v : (typeof v === 'string' ? Number(v.replace(/[^0-9+\-.]/g, '')) : NaN);
-}
-
-async function resolveNearestAvailableShop(stadiumId, customerLocation, strictShopAvailability) {
-  // Query shops where shopAvailability == true and (if possible) stadiumId == current stadium
-  let shopSnap;
+// New: Resolve shop based on selected section (first shop from section.shops[])
+async function resolveShopFromSection(stadiumId, sectionId, strictShopAvailability) {
+  if (!stadiumId || !sectionId) return null;
   try {
-    if (stadiumId) {
-      const q = query(
-        collection(db, 'shops'),
-        where('shopAvailability', '==', true),
-        where('stadiumId', '==', stadiumId)
-      );
-      shopSnap = await getDocs(q);
+    const secRef = doc(db, 'stadiums', stadiumId, 'sections', sectionId);
+    const secSnap = await getDoc(secRef);
+    if (!secSnap.exists()) return null;
+    const secData = secSnap.data() || {};
+    const shops = Array.isArray(secData.shops) ? secData.shops : [];
+    const firstShopId = shops.length > 0 ? shops[0] : null;
+    if (!firstShopId) {
+      if (strictShopAvailability) throw new Error('No shop is assigned to the selected section.');
+      return null;
     }
-  } catch (_) {}
-
-  if (!shopSnap) {
-    // Fallback to availability only
-    const qAvail = query(collection(db, 'shops'), where('shopAvailability', '==', true));
-    shopSnap = await getDocs(qAvail);
+    // Directly use the first shop id (no availability check)
+    return String(firstShopId);
+  } catch (e) {
+    if (strictShopAvailability) throw e;
+    return null;
   }
-
-  const shops = shopSnap.docs.map(d => ({ id: d.id, data: d.data() }));
-
-  if (shops.length === 0) {
-    if (strictShopAvailability) {
-      throw new Error('Shops are closed today. Please try again later.');
-    } else {
-      return null; // let caller fallback to cart shop
-    }
-  }
-
-  let bestShop = { id: null, dist: Number.POSITIVE_INFINITY };
-  shops.forEach((entry) => {
-    const s = entry.data || {};
-    let lat, lng;
-    if (s.latitude != null && s.longitude != null) {
-      lat = parseNum(s.latitude);
-      lng = parseNum(s.longitude);
-    } else if (s.location && typeof s.location.latitude === 'number' && typeof s.location.longitude === 'number') {
-      lat = s.location.latitude; lng = s.location.longitude;
-    } else if (Array.isArray(s.location) && s.location.length === 2) {
-      lat = parseNum(s.location[0]); lng = parseNum(s.location[1]);
-    }
-
-    if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
-      if (customerLocation) {
-        const d = haversine(customerLocation.latitude, customerLocation.longitude, lat, lng);
-        if (d < bestShop.dist) bestShop = { id: entry.id, dist: d };
-      } else if (!bestShop.id) {
-        bestShop = { id: entry.id, dist: 0 };
-      }
-    }
-  });
-
-  let nearestShopId = bestShop.id;
-  if (!nearestShopId && shops.length > 0) {
-    nearestShopId = shops[0].id;
-  }
-  return nearestShopId;
 }
 
 /**
@@ -146,20 +93,17 @@ export async function placeOrderAfterPayment({
     0
   );
 
-  // Resolve nearest available shop
-  let nearestShopId = null;
+  // Resolve shop from the selected section ONLY (always index 0 of `shops` array)
+  let selectedShopId = null;
   try {
-    nearestShopId = await resolveNearestAvailableShop(stadiumData.id, customerLocation, strictShopAvailability);
+    selectedShopId = await resolveShopFromSection(stadiumData.id, formData.sectionId, strictShopAvailability);
   } catch (e) {
-    // If strict and no shops, rethrow
     throw e;
   }
 
-  // Fallback to a shop from cart when not strict
-  if (!nearestShopId && cartItems.length > 0) {
-    nearestShopId = (cartItems.find(it => it.shopId)?.shopId) ||
-                    (cartItems.find(it => Array.isArray(it.shopIds) && it.shopIds.length > 0)?.shopIds[0]) ||
-                    '';
+  // Enforce that a shop is resolved from section; do not fallback to cart shops
+  if (!selectedShopId) {
+    throw new Error('No shop is assigned to the selected section. Please choose a different section.');
   }
 
   const order = Order.createFromCart({
@@ -172,7 +116,7 @@ export async function placeOrderAfterPayment({
     userData: userDataWithPhone,
     seatInfo,
     stadiumId: stadiumData.id,
-    shopId: nearestShopId || '',
+    shopId: selectedShopId,
     customerLocation,
     location: null,
     deliveryUserId: "",

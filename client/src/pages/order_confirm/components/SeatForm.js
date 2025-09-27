@@ -1,8 +1,22 @@
 import React from 'react';
 import { useTranslation } from '../../../i18n/i18n';
 
-const SeatForm = ({ formData, errors, onChange }) => {
+// Props:
+// - formData: { row, seatNo, entrance, stand, section, sectionId }
+// - sectionsOptions: [{ id, name }]
+// - errors: may include row/seatNo/entrance/section
+// - onChange: (field, value) => void
+const SeatForm = ({ formData, errors, onChange, sectionsOptions = [] }) => {
   const { t } = useTranslation();
+  const td = (key, fallback) => {
+    try {
+      const val = t(key);
+      if (!val || val === key) return fallback;
+      return val;
+    } catch (_) {
+      return fallback;
+    }
+  };
   return (
     <div className="seat-info-section">
       <h2 className="section-title">{t('order.seat_info_title')}</h2>
@@ -35,7 +49,7 @@ const SeatForm = ({ formData, errors, onChange }) => {
         </div>
       </div>
 
-      {/* Second row: Row Number & Entrance */}
+      {/* Second row: Row Number & Section */}
       <div className="form-row">
         <div className="form-field">
           <label className="field-label">{t('order.row_number')}</label>
@@ -49,18 +63,28 @@ const SeatForm = ({ formData, errors, onChange }) => {
           {errors.row && <span className="error-text">{errors.row}</span>}
         </div>
 
+        {/* Section selector (required) */}
         <div className="form-field">
-          <label className="field-label">{t('order.entrance')}</label>
-          <input
-            type="text"
-            className={`field-input ${errors.entrance ? 'error' : ''}`}
-            placeholder={t('order.entrance_ph')}
-            value={formData.entrance || ''}
-            onChange={(e) => onChange('entrance', e.target.value)}
-          />
-          {errors.entrance && <span className="error-text">{errors.entrance}</span>}
+          <label className="field-label">{td('order.section', 'Section')}</label>
+          <select
+            className={`field-input ${errors.section ? 'error' : ''}`}
+            value={formData.sectionId || ''}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              const selected = sectionsOptions.find(s => s.id === selectedId);
+              onChange('sectionId', selectedId);
+              onChange('section', selected?.name || '');
+            }}
+          >
+            <option value="" disabled>{td('order.select_section', 'Select section')}</option>
+            {sectionsOptions.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.name || opt.id}</option>
+            ))}
+          </select>
+          {errors.section && <span className="error-text">{errors.section}</span>}
         </div>
       </div>
+
 
       {/* Third row: Area & (spacer) */}
       {/* <div className="form-row">

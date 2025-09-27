@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
-import { userStorage, stadiumStorage, seatStorage } from '../../utils/storage';
+import { userStorage, stadiumStorage, seatStorage, STORAGE_KEYS } from '../../utils/storage';
 import { Order } from '../../models/Order';
 import orderRepository from '../../repositories/orderRepository';
 import { showToast } from '../../components/toast/ToastContainer';
@@ -38,6 +38,9 @@ const OrderConfirmScreen = () => {
   const [deliveryFee, setDeliveryFee] = useState(0); // ILS per item
   const [tipData, setTipData] = useState({ amount: 0, percentage: 0 });
   const [finalTotal, setFinalTotal] = useState(0);
+  // Stadium and sections state
+  const [stadiumId, setStadiumId] = useState(() => stadiumStorage.getSelectedStadium()?.id || null);
+  const [sectionsOptions, setSectionsOptions] = useState([]); // [{id,name,shops:[], no:number}]
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -98,7 +101,89 @@ const OrderConfirmScreen = () => {
       }
     } catch (_) {}
 
-    // Try to capture geolocation
+    // Load stadium sections for the selected stadium
+    (async () => {
+      try {
+        const selectedStadium = stadiumStorage.getSelectedStadium();
+        let sid = stadiumId || selectedStadium?.id;
+        console.log('[Sections] Selected stadium from storage:', selectedStadium);
+        // Fallback: if no stadium selected in storage, try the first stadium in collection
+        if (!sid) {
+          try {
+            const stadSnap = await getDocs(collection(db, 'stadiums'));
+            if (!stadSnap.empty) {
+              sid = stadSnap.docs[0].id;
+              setStadiumId(sid);
+              console.log('[Sections] Using fallback stadium id from collection:', sid);
+              try { showToast(`Using default stadium ${sid}`, 'info', 2500); } catch (_) {}
+            }
+          } catch (e) {
+            console.warn('[Sections] Failed to load fallback stadium list:', e);
+          }
+        }
+        if (sid) {
+          const secsCol = collection(db, 'stadiums', sid, 'sections');
+          const secsSnap = await getDocs(secsCol);
+          console.log('[Sections] Fetched sections count:', secsSnap.size, 'for stadiumId:', sid);
+          try {
+            console.log('[Sections] Raw docs:', secsSnap.docs.map(d => ({ id: d.id, data: d.data() })));
+          } catch (_) {}
+          const all = secsSnap.docs.map(d => {
+            const data = d.data() || {};
+            const no = typeof data.sectionNo === 'number' ? data.sectionNo : Number(data.sectionNo);
+            const display = (typeof no === 'number' && !Number.isNaN(no))
+              ? `Section ${no}`
+              : (data.sectionName || data.name || d.id);
+            return {
+              id: d.id,
+              name: display,
+              shops: data.shops || [],
+              no: (typeof no === 'number' && !Number.isNaN(no)) ? no : null,
+              isActive: (data.isActive === undefined || data.isActive === null) ? true : !!data.isActive
+            };
+          });
+          // Show ALL sections (no isActive filter)
+          const allSorted = [...all];
+          allSorted.sort((a, b) => {
+            if (a.no != null && b.no != null) return a.no - b.no;
+            if (a.no != null) return -1;
+            if (b.no != null) return 1;
+            return String(a.name).localeCompare(String(b.name));
+          });
+          setSectionsOptions(allSorted);
+          try {
+            if (allSorted.length > 0) {
+              showToast(`Loaded ${allSorted.length} sections for stadium ${sid}`, 'success', 2000);
+            } else {
+              showToast(`No sections found for stadium ${sid}`, 'error', 3000);
+            }
+          } catch (_) {}
+          console.log('[Sections] Options after sort (all):', allSorted);
+          // Auto-preselect if only one and none chosen yet
+          if (allSorted.length === 1 && !formData.sectionId) {
+            const only = allSorted[0];
+            setFormData(prev => ({ ...prev, sectionId: only.id, section: only.name }));
+            try { seatStorage.setSeatInfo({
+              row: formData.row,
+              seatNo: formData.seatNo,
+              stand: formData.stand,
+              sectionId: only.id,
+              section: only.name,
+              entrance: formData.entrance,
+            }); } catch (_) {}
+          }
+        } else {
+          setSectionsOptions([]);
+          try { showToast('No stadium selected. Please choose a stadium first.', 'error', 3000); } catch (_) {}
+        }
+      } catch (e) {
+        console.warn('[OrderConfirm] Failed to load sections:', e?.message || e);
+        setSectionsOptions([]);
+        try { showToast(`Failed to load sections: ${e?.message || e}`, 'error', 4000); } catch (_) {}
+      }
+    })();
+
+    // Try to capture geolocation (still collected but not used for shop selection anymore)
     if (navigator.geolocation) {
       // Check permission state first (where supported)
       try {
@@ -133,6 +218,22 @@ const OrderConfirmScreen = () => {
     setTimeout(() => validateForm(), 0);
     // We intentionally run this only once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stadiumId]);
+
+  // React to stadium changes dynamically via localStorage 'storage' event
+  useEffect(() => {
+    const handler = (evt) => {
+      try {
+        if (evt?.key === STORAGE_KEYS.SELECTED_STADIUM) {
+          const sid = stadiumStorage.getSelectedStadium()?.id || null;
+          setStadiumId(sid);
+          // reset section selection on stadium change
+          setFormData(prev => ({ ...prev, sectionId: '', section: '' }));
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
   }, []);
 
   // Calculate final total whenever order components change
@@ -209,6 +310,8 @@ const OrderConfirmScreen = () => {
         seatNo: field === 'seatNo' ? value : newData.seatNo,
         entrance: field === 'entrance' ? value : newData.entrance,
         stand: field === 'stand' ? value : newData.stand,
+        section: field === 'section' ? value : newData.section,
+        sectionId: field === 'sectionId' ? value : newData.sectionId,
       }); } catch (e) { console.warn('seatStorage set error', e); }
       return newData;
     });
@@ -243,8 +346,10 @@ const OrderConfirmScreen = () => {
     if (!formData.seatNo || !formData.seatNo.trim()) {
       newErrors.seatNo = t('order.err_seat_required');
     }
-    if (!formData.entrance || !formData.entrance.trim()) {
-      newErrors.entrance = t('order.err_entrance_required');
+    // Entrance no longer required
+    // Require section selection
+    if (!formData.sectionId || !String(formData.sectionId).trim()) {
+      newErrors.section = t('order.err_section_required');
     }
     // Require phone only if it's missing in customer profile
     if (!hasPhoneInCustomer) {
@@ -302,7 +407,7 @@ const OrderConfirmScreen = () => {
     const effective = {
       row: pick(formData.row, savedSeat.row),
       seatNo: pick(formData.seatNo, savedSeat.seatNo),
-      entrance: pick(formData.entrance, savedSeat.entrance),
+      sectionId: pick(formData.sectionId, savedSeat.sectionId),
     };
 
     // Read freshest phone directly from input
@@ -318,7 +423,7 @@ const OrderConfirmScreen = () => {
     const newErrors = {};
     if (!effective.row.trim()) newErrors.row = t('order.err_row_required');
     if (!effective.seatNo.trim()) newErrors.seatNo = t('order.err_seat_required');
-    if (!effective.entrance.trim()) newErrors.entrance = t('order.err_entrance_required');
+    if (!effective.sectionId || !String(effective.sectionId).trim()) newErrors.section = t('order.err_section_required');
     if (!hasPhoneInCustomer) {
       const okPhone = validatePhone(effectivePhone);
       if (!okPhone) newErrors.customerPhone = t('order.err_phone_required');
@@ -337,7 +442,7 @@ const OrderConfirmScreen = () => {
       const missing = [];
       if (newErrors.row) missing.push(t('order.row'));
       if (newErrors.seatNo) missing.push(t('order.seat'));
-      if (newErrors.entrance) missing.push(t('order.entrance'));
+      // entrance no longer required
       if (newErrors.customerPhone) missing.push(t('auth.phone'));
 
       const prefix = t('order.complete_required_fields_prefix');
@@ -511,6 +616,7 @@ const OrderConfirmScreen = () => {
         entrance: pickTrimCard(formData.entrance, savedSeatForCard.entrance),
         stand: pickTrimCard(formData.stand, savedSeatForCard.stand),
         section: pickTrimCard(formData.section, savedSeatForCard.section),
+        sectionId: pickTrimCard(formData.sectionId, savedSeatForCard.sectionId),
         seatDetails: pickTrimCard(formData.seatDetails, savedSeatForCard.seatDetails),
         area: pickTrimCard(formData.area, savedSeatForCard.area),
       };
@@ -592,6 +698,7 @@ const OrderConfirmScreen = () => {
         entrance: pickTrim(formData.entrance, savedSeat.entrance),
         stand: pickTrim(formData.stand, savedSeat.stand),
         section: pickTrim(formData.section, savedSeat.section),
+        sectionId: pickTrim(formData.sectionId, savedSeat.sectionId),
         seatDetails: pickTrim(formData.seatDetails, savedSeat.seatDetails),
         area: pickTrim(formData.area, savedSeat.area),
       };
@@ -688,7 +795,7 @@ const OrderConfirmScreen = () => {
         <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 
         {/* Seat Information Form */}
-        <SeatForm formData={formData} errors={errors} onChange={handleInputChange} />
+        <SeatForm formData={formData} errors={errors} onChange={handleInputChange} sectionsOptions={sectionsOptions} />
 
         {/* Customer Phone for Delivery Contact */}
         <div className="seat-info-section phone-section">
