@@ -17,6 +17,7 @@ import { useTranslation } from '../../i18n/i18n';
 import { collection, getDocs, doc, getDoc, query } from 'firebase/firestore';
 import { placeOrderAfterPayment } from './utils/placeOrderCommon';
 import { fetchCustomerPhone, validatePhone, saveCustomerPhoneIfMissing, normalizePhone } from './utils/phoneHelper';
+import QrScanner from '../../components/qr-scanner/QrScanner';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ const OrderConfirmScreen = () => {
   const [customerPhone, setCustomerPhone] = useState('');
   const [hasPhoneInCustomer, setHasPhoneInCustomer] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
+  const [showQrScanner, setShowQrScanner] = useState(false);
 
   useEffect(() => {
     // Initialize order data
@@ -206,6 +208,46 @@ const OrderConfirmScreen = () => {
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
+
+  // Auto-select sectionId from section name when coming from QR or saved seat
+  useEffect(() => {
+    try {
+      // If we already have an id or no name, nothing to do
+      const name = (formData.section || '').toString().trim();
+      const hasId = !!(formData.sectionId && String(formData.sectionId).trim());
+      if (!name || hasId || sectionsOptions.length === 0) return;
+
+      const norm = name.toLowerCase();
+      // Try exact name match (case-insensitive)
+      let match = sectionsOptions.find(s => (s.name || '').toString().toLowerCase() === norm);
+
+      // If the name looks like "Section N", match by number
+      if (!match) {
+        const m = /section\s*(\d+)/i.exec(name);
+        if (m) {
+          const num = Number(m[1]);
+          if (!Number.isNaN(num)) {
+            match = sectionsOptions.find(s => s.no === num) || null;
+          }
+        }
+      }
+
+      if (match) {
+        setFormData(prev => ({ ...prev, sectionId: match.id, section: match.name }));
+        try { seatStorage.setSeatInfo({
+          row: formData.row,
+          seatNo: formData.seatNo,
+          entrance: formData.entrance,
+          stand: formData.stand,
+          section: match.name,
+          sectionId: match.id,
+        }); } catch (_) {}
+        try { showToast(`Section auto-selected: ${match.name}`, 'success', 1600); } catch (_) {}
+      }
+    } catch (e) {
+      console.warn('Auto-select sectionId failed:', e);
+    }
+  }, [sectionsOptions, formData.section, formData.sectionId]);
 
   // Calculate final total whenever order components change
   useEffect(() => {
@@ -437,6 +479,45 @@ const OrderConfirmScreen = () => {
     }
     // Re-validate to surface or clear phone errors live
     setTimeout(() => validateForm(), 0);
+  };
+
+  const handleQrScanSuccess = (seatData) => {
+    try {
+      // Update form data with scanned information
+      setFormData(prev => ({
+        ...prev,
+        row: seatData.row || prev.row,
+        seatNo: seatData.seatNo || prev.seatNo,
+        section: seatData.section || prev.section,
+        sectionId: seatData.sectionId || prev.sectionId,
+        entrance: seatData.entrance || prev.entrance,
+        stand: seatData.stand || prev.stand || 'Main',
+        seatDetails: seatData.seatDetails || prev.seatDetails,
+        area: seatData.area || prev.area
+      }));
+
+      // Save to storage
+      try {
+        seatStorage.setSeatInfo({
+          row: seatData.row || formData.row,
+          seatNo: seatData.seatNo || formData.seatNo,
+          section: seatData.section || formData.section,
+          sectionId: seatData.sectionId || formData.sectionId,
+          entrance: seatData.entrance || formData.entrance,
+          stand: seatData.stand || formData.stand || 'Main',
+          seatDetails: seatData.seatDetails || formData.seatDetails,
+          area: seatData.area || formData.area
+        });
+      } catch (_) {}
+
+      setShowQrScanner(false);
+      
+      // Re-validate form after QR scan
+      setTimeout(() => validateForm(), 100);
+    } catch (error) {
+      console.error('Failed to process QR scan data:', error);
+      showToast('Failed to process QR code data', 'error', 3000);
+    }
   };
 
   // Location permission workflow removed
@@ -723,8 +804,15 @@ const OrderConfirmScreen = () => {
         {/* Ticket Image Upload */}
         <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
 
+
         {/* Seat Information Form */}
-        <SeatForm formData={formData} errors={errors} onChange={handleInputChange} sectionsOptions={sectionsOptions} />
+        <SeatForm 
+          formData={formData} 
+          errors={errors} 
+          onChange={handleInputChange} 
+          sectionsOptions={sectionsOptions}
+          onScanQr={() => setShowQrScanner(true)}
+        />
 
         {/* Customer Phone for Delivery Contact */}
         <div className="seat-info-section phone-section">
@@ -789,9 +877,15 @@ const OrderConfirmScreen = () => {
           onPlaceOrder={handlePayment}
           disabled={!isFormValid}
         />
+
+        {/* QR Scanner Modal */}
+        <QrScanner
+          visible={showQrScanner}
+          onScanSuccess={handleQrScanSuccess}
+          onClose={() => setShowQrScanner(false)}
+        />
       </div>
     </div>
   );
 };
-
 export default OrderConfirmScreen;

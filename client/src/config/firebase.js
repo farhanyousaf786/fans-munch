@@ -42,85 +42,84 @@ let analytics = null;
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Initialize Firebase Cloud Messaging and get a reference to the service
+// Initialize Firebase Cloud Messaging lazily to avoid startup errors
 let messaging = null;
-try {
-  messaging = getMessaging(app);
-} catch (error) {
-  console.warn('Firebase Messaging not supported in this environment::', error);
-}
+let messagingInitialized = false;
+
+const initializeMessaging = () => {
+  if (messagingInitialized) return messaging;
+  
+  try {
+    // Check if all required APIs are supported
+    const hasServiceWorker = typeof window !== 'undefined' && 'serviceWorker' in navigator;
+    const hasPushManager = typeof window !== 'undefined' && 'PushManager' in window;
+    const hasNotification = typeof window !== 'undefined' && 'Notification' in window;
+    const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
+    
+    if (hasServiceWorker && hasPushManager && hasNotification && isSecureContext) {
+      messaging = getMessaging(app);
+      console.log('Firebase Messaging initialized successfully');
+    } else {
+      console.warn('Firebase Messaging not supported in this environment');
+      messaging = null;
+    }
+  } catch (error) {
+    console.warn('Firebase Messaging initialization failed:', error.message || error);
+    messaging = null;
+  }
+  
+  messagingInitialized = true;
+  return messaging;
+};
+
+// Don't initialize messaging on module load - only when explicitly called
+// This prevents the "unsupported-browser" error from crashing the app
 
 // Request permission for notifications and get FCM token
 export const requestNotificationPermission = async () => {
   try {
-    if (!messaging) {
+    const msg = initializeMessaging();
+    if (!msg) {
       throw new Error('Firebase Messaging not supported');
     }
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       console.log('Notification permission granted.');
-      
-      // Get FCM token using Web Push certificate key from env
-      const vapidKey = (process.env.REACT_APP_FIREBASE_VAPID_KEY || '').trim();
-      if (!vapidKey) {
-        console.warn('[FCM] Missing REACT_APP_FIREBASE_VAPID_KEY. Set it in client/.env to enable web push.');
-      }
-
-      // Explicitly register our service worker to avoid default SW ambiguity
-      let swReg = undefined;
-      try {
-        if ('serviceWorker' in navigator) {
-          swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          // Wait for activation if needed
-          if (swReg.installing) {
-            await new Promise((res) => {
-              swReg.installing.addEventListener('statechange', function onState() {
-                if (this.state === 'activated') res();
-              });
-            });
-          }
-          console.log('[FCM] Service worker registered for messaging.');
-        }
-      } catch (e) {
-        console.warn('[FCM] SW registration failed, will try default:', e?.message || e);
-      }
-
-      const token = await getToken(messaging, {
-        vapidKey: vapidKey || undefined,
-        serviceWorkerRegistration: swReg
-      });
-      
-      if (token) {
-        console.log('FCM Token:', token);
-        return token;
-      } else {
-        console.log('No registration token available.');
-        return null;
-      }
+      return 'granted';
     } else {
-      console.log('Unable to get permission to notify.');
+      console.log('Notification permission denied.');
       return null;
     }
   } catch (error) {
-    console.error('An error occurred while retrieving token:', error);
+    console.error('An error occurred while requesting permission:', error);
     return null;
   }
 };
 
 // Listen for foreground messages
 export const onMessageListener = () => {
-  return new Promise((resolve) => {
-    if (!messaging) {
+  return new Promise((resolve, reject) => {
+    const msg = initializeMessaging();
+    if (!msg) {
       console.warn('Firebase Messaging not available');
+      reject(new Error('Messaging not supported'));
       return;
     }
 
-    onMessage(messaging, (payload) => {
-      console.log('Message received in foreground:', payload);
-      resolve(payload);
-    });
+    try {
+      onMessage(msg, (payload) => {
+        console.log('Message received in foreground:', payload);
+        resolve(payload);
+      });
+    } catch (error) {
+      console.warn('Error setting up message listener:', error);
+      reject(error);
+    }
   });
 };
 
-export { app, analytics, auth, db, messaging };
+// Export messaging getter function for backwards compatibility
+export const getMessagingInstance = () => initializeMessaging();
+
+export { app, analytics, auth, db, initializeMessaging };

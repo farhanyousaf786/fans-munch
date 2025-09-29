@@ -6,7 +6,8 @@ import { useTranslation } from '../../../i18n/i18n';
 // - sectionsOptions: [{ id, name }]
 // - errors: may include row/seatNo/entrance/section
 // - onChange: (field, value) => void
-const SeatForm = ({ formData, errors, onChange, sectionsOptions = [] }) => {
+// - onScanQr: () => void
+const SeatForm = ({ formData, errors, onChange, sectionsOptions = [], onScanQr }) => {
   const { t } = useTranslation();
   const td = (key, fallback) => {
     try {
@@ -19,7 +20,31 @@ const SeatForm = ({ formData, errors, onChange, sectionsOptions = [] }) => {
   };
   return (
     <div className="seat-info-section">
-      <h2 className="section-title">{t('order.seat_info_title')}</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 className="section-title" style={{ margin: 0 }}>{t('order.seat_info_title')}</h2>
+        <button
+          type="button"
+          onClick={onScanQr}
+          style={{
+            padding: '8px 16px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => e.target.style.background = '#2563eb'}
+          onMouseOut={(e) => e.target.style.background = '#3b82f6'}
+        >
+          📱 Scan QR
+        </button>
+      </div>
 
       {/* First row: Seat Number & Stand Number */}
       <div className="form-row">

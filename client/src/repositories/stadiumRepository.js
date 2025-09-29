@@ -237,6 +237,56 @@ class StadiumRepository {
         color: "#C4122E",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
+      },
+      // Added: India stadiums
+      {
+        id: 'wankhede-stadium',
+        name: 'Wankhede Stadium',
+        location: 'Mumbai, India',
+        about: 'Iconic cricket stadium in Mumbai',
+        capacity: 33000,
+        imageUrl: '',
+        teams: ['India', 'Mumbai Indians'],
+        color: '#1E88E5',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'eden-gardens',
+        name: 'Eden Gardens',
+        location: 'Kolkata, India',
+        about: 'Historic cricket ground in Kolkata',
+        capacity: 68000,
+        imageUrl: '',
+        teams: ['India', 'Kolkata Knight Riders'],
+        color: '#6A1B9A',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      // Added: Pakistan stadiums
+      {
+        id: 'gaddafi-stadium',
+        name: 'Gaddafi Stadium',
+        location: 'Lahore, Pakistan',
+        about: 'Premier cricket stadium in Lahore',
+        capacity: 27000,
+        imageUrl: '',
+        teams: ['Pakistan', 'Lahore Qalandars'],
+        color: '#2E7D32',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: 'national-stadium-karachi',
+        name: 'National Stadium',
+        location: 'Karachi, Pakistan',
+        about: 'Major cricket venue in Karachi',
+        capacity: 34000,
+        imageUrl: '',
+        teams: ['Pakistan', 'Karachi Kings'],
+        color: '#EF6C00',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
     ];
 

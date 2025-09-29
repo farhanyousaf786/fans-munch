@@ -22,6 +22,7 @@ import TipScreen from './pages/tip/TipScreen';
 import ShopMenuScreen from './pages/shop_menu/ShopMenuScreen';
 import OrderConfirmScreen from './pages/order_confirm/OrderConfirmScreen';
 import OrderTrackScreen from './pages/order_track/OrderTrackScreen';
+import FanmunchQrCode from './pages/tools/FanmunchQrCode';
 import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
 import Footer from './components/footer/Footer';
 import MenuListPage from './pages/menu/MenuListPage';
@@ -36,6 +37,7 @@ import LanguageScreen from './pages/settings/LanguageScreen';
 
 function App() {
   // Parse QR parameters on first load and store seat info
+  // Supports both fanmunch.com and localhost domains
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -44,6 +46,7 @@ function App() {
           row: params.get('row') || '',
           seatNo: params.get('seat') || params.get('seatNo') || '',
           section: params.get('section') || '',
+          sectionId: params.get('sectionId') || '', // Added sectionId support
           seatDetails: params.get('details') || params.get('seatDetails') || '',
           area: params.get('area') || '',
           entrance: params.get('entrance') || params.get('gate') || '',
@@ -54,6 +57,7 @@ function App() {
         const hasValue = Object.values(seatInfo).some(v => v && String(v).trim() !== '');
         if (hasValue) {
           seatStorage.setSeatInfo(seatInfo);
+          console.log('🎫 QR parameters parsed and saved:', seatInfo);
         }
       }
     } catch (e) {
@@ -107,6 +111,8 @@ function App() {
             <Route path="/tip" element={<TipScreen />} />
             <Route path="/order/confirm" element={<OrderConfirmScreen />} />
             <Route path="/order/:orderId" element={<OrderTrackScreen />} />
+            {/* Tools */}
+            <Route path="/tools/fanmunch-qr" element={<FanmunchQrCode />} />
             
             {/* Redirect any unknown routes to splash */}
             <Route path="*" element={<Navigate to="/" replace />} />

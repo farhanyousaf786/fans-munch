@@ -6,6 +6,7 @@ import Stadium from '../../models/Stadium';
 import stadiumRepository from '../../repositories/stadiumRepository';
 import './StadiumSelectionScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { showToast } from '../../components/toast/ToastContainer';
 
 const StadiumSelectionScreen = () => {
   const [selectedStadium, setSelectedStadium] = useState(null);
@@ -24,13 +25,18 @@ const StadiumSelectionScreen = () => {
         setError(null);
         
         const stadiumData = await stadiumRepository.getAllStadiums();
-        setStadiums(stadiumData);
+        // Always append static fallback stadiums (marked as _isStatic) after Firebase results
+        const fallback = stadiumRepository.getFallbackStadiums().map(s => ({ ...s, _isStatic: true }));
+        // De-duplicate by id
+        const existingIds = new Set(stadiumData.map(s => s.id));
+        const onlyStaticNew = fallback.filter(s => !existingIds.has(s.id));
+        setStadiums([...stadiumData, ...onlyStaticNew]);
       } catch (err) {
         console.error('Error fetching stadiums:', err);
         setError('Failed to load stadiums. Please try again.');
         
         // Use fallback data if Firebase fails
-        const fallbackStadiums = stadiumRepository.getFallbackStadiums();
+        const fallbackStadiums = stadiumRepository.getFallbackStadiums().map(s => ({ ...s, _isStatic: true }));
         setStadiums(fallbackStadiums);
       } finally {
         setLoading(false);
@@ -41,6 +47,10 @@ const StadiumSelectionScreen = () => {
   }, []);
 
   const handleStadiumSelect = (stadium) => {
+    if (stadium?._isStatic) {
+      try { showToast('Coming soon in this stadium', 'info', 2000); } catch (_) {}
+      return; // Do not allow selecting static placeholder stadiums
+    }
     setSelectedStadium(stadium);
   };
 
@@ -115,6 +125,9 @@ const StadiumSelectionScreen = () => {
 
               <div className="stadium-info">
                 <h3 className="stadium-name">{stadium.name}</h3>
+                {stadium._isStatic && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#6b7280' }}>(Coming soon)</div>
+                )}
               </div>
               {selectedStadium?.id === stadium.id && (
                 <div className="selected-indicator">
@@ -127,11 +140,11 @@ const StadiumSelectionScreen = () => {
         )}
 
         {/* Continue Button */}
-        <div className="stadium-actions">
+        <div className={`stadium-actions ${selectedStadium && !selectedStadium._isStatic ? 'show' : ''}`}>
           <button
-            className={`continue-button ${selectedStadium ? 'active' : 'disabled'}`}
+            className={`continue-button ${selectedStadium && !selectedStadium._isStatic ? 'active' : 'disabled'}`}
             onClick={handleContinue}
-            disabled={!selectedStadium}
+            disabled={!selectedStadium || !!selectedStadium?._isStatic}
           >
             {selectedStadium ? `${t('stadium.continue_to')} ${selectedStadium.name}` : t('stadium.select_button')}
           </button>

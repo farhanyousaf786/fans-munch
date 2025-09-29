@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopSection from './components/top_section/TopSection';
 import SearchFilterWidget from './components/search_filter/SearchFilterWidget';
 import OffersList from './components/offers_list/OffersList';
@@ -7,10 +8,11 @@ import MenuList from './components/menu_list/MenuList';
 import ShopList from './components/shop_list/ShopList';
 import foodRepository from '../../repositories/foodRepository';
 import offerRepository from '../../repositories/offerRepository';
-import { stadiumStorage } from '../../utils/storage';
+import { stadiumStorage, userStorage } from '../../utils/storage';
 import './Home.css';
 
 function Home() {
+  const navigate = useNavigate();
   const [allMenuItems, setAllMenuItems] = useState([]);
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [allOffers, setAllOffers] = useState([]);
@@ -23,8 +25,9 @@ function Home() {
   const [error, setError] = useState(null);
   const [offersError, setOffersError] = useState(null);
 
-  // Load menu items and offers once on component mount
+  // Load data on component mount - no stadium requirement for browsing
   useEffect(() => {
+    console.log('🏠 Loading Home dashboard');
     loadMenuItems();
     loadOffers();
   }, []);
