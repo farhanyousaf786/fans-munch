@@ -82,13 +82,91 @@ const OrderConfirmScreen = () => {
       setFinalTotal(cartTotal + fee);
     }
 
-    // Prefill seat info
-    const savedSeat = seatStorage.getSeatInfo();
-    if (savedSeat) {
-      setFormData(prev => ({
-        ...prev,
-        ...savedSeat
-      }));
+    // Priority 1: Check URL parameters (direct QR scan)
+    console.log('🔍 [ORDER] Checking for seat data...');
+    console.log('🔍 [ORDER] Current URL:', window.location.href);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('🔍 [ORDER] URL params:', Object.fromEntries(urlParams.entries()));
+    
+    const urlSeatData = {
+      row: urlParams.get('row') || '',
+      seatNo: urlParams.get('seat') || urlParams.get('seatNo') || '',
+      section: urlParams.get('section') || '',
+      sectionId: urlParams.get('sectionId') || '',
+      entrance: urlParams.get('entrance') || urlParams.get('gate') || '',
+      stand: urlParams.get('stand') || '',
+      seatDetails: urlParams.get('details') || urlParams.get('seatDetails') || '',
+      area: urlParams.get('area') || ''
+    };
+
+    const hasUrlData = Object.values(urlSeatData).some(v => v && String(v).trim() !== '');
+    console.log('🔍 [ORDER] Has URL data?', hasUrlData, urlSeatData);
+    
+    // Priority 2: Check sessionStorage (from home page URL)
+    console.log('🔍 [ORDER] Checking sessionStorage...');
+    let sessionSeatData = null;
+    try {
+      const pendingData = sessionStorage.getItem('pending_seat_data');
+      console.log('🔍 [ORDER] Raw sessionStorage data:', pendingData);
+      
+      if (pendingData) {
+        sessionSeatData = JSON.parse(pendingData);
+        console.log('✅ [ORDER] Parsed session data:', sessionSeatData);
+      } else {
+        console.log('⚠️ [ORDER] No data in sessionStorage');
+      }
+    } catch (e) {
+      console.error('❌ [ORDER] Failed to parse pending seat data:', e);
+    }
+    
+    if (hasUrlData) {
+      // URL parameters take highest priority
+      console.log('✅ [ORDER] Auto-filling from URL parameters:', urlSeatData);
+      setFormData(prev => {
+        const newData = { 
+          ...prev, 
+          ...urlSeatData,
+          // Default stand to 'Main' if not provided in QR code
+          stand: urlSeatData.stand || 'Main'
+        };
+        console.log('📝 [ORDER] Form data updated:', newData);
+        return newData;
+      });
+      showToast('Seat info loaded from QR code!', 'success', 2000);
+      // Clear session data after using URL params
+      sessionStorage.removeItem('pending_seat_data');
+      console.log('🗑️ [ORDER] Cleared sessionStorage');
+    } else if (sessionSeatData) {
+      // Session data (from home page) takes second priority
+      console.log('✅ [ORDER] Auto-filling from session storage:', sessionSeatData);
+      setFormData(prev => {
+        const newData = { 
+          ...prev, 
+          ...sessionSeatData,
+          // Default stand to 'Main' if not provided in QR code
+          stand: sessionSeatData.stand || 'Main'
+        };
+        console.log('📝 [ORDER] Form data updated:', newData);
+        return newData;
+      });
+      showToast('Seat info loaded from QR code!', 'success', 2000);
+      // Clear session data after using it
+      sessionStorage.removeItem('pending_seat_data');
+      console.log('🗑️ [ORDER] Cleared sessionStorage');
+    } else {
+      // Priority 3: Fallback to saved seat info from storage
+      console.log('🔍 [ORDER] Checking seatStorage...');
+      const savedSeat = seatStorage.getSeatInfo();
+      if (savedSeat) {
+        console.log('✅ [ORDER] Auto-filling from seatStorage:', savedSeat);
+        setFormData(prev => ({
+          ...prev,
+          ...savedSeat
+        }));
+      } else {
+        console.log('⚠️ [ORDER] No seat data found anywhere - form will be empty');
+      }
     }
 
     // Load phone from customers collection

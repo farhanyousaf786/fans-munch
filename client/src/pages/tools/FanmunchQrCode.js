@@ -36,7 +36,7 @@ export default function FanmunchQrCode() {
 
   const [baseUrl, setBaseUrl] = useState(() => {
     // Always default to production domain for QR codes
-    return 'https://fanmunch.com';
+    return 'https://www.fanmunch.com';
   });
   const [sectionName, setSectionName] = useState('');
   const [sectionId, setSectionId] = useState('');
@@ -184,8 +184,8 @@ export default function FanmunchQrCode() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(260px, 1fr))', gap: 16, marginBottom: 16 }}>
         {field(<>
           <div style={labelStyle}>Base URL</div>
-          <input style={inputStyle} value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://fanmunch.com" />
-          <div style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>Production: https://fanmunch.com | Development: http://localhost:3000</div>
+          <input style={inputStyle} value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://www.fanmunch.com" />
+          <div style={{ color: '#6b7280', fontSize: 12, marginTop: 6 }}>Production: https://www.fanmunch.com | Development: http://localhost:3000</div>
         </>, 'base')}
 
         {field(<>

@@ -28,6 +28,40 @@ function Home() {
   // Load data on component mount - no stadium requirement for browsing
   useEffect(() => {
     console.log('🏠 Loading Home dashboard');
+    
+    // Check if URL has seat parameters (from QR code)
+    console.log('🔍 [HOME] Checking URL for seat parameters...');
+    console.log('🔍 [HOME] Current URL:', window.location.href);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('🔍 [HOME] URL params:', Object.fromEntries(urlParams.entries()));
+    
+    const hasSeatParams = urlParams.has('row') || urlParams.has('seat') || urlParams.has('section');
+    console.log('🔍 [HOME] Has seat params?', hasSeatParams);
+    
+    if (hasSeatParams) {
+      // Store URL params for later use
+      const seatData = {
+        row: urlParams.get('row') || '',
+        seatNo: urlParams.get('seat') || urlParams.get('seatNo') || '',
+        section: urlParams.get('section') || '',
+        sectionId: urlParams.get('sectionId') || '',
+        entrance: urlParams.get('entrance') || urlParams.get('gate') || '',
+        stand: urlParams.get('stand') || '',
+        seatDetails: urlParams.get('details') || urlParams.get('seatDetails') || '',
+        area: urlParams.get('area') || ''
+      };
+      
+      console.log('✅ [HOME] Extracted seat data:', seatData);
+      
+      // Store in sessionStorage so it persists during navigation
+      sessionStorage.setItem('pending_seat_data', JSON.stringify(seatData));
+      console.log('💾 [HOME] Saved to sessionStorage:', sessionStorage.getItem('pending_seat_data'));
+      console.log('📍 [HOME] Seat data stored successfully for later use!');
+    } else {
+      console.log('⚠️ [HOME] No seat parameters found in URL');
+    }
+    
     loadMenuItems();
     loadOffers();
   }, []);

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import './styles/rtl.css';
 import { ThemeProvider } from './context/ThemeContext';
@@ -34,6 +34,17 @@ import PrivacyPolicyScreen from './pages/settings/PrivacyPolicyScreen';
 import FeedbackScreen from './pages/settings/FeedbackScreen';
 import ReportProblemScreen from './pages/settings/ReportProblemScreen';
 import LanguageScreen from './pages/settings/LanguageScreen';
+
+// Component to redirect root to home while preserving query params
+const RootRedirect = () => {
+  // Use window.location.search instead of useLocation() to get query params
+  // because useLocation() might not have them on initial render
+  const search = window.location.search;
+  console.log('🔀 [REDIRECT] window.location.search:', search);
+  console.log('🔀 [REDIRECT] window.location.href:', window.location.href);
+  console.log('🔀 [REDIRECT] Redirecting to:', `/home${search}`);
+  return <Navigate to={`/home${search}`} replace />;
+};
 
 function App() {
   // Parse QR parameters on first load and store seat info
@@ -71,8 +82,8 @@ function App() {
         <Router>
           <div className="App">
           <Routes>
-            {/* Landing page goes to Home regardless of auth */}
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            {/* Landing page goes to Home regardless of auth - preserve query params */}
+            <Route path="/" element={<RootRedirect />} />
             
             {/* Splash Screen - After auth */}
             <Route path="/splash" element={<SplashScreen />} />

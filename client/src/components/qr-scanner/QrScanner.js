@@ -434,26 +434,6 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
         justifyContent: 'center'
       }}>
         <button
-          onClick={handleManualInput}
-          style={{
-            padding: '16px 32px',
-            background: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: '600',
-            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => e.target.style.background = '#059669'}
-          onMouseOut={(e) => e.target.style.background = '#10b981'}
-        >
-          ✏️ Enter URL Manually
-        </button>
-        
-        <button
           onClick={onClose}
           style={{
             padding: '16px 32px',
