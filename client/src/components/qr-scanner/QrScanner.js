@@ -353,8 +353,7 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
         maxWidth: '280px',
         lineHeight: '1.4'
       }}>
-        {lastStatus === 'detected' ? '✅ QR Detected' : '📱 Scanning for QR Codes...'}<br/>
-        <span style={{ fontSize: '12px', fontWeight: '400' }}>FPS {metrics.fps} • V {metrics.vw}x{metrics.vh} • C {metrics.cw}x{metrics.ch}</span>
+        {lastStatus === 'detected' ? '✅ QR Detected' : '📱 Scanning for QR Codes...'}
       </div>
 
       {/* Camera container */}
@@ -434,6 +433,26 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
         flexWrap: 'wrap',
         justifyContent: 'center'
       }}>
+        <button
+          onClick={handleManualInput}
+          style={{
+            padding: '16px 32px',
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: '600',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => e.target.style.background = '#059669'}
+          onMouseOut={(e) => e.target.style.background = '#10b981'}
+        >
+          ✏️ Enter URL Manually
+        </button>
+        
         <button
           onClick={onClose}
           style={{
