@@ -1,12 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
+import jsQR from 'jsqr';
 import { showToast } from '../toast/ToastContainer';
 
 const QrScanner = ({ onScanSuccess, onClose, visible }) => {
   const videoRef = useRef(null);
+  // Offscreen canvas used for jsQR processing
   const canvasRef = useRef(null);
+  // Optional visible debug canvas (mirrors processing frame)
+  const debugCanvasRef = useRef(null);
   const [isScanning, setIsScanning] = useState(false);
+  const isScanningRef = useRef(false);
   const [stream, setStream] = useState(null);
-  const scanIntervalRef = useRef(null);
+  const scanRafRef = useRef(null);
+  const [debugEnabled, setDebugEnabled] = useState(false);
+  const [lastStatus, setLastStatus] = useState('idle');
+  const [metrics, setMetrics] = useState({ fps: 0, vw: 0, vh: 0, cw: 0, ch: 0, tw: 0, th: 0 });
+  const lastFrameTsRef = useRef(performance.now());
+  const frameCounterRef = useRef(0);
+  const imageCaptureBusyRef = useRef(false);
 
   useEffect(() => {
     if (visible) {
@@ -19,22 +30,52 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment', // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
+      // Try preferred back camera; fall back to any camera if not available
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+      } catch (_) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        const video = videoRef.current;
+        // Ensure best chance for autoplay inline across browsers (iOS requires attributes)
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('muted', 'true');
+        video.setAttribute('autoplay', 'true');
+        video.srcObject = mediaStream;
         setStream(mediaStream);
-        setIsScanning(true);
         
-        // Start scanning for QR codes
-        scanIntervalRef.current = setInterval(scanForQrCode, 500);
+        // Ensure metadata is loaded to get correct dimensions
+        const onLoaded = async (evtName) => {
+          console.info(`[QR DEBUG] ${evtName} fired. readyState=${video.readyState}, dims=${video.videoWidth}x${video.videoHeight}`);
+          try {
+            await video.play();
+          } catch (e) {
+            console.warn('[QR DEBUG] video.play() blocked, will continue polling', e);
+          }
+          // If dimensions are not ready yet, fall back to polling
+          waitForDimensionsAndStart(video);
+        };
+
+        // Attach multiple readiness events
+        video.onloadedmetadata = () => onLoaded('loadedmetadata');
+        video.onloadeddata = () => onLoaded('loadeddata');
+        video.oncanplay = () => onLoaded('canplay');
+        video.onresize = () => onLoaded('resize');
+
+        // If already has metadata, proceed immediately
+        if (video.readyState >= 1) {
+          onLoaded('immediate');
+        }
       }
     } catch (error) {
       console.error('Camera access failed:', error);
@@ -42,39 +83,164 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
     }
   };
 
+  // Poll for non-zero dimensions before starting scanning (handles browsers that delay dims)
+  const waitForDimensionsAndStart = (video, attempts = 0) => {
+    const vw = video.videoWidth || 0;
+    const vh = video.videoHeight || 0;
+    if (vw > 0 && vh > 0) {
+      console.info(`[QR DEBUG] Dimensions ready: ${vw}x${vh}. Starting scan loop.`);
+      setIsScanning(true);
+      isScanningRef.current = true;
+      if (!scanRafRef.current) {
+        scanRafRef.current = requestAnimationFrame(scanForQrCode);
+      }
+      return;
+    }
+    if (attempts > 50) { // ~2.5s at 50ms
+      console.warn('[QR DEBUG] Dimensions still 0 after retries. Will keep running loop anyway.');
+      setIsScanning(true);
+      isScanningRef.current = true;
+      if (!scanRafRef.current) {
+        scanRafRef.current = requestAnimationFrame(scanForQrCode);
+      }
+      return;
+    }
+    // Not ready: keep polling
+    setLastStatus('warming-up');
+    setTimeout(() => waitForDimensionsAndStart(video, attempts + 1), 50);
+  };
+
   const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
+    if (scanRafRef.current) {
+      cancelAnimationFrame(scanRafRef.current);
+      scanRafRef.current = null;
     }
     setIsScanning(false);
+    isScanningRef.current = false;
   };
 
   const scanForQrCode = () => {
-    if (!videoRef.current || !canvasRef.current || !isScanning) return;
+    if (!videoRef.current || !canvasRef.current) {
+      console.warn('[QR DEBUG] scanForQrCode: missing refs, stopping');
+      return;
+    }
+    if (!isScanningRef.current) {
+      console.warn('[QR DEBUG] scanForQrCode: isScanningRef=false, stopping');
+      return;
+    }
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
 
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Some browsers report readyState but keep videoWidth/Height at 0 for a while.
+    // Gate on actual dimensions instead.
+    const track = stream?.getVideoTracks?.()[0];
+    const tSettings = track?.getSettings?.() || {};
+    const tW = tSettings.width || 0;
+    const tH = tSettings.height || 0;
+    
+    console.log('[QR DEBUG] scanForQrCode tick, isScanningRef=', isScanningRef.current, 'dims=', video.videoWidth, 'x', video.videoHeight);
+    
+    if ((video.videoWidth || 0) > 0 && (video.videoHeight || 0) > 0) {
+      const vw = video.videoWidth || 640;
+      const vh = video.videoHeight || 480;
+      // 1) Try full frame first (helps with rotated sources)
+      canvas.width = vw;
+      canvas.height = vh;
+      context.drawImage(video, 0, 0, vw, vh);
+      let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      let qrCode = detectQrCode(imageData);
+      
+      // 2) If not found, try center square crop as fallback
+      if (!qrCode) {
+        const size = Math.min(vw, vh);
+        const sx = Math.max(0, Math.floor((vw - size) / 2));
+        const sy = Math.max(0, Math.floor((vh - size) / 2));
+        canvas.width = size;
+        context.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+        imageData = context.getImageData(0, 0, size, size);
+        qrCode = detectQrCode(imageData);
+      }
 
-      // Since we don't have a QR library, we'll use manual input
-      // In production, you'd use jsQR library here to detect QR codes
+      // Debug: mirror processing frame to visible debug canvas and log metrics
+      if (debugEnabled && debugCanvasRef.current) {
+        try {
+          const dctx = debugCanvasRef.current.getContext('2d');
+          debugCanvasRef.current.width = canvas.width;
+          debugCanvasRef.current.height = canvas.height;
+          dctx.drawImage(canvas, 0, 0);
+          if (debugEnabled && typeof qrCode === 'object' && qrCode.location) {
+            const loc = qrCode.location;
+            const drawLine = (begin, end, color) => {
+              dctx.beginPath();
+              dctx.moveTo(begin.x, begin.y);
+              dctx.lineTo(end.x, end.y);
+              dctx.lineWidth = 3;
+              dctx.strokeStyle = color;
+              dctx.stroke();
+            };
+            drawLine(loc.topLeftCorner, loc.topRightCorner, '#22c55e');
+            drawLine(loc.topRightCorner, loc.bottomRightCorner, '#22c55e');
+            drawLine(loc.bottomRightCorner, loc.bottomLeftCorner, '#22c55e');
+            drawLine(loc.bottomLeftCorner, loc.topLeftCorner, '#22c55e');
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // FPS + metrics
+      frameCounterRef.current += 1;
+      const now = performance.now();
+      const dt = now - lastFrameTsRef.current;
+      if (dt >= 1000) {
+        const fps = Math.round((frameCounterRef.current * 1000) / dt);
+        frameCounterRef.current = 0;
+        lastFrameTsRef.current = now;
+        setMetrics({ fps, vw, vh, cw: canvas.width, ch: canvas.height, tw: tW, th: tH });
+        if (debugEnabled) {
+          console.info(`[QR DEBUG] fps=${fps} video=${vw}x${vh} track=${tW}x${tH} canvas=${canvas.width}x${canvas.height}`);
+        }
+      }
+      
+      if (qrCode) {
+        setLastStatus('detected');
+        handleQrDetected(typeof qrCode === 'object' ? qrCode.data : qrCode);
+        return; // stop loop, stopCamera will cancel RAF
+      } else {
+      }
+    }
+    // Continue scanning on next animation frame
+    if (isScanningRef.current) {
+      scanRafRef.current = requestAnimationFrame(scanForQrCode);
+    } else {
+      console.warn('[QR DEBUG] Not continuing RAF, isScanningRef=false');
+      return;
     }
   };
 
-  // Placeholder QR detection - would use jsQR library in production
+  // Real QR detection using jsQR library
   const detectQrCode = (imageData) => {
-    // This is a placeholder. In production, you'd use a library like jsQR
-    return null;
+    try {
+      // Try with inversion attempts for better detection in various lighting
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'attemptBoth', // Try both normal and inverted
+      });
+      
+      if (code) {
+        console.log('🎯 QR Code detected:', code.data);
+        return code; // return the full object for optional box drawing
+      }
+      return null;
+    } catch (error) {
+      console.warn('QR detection error:', error);
+      return null;
+    }
   };
 
   const handleQrDetected = (qrData) => {
@@ -173,24 +339,46 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
 
       {/* Camera View */}
       <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        color: 'white',
+        background: lastStatus === 'detected' ? 'rgba(34,197,94,0.9)' : 'rgba(59, 130, 246, 0.9)',
+        padding: '12px 20px',
+        borderRadius: '25px',
+        fontSize: '14px',
+        fontWeight: '600',
+        textAlign: 'center',
+        maxWidth: '280px',
+        lineHeight: '1.4'
+      }}>
+        {lastStatus === 'detected' ? '✅ QR Detected' : '📱 Scanning for QR Codes...'}<br/>
+        <span style={{ fontSize: '12px', fontWeight: '400' }}>FPS {metrics.fps} • V {metrics.vw}x{metrics.vh} • C {metrics.cw}x{metrics.ch}</span>
+      </div>
+
+      {/* Camera container */}
+      <div style={{
         position: 'relative',
         width: '100%',
-        maxWidth: '400px',
-        aspectRatio: '1',
-        background: '#000',
+        maxWidth: '600px',
+        aspectRatio: '4/3',
+        background: '#1f2937',
         borderRadius: '12px',
         overflow: 'hidden',
         marginBottom: '20px'
       }}>
         <video
           ref={videoRef}
+          autoPlay
+          playsInline
+          muted
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover'
+            objectFit: 'cover',
+            transform: 'scaleX(1)' // ensure no mirror; change to 'scaleX(-1)' if device mirrors
           }}
-          playsInline
-          muted
         />
         
         {/* Scanning overlay */}
@@ -226,6 +414,19 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
       {/* Hidden canvas for image processing */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
+      {/* Optional visible debug canvas */}
+      {debugEnabled && (
+        <div style={{
+          marginTop: '8px',
+          background: '#111827',
+          padding: '8px',
+          borderRadius: '8px'
+        }}>
+          <div style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 6 }}>Processed frame preview</div>
+          <canvas ref={debugCanvasRef} style={{ maxWidth: 320, width: '100%', borderRadius: 6, border: '1px solid #374151' }} />
+        </div>
+      )}
+
       {/* Controls */}
       <div style={{
         display: 'flex',
@@ -234,32 +435,21 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
         justifyContent: 'center'
       }}>
         <button
-          onClick={handleManualInput}
-          style={{
-            padding: '12px 20px',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '600'
-          }}
-        >
-          📝 Enter URL Manually
-        </button>
-        
-        <button
           onClick={onClose}
           style={{
-            padding: '12px 20px',
+            padding: '16px 32px',
             background: '#dc2626',
             color: 'white',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '14px'
+            fontSize: '16px',
+            fontWeight: '600',
+            boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+            transition: 'all 0.2s ease'
           }}
+          onMouseOver={(e) => e.target.style.background = '#b91c1c'}
+          onMouseOut={(e) => e.target.style.background = '#dc2626'}
         >
           Close Scanner
         </button>
@@ -274,8 +464,7 @@ const QrScanner = ({ onScanSuccess, onClose, visible }) => {
         maxWidth: '300px'
       }}>
         <p style={{ margin: 0 }}>
-          Position the QR code within the blue frame. 
-          If scanning doesn't work, use "Enter URL Manually".
+          Position the QR code within the blue frame and hold steady.
         </p>
       </div>
     </div>
