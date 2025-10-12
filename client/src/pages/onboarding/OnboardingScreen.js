@@ -41,13 +41,19 @@ const OnboardingScreen = () => {
     } else {
       // Mark onboarding as completed
       localStorage.setItem('hasSeenOnboarding', 'true');
-      navigate('/stadium-selection');
+      // Go to home page (users can browse without signing in)
+      // Preserve query parameters from QR code
+      const search = window.location.search;
+      navigate(`/home${search}`);
     }
   };
 
   const handleSkip = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
-    navigate('/stadium-selection');
+    // Go to home page (users can browse without signing in)
+    // Preserve query parameters from QR code
+    const search = window.location.search;
+    navigate(`/home${search}`);
   };
 
   const currentStepData = onboardingSteps[currentStep];

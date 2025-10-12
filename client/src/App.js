@@ -5,6 +5,7 @@ import './styles/rtl.css';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';
 import { seatStorage, userStorage } from './utils/storage';
+import LogRocket from 'logrocket';
 
 // Import all screens
 import SplashScreen from './pages/splash/SplashScreen';
@@ -35,16 +36,42 @@ import FeedbackScreen from './pages/settings/FeedbackScreen';
 import ReportProblemScreen from './pages/settings/ReportProblemScreen';
 import LanguageScreen from './pages/settings/LanguageScreen';
 
-// Component to redirect root to home while preserving query params
+// Component to redirect root to onboarding or home based on auth status
 const RootRedirect = () => {
   // Use window.location.search instead of useLocation() to get query params
-  // because useLocation() might not have them on initial render
   const search = window.location.search;
+  const isLoggedIn = localStorage.getItem('userToken');
+  const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+  
   console.log('🔀 [REDIRECT] window.location.search:', search);
-  console.log('🔀 [REDIRECT] window.location.href:', window.location.href);
-  console.log('🔀 [REDIRECT] Redirecting to:', `/home${search}`);
+  console.log('🔀 [REDIRECT] isLoggedIn:', !!isLoggedIn);
+  console.log('🔀 [REDIRECT] hasSeenOnboarding:', !!hasSeenOnboarding);
+  
+  // If logged in, always go to home with query params
+  if (isLoggedIn) {
+    console.log('🔀 [REDIRECT] Logged in, redirecting to:', `/home${search}`);
+    return <Navigate to={`/home${search}`} replace />;
+  }
+  
+  // If not logged in AND hasn't seen onboarding, show onboarding first
+  if (!hasSeenOnboarding) {
+    return <Navigate to={`/onboarding${search}`} replace />;
+  }
+  
+  // If not logged in but has seen onboarding, go to home (let them browse)
+  console.log('🔀 [REDIRECT] Not logged in but seen onboarding, redirecting to home');
   return <Navigate to={`/home${search}`} replace />;
 };
+
+// Initialize LogRocket
+// try {
+  // LogRocket.init('cvlyge/fanmunch');
+//   console.log('📊 [LogRocket] Successfully initialized');
+//   console.log('📊 [LogRocket] Environment:', process.env.NODE_ENV);
+//   console.log('📊 [LogRocket] Hostname:', window.location.hostname);
+// } catch (error) {
+//   console.error('📊 [LogRocket] Failed to initialize:', error);
+// }
 
 function App() {
   // Parse QR parameters on first load and store seat info
@@ -57,7 +84,7 @@ function App() {
           row: params.get('row') || '',
           seatNo: params.get('seat') || params.get('seatNo') || '',
           section: params.get('section') || '',
-          sectionId: params.get('sectionId') || '', // Added sectionId support
+          sectionId: params.get('sectionId') || '',
           seatDetails: params.get('details') || params.get('seatDetails') || '',
           area: params.get('area') || '',
           entrance: params.get('entrance') || params.get('gate') || '',
