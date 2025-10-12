@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -7,6 +7,7 @@ import QRCode from 'react-qr-code';
 import './OrderTrackScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle, MdPhone } from 'react-icons/md';
+import { cartStorage } from '../../utils/storage';
 
 const baseSteps = [
   { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
@@ -30,6 +31,30 @@ export default function OrderTrackScreen() {
   useEffect(() => {
     try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'auto' }); } catch (_) {}
   }, [orderId]);
+
+  // Handle back button - clear cart and go to home
+  const handleBackButton = useCallback(() => {
+    try {
+      // Clear cart to prevent accidental re-ordering
+      cartStorage.clearCart();
+      console.log('🛒 Cart cleared after order completion');
+    } catch (e) {
+      console.warn('Failed to clear cart:', e);
+    }
+    // Navigate to home page, not back to order confirmation
+    navigate('/home', { replace: true });
+  }, [navigate]);
+
+  // Prevent browser back button from going to order confirmation
+  useEffect(() => {
+    const handlePopState = (e) => {
+      e.preventDefault();
+      handleBackButton();
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [handleBackButton]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -106,7 +131,7 @@ export default function OrderTrackScreen() {
   return (
     <div className="order-track-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="hero">
-        <button className="back-btn" aria-label={t('common.back')} onClick={() => navigate(-1)}>
+        <button className="back-btn" aria-label={t('common.back')} onClick={handleBackButton}>
           {isRTL ? <MdArrowForward /> : <MdArrowBack />}
         </button>
         <div className="hero-title">{t('track.order')}</div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cartUtils } from '../../utils/cartUtils';
-import { userStorage, stadiumStorage, seatStorage, STORAGE_KEYS } from '../../utils/storage';
+import { userStorage, stadiumStorage, seatStorage, cartStorage, STORAGE_KEYS } from '../../utils/storage';
 import { Order } from '../../models/Order';
 import orderRepository from '../../repositories/orderRepository';
 import { showToast } from '../../components/toast/ToastContainer';
@@ -751,6 +751,14 @@ const OrderConfirmScreen = () => {
       const msg = t('order.order_placed');
       showToast(`${msg} ${t('order.order_id')}: ${createdOrder.orderId}`, 'success', 4000);
 
+      // Clear cart after successful order
+      try {
+        cartStorage.clearCart();
+        console.log('🛒 Cart cleared after successful order');
+      } catch (e) {
+        console.warn('Failed to clear cart:', e);
+      }
+
       // Navigate to order tracking screen after a short delay
       console.log('Order Doc ID:', createdOrder.id);
       setTimeout(() => navigate(`/order/${createdOrder.id}`, { replace: true }), 1200);
@@ -834,6 +842,14 @@ const OrderConfirmScreen = () => {
         setIsFormValid(false);
         setTicketImage(null);
         setEditingPhone(false);
+
+        // Clear cart after successful order
+        try {
+          cartStorage.clearCart();
+          console.log('🛒 Cart cleared after successful order (Apple/Google Pay)');
+        } catch (e) {
+          console.warn('Failed to clear cart:', e);
+        }
 
         // Notify & navigate
         const msg = 'Order placed successfully!';

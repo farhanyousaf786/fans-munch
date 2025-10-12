@@ -22,7 +22,8 @@ const SeatForm = ({ formData, errors, onChange, sectionsOptions = [], onScanQr }
     <div className="seat-info-section">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h2 className="section-title" style={{ margin: 0 }}>{t('order.seat_info_title')}</h2>
-        <button
+        {/* Temporarily commented out - Scan QR button */}
+        {/* <button
           type="button"
           onClick={onScanQr}
           style={{
@@ -43,7 +44,7 @@ const SeatForm = ({ formData, errors, onChange, sectionsOptions = [], onScanQr }
           onMouseOut={(e) => e.target.style.background = '#3b82f6'}
         >
           📱 Scan QR
-        </button>
+        </button> */}
       </div>
 
       {/* First row: Seat Number & Stand Number */}
