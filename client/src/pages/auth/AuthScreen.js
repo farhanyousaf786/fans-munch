@@ -6,7 +6,6 @@ import { userStorage, stadiumStorage, settingsStorage } from '../../utils/storag
 import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import Footer from '../../components/footer/Footer';
 
 const AuthScreen = () => {
   const { t, lang, setLang } = useTranslation();
@@ -331,7 +330,6 @@ const AuthScreen = () => {
           </p>
         </div>
       </div>
-      <Footer />
 
     </div>
   );

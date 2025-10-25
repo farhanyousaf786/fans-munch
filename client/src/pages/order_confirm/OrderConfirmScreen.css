@@ -17,6 +17,7 @@
 .order-confirm-container {
   flex: 1;
   padding: 20px;
+  padding-bottom: 120px; /* Extra space for bottom nav + footer */
   max-width: 600px;
   margin: 0 auto;
   width: 100%;
@@ -109,8 +110,8 @@
 .seat-info-section .field-input { text-align: left; }
 
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -481,5 +482,21 @@ body[lang="he"] .field-input {
   .payment-method-section,
   .order-summary-section {
     padding: 16px;
+  }
+
+  /* Keep 2 columns on mobile for seat form */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .field-input {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .field-label {
+    font-size: 13px;
   }
 }

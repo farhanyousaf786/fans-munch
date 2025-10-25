@@ -71,16 +71,21 @@ export async function placeOrderAfterPayment({
   if (!stadiumData) throw new Error('Stadium data not found. Please select a stadium.');
   if (!cartItems || cartItems.length === 0) throw new Error('Cart is empty. Please add items to cart.');
 
+  console.log('🔍 [PLACE ORDER] formData received:', formData);
+  
   const seatInfo = {
     row: formData.row,
     seatNo: formData.seatNo,
     section: formData.section,
+    sectionId: formData.sectionId,
     seatDetails: formData.seatDetails,
     area: formData.area,
     entrance: formData.entrance,
     stand: formData.stand,
     ticketImage: ticketImage || ''
   };
+  
+  console.log('🔍 [PLACE ORDER] seatInfo created:', seatInfo);
 
   // Recompute delivery fee from cart (2 ILS per item)
   const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;

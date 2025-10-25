@@ -31,7 +31,11 @@ const OrderConfirmScreen = () => {
     row: '',
     seatNo: '',
     entrance: '',
-    stand: 'Main' // Default to Main stand
+    stand: 'Main', // Default to Main stand
+    section: '',
+    sectionId: '',
+    seatDetails: '',
+    area: ''
   });
   
   // Order state
@@ -708,6 +712,10 @@ const OrderConfirmScreen = () => {
         seatDetails: pickTrimCard(formData.seatDetails, savedSeatForCard.seatDetails),
         area: pickTrimCard(formData.area, savedSeatForCard.area),
       };
+      
+      console.log('🔍 [ORDER DEBUG] formData:', formData);
+      console.log('🔍 [ORDER DEBUG] savedSeatForCard:', savedSeatForCard);
+      console.log('🔍 [ORDER DEBUG] effectiveFormForCard:', effectiveFormForCard);
 
       // Capture the freshest phone value at the moment of placing the order
       let effectivePhoneForCard = customerPhone;
@@ -741,7 +749,7 @@ const OrderConfirmScreen = () => {
 
       // 4) Cleanup and reset UI (cart/tip already cleared in helper)
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-      setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
+      setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
       setErrors({});
       setShowErrors(false);
       setIsFormValid(false);
@@ -836,7 +844,7 @@ const OrderConfirmScreen = () => {
 
         // Cleanup form inputs and notify & navigate
         try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-        setFormData({ row: '', seatNo: '', section: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
+        setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
         setErrors({});
         setShowErrors(false);
         setIsFormValid(false);

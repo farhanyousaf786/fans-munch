@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import './App.css';
-import './styles/rtl.css';
-import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';
+import { ThemeProvider } from './context/ThemeContext';
 import { seatStorage, userStorage } from './utils/storage';
 import LogRocket from 'logrocket';
 
@@ -35,6 +33,19 @@ import PrivacyPolicyScreen from './pages/settings/PrivacyPolicyScreen';
 import FeedbackScreen from './pages/settings/FeedbackScreen';
 import ReportProblemScreen from './pages/settings/ReportProblemScreen';
 import LanguageScreen from './pages/settings/LanguageScreen';
+import HelpScreen from './pages/settings/HelpScreen';
+
+// Component to conditionally show footer
+const ConditionalFooter = () => {
+  const location = useLocation();
+  const hideFooterPaths = ['/', '/onboarding', '/auth', '/forgot-password', '/splash'];
+  
+  if (hideFooterPaths.includes(location.pathname)) {
+    return null;
+  }
+  
+  return <Footer />;
+};
 
 // Component to redirect root to onboarding or home based on auth status
 const RootRedirect = () => {
@@ -64,14 +75,14 @@ const RootRedirect = () => {
 };
 
 // Initialize LogRocket
-// try {
+try {
   // LogRocket.init('cvlyge/fanmunch');
-//   console.log('📊 [LogRocket] Successfully initialized');
-//   console.log('📊 [LogRocket] Environment:', process.env.NODE_ENV);
-//   console.log('📊 [LogRocket] Hostname:', window.location.hostname);
-// } catch (error) {
-//   console.error('📊 [LogRocket] Failed to initialize:', error);
-// }
+  console.log('📊 [LogRocket] Successfully initialized');
+  console.log('📊 [LogRocket] Environment:', process.env.NODE_ENV);
+  console.log('📊 [LogRocket] Hostname:', window.location.hostname);
+} catch (error) {
+  console.error('📊 [LogRocket] Failed to initialize:', error);
+}
 
 function App() {
   // Parse QR parameters on first load and store seat info
@@ -100,6 +111,23 @@ function App() {
       }
     } catch (e) {
       console.log('QR param parse skipped:', e?.message);
+    }
+  }, []);
+
+  // Identify user in LogRocket when user data is available
+  useEffect(() => {
+    try {
+      const userData = userStorage.getUserData();
+      if (userData && userData.id) {
+        LogRocket.identify(userData.id, {
+          name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'Unknown',
+          email: userData.email || '',
+          phone: userData.phone || ''
+        });
+        console.log('📊 [LogRocket] User identified:', userData.id);
+      }
+    } catch (error) {
+      console.error('📊 [LogRocket] Failed to identify user:', error);
     }
   }, []);
 
@@ -139,6 +167,7 @@ function App() {
             <Route path="/settings/feedback" element={<FeedbackScreen />} />
             <Route path="/settings/report" element={<ReportProblemScreen />} />
             <Route path="/settings/language" element={<LanguageScreen />} />
+            <Route path="/settings/help" element={<HelpScreen />} />
             
             {/* Food Detail Route */}
             <Route path="/food/:foodId" element={<FoodDetailScreen />} />
@@ -159,7 +188,8 @@ function App() {
             {/* Bottom Navigation - Shows on main app screens */}
             <BottomNavigation />
 
-            {/* Global footer */}
+            {/* Global footer - Conditionally shown */}
+            <ConditionalFooter />
 
             {/* Toast Container - Shows cart notifications */}
             <ToastContainer />

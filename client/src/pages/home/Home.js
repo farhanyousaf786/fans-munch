@@ -81,7 +81,7 @@ function Home() {
       let result;
       
       if (selectedStadium && selectedStadium.id) {
-        result = await foodRepository.getStadiumMenu(selectedStadium.id, 20); // Load more items for better search
+        result = await foodRepository.getStadiumMenu(selectedStadium.id, 200); // Match menu page limit
       } else {
         result = await foodRepository.getAllMenuItems();
       }

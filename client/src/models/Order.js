@@ -213,7 +213,7 @@ export class Order {
       deliveryTime: this.deliveryTime
         ? (this.deliveryTime instanceof Date ? Timestamp.fromDate(this.deliveryTime) : (typeof this.deliveryTime?.toDate === 'function' ? this.deliveryTime : Timestamp.fromDate(new Date(this.deliveryTime))))
         : null,
-      seatInfo: this.seatInfo,
+      seatInfo: this.seatInfo || {},
       // Ensure GeoPoint for locations if latitude/longitude provided
       customerLocation: (() => {
         const loc = this.customerLocation;
@@ -236,7 +236,11 @@ export class Order {
       ,
       platform: (typeof this.platform === 'string' && this.platform.trim()) ? this.platform : 'Web'
     };
-    try { console.log('[Order.toMap] Result payload:', result); } catch (_) {}
+    try { 
+      console.log('[Order.toMap] Result payload:', result);
+      console.log('[Order.toMap] seatInfo specifically:', result.seatInfo);
+      console.log('[Order.toMap] seatInfo.sectionId:', result.seatInfo?.sectionId);
+    } catch (_) {}
     return result;
   }
 
@@ -309,6 +313,7 @@ export class Order {
         row: seatInfo.row || '',
         seatNo: seatInfo.seatNo || '',
         section: seatInfo.section || '',
+        sectionId: seatInfo.sectionId || '',
         seatDetails: seatInfo.seatDetails || '',
         area: seatInfo.area || '',
         entrance: seatInfo.entrance || '',
