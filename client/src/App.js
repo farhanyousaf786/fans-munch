@@ -69,7 +69,6 @@ const RootRedirect = () => {
     return <Navigate to={`/onboarding${search}`} replace />;
   }
   
-  // If not logged in but has seen onboarding, go to home (let them browse)
   console.log('🔀 [REDIRECT] Not logged in but seen onboarding, redirecting to home');
   return <Navigate to={`/home${search}`} replace />;
 };
