@@ -462,3 +462,123 @@
     font-size: 1.4rem;
   }
 }
+
+/* Social Authentication Styles */
+.social-auth-section {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+  transform: translateY(-50%);
+}
+
+.divider-text {
+  background: white;
+  padding: 0 20px;
+  color: #555;
+  font-size: 0.95rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.social-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.social-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  background: white;
+  color: var(--text-color);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 52px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.social-button:hover:not(:disabled) {
+  border-color: #ccc;
+  background: #f9f9f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.social-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.social-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.google-button:hover:not(:disabled) {
+  border-color: #4285f4;
+  background: #f8f9ff;
+}
+
+.full-width {
+  width: 100%;
+  flex: none;
+}
+
+/* Apple button styles - commented out for now */
+/* .apple-button:hover:not(:disabled) {
+  border-color: #000;
+  background: #f5f5f5;
+}
+
+.apple-button svg {
+  color: #000;
+} */
+
+/* RTL Support for Social Buttons */
+[dir="rtl"] .social-buttons {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .social-button {
+  flex-direction: row-reverse;
+}
+
+/* Mobile Responsive for Social Buttons */
+@media (max-width: 480px) {
+  .social-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .social-button {
+    width: 100%;
+  }
+}

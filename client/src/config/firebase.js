@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported as isAnalyticsSupported } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
@@ -41,6 +41,15 @@ let analytics = null;
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Initialize social auth providers
+const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
+
+const appleProvider = new OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
 
 // Initialize Firebase Cloud Messaging lazily to avoid startup errors
 let messaging = null;
@@ -122,4 +131,4 @@ export const onMessageListener = () => {
 // Export messaging getter function for backwards compatibility
 export const getMessagingInstance = () => initializeMessaging();
 
-export { app, analytics, auth, db, initializeMessaging };
+export { app, analytics, auth, db, initializeMessaging, googleProvider, appleProvider };

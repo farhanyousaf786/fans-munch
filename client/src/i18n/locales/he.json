@@ -29,7 +29,8 @@
   }
   ,
   "common": {
-    "edit": "ערוך"
+    "edit": "ערוך",
+    "not_now": "לא עכשיו"
   }
   ,
   "cart": {
@@ -52,7 +53,11 @@
     "swipe_add_to_cart": "החלק להוספה לעגלה",
     "add_to_cart_short": "הוסף לסל",
     "not_found": "המנה לא נמצאה",
-    "try_again": "נסה שוב"
+    "try_again": "נסה שוב",
+    "combo_includes": "הקומבו כולל:",
+    "individual_items_total": "סה\"כ פריטים בודדים:",
+    "combo_price": "מחיר קומבו:",
+    "you_save": "חיסכון שלך:"
   }
   ,
   "tip": {
@@ -95,10 +100,13 @@
     "subtotal": "סכום ביניים",
     "tip": "טיפ",
     "total": "סה\"כ",
+    "place_order": "בצע הזמנה",
+    "phone_contact_title": "טלפון איש קשר למשלוח",
+    "phone_contact_hint": "מספר זה ישמש את איש המשלוח אם יזדקק לעזרה במציאתך.",
+    "phone_input_ph": "+972501234567",
 
     "processing": "מעבד...",
     "place_order_with_total": "בצע הזמנה - {total}",
-    "place_order": "בצע הזמנה",
     "card_payment_title": "תשלום בכרטיס",
     "confirm_card_payment": "אשר תשלום בכרטיס",
 
@@ -126,9 +134,6 @@
     "location_required_desc": "אנא אפשרו גישה למיקום כדי שנוכל לעקוב אחר מיקום המושב שלכם למשלוח",
     "enable_location": "אפשר מיקום"
     ,
-    "phone_contact_title": "טלפון ליצירת קשר למשלוח",
-    "phone_contact_hint": "מספר זה ישמש את השליח במקרה שיזדקק לעזרה בלמצוא אתכם.",
-    "phone_input_ph": "+972501234567",
     "err_phone_required": "נא להזין מספר טלפון תקין (ספרות, עם + אופציונלי)."
   }
   ,
@@ -145,6 +150,8 @@
     "confirm_password_ph": "הכנס שוב את הסיסמה",
     "forgot_password": "שכחת סיסמה?",
     "sign_in": "התחבר",
+    "sign_in_required": "נדרשת התחברות",
+    "sign_in_required_message": "עליך להתחבר כדי לבצע הזמנה. צור חשבון או התחבר כדי להמשיך לתשלום.",
     "create_account": "הירשם",
     "toggle_no_account": "אין לך חשבון? ",
     "toggle_register_now": "הירשם עכשיו",
@@ -161,7 +168,9 @@
     "send_reset_link": "שלח קישור לאיפוס",
     "reset_sent": "אם קיים חשבון עבור אימייל זה, נשלח קישור לאיפוס סיסמה. אנא בדוק גם את תיקיית הספאם/דואר זבל.",
     "reset_failed": "שליחת הקישור נכשלה. אנא נסה שוב.",
-    "back_to_login": "חזרה להתחברות"
+    "back_to_login": "חזרה להתחברות",
+    "or_sign_in_email": "או התחבר עם אימייל",
+    "or_sign_up_email": "או הירשם עם אימייל"
   }
   ,
   "onboarding": {

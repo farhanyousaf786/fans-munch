@@ -5,6 +5,19 @@
   min-height: 100vh;
   background-color: #ffffff;
   position: relative;
+  animation: slideFromTop 0.3s ease-out;
+}
+
+/* Slide from top animation */
+@keyframes slideFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Extra safety: tiny white overlay at content top to mask any subpixel seam */

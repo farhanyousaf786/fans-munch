@@ -1,0 +1,208 @@
+/* Combo Items List Styles */
+.combo-price-comparison {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.price-row:last-child {
+  margin-bottom: 0;
+}
+
+.price-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.price-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.individual-price {
+  color: #666;
+  text-decoration: line-through;
+}
+
+.combo-price {
+  color: #3D70FF;
+}
+
+.savings {
+  border-top: 1px solid #e9ecef;
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.savings-amount {
+  color: #28a745;
+}
+
+.combo-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.combo-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.combo-item.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.combo-item.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.combo-item-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.combo-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.combo-item-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9ecef;
+  font-size: 24px;
+  color: #6c757d;
+}
+
+.combo-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.combo-item-name {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+}
+
+.combo-item-description {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.combo-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.combo-item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3D70FF;
+}
+
+.combo-item-time {
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.combo-item-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #3D70FF;
+  margin-left: auto;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.combo-item.clickable:hover .combo-item-arrow {
+  opacity: 1;
+}
+
+.combo-note {
+  margin-top: 8px;
+  padding: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+}
+
+.combo-note p {
+  margin: 0;
+  font-size: 13px;
+  color: #856404;
+  text-align: center;
+  font-style: italic;
+}
+
+/* RTL Support */
+[dir="rtl"] .combo-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .combo-item-meta {
+  flex-direction: row-reverse;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .combo-item {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .combo-item-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .combo-item-name {
+    font-size: 14px;
+  }
+  
+  .combo-item-description {
+    font-size: 13px;
+  }
+}

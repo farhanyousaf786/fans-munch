@@ -29,7 +29,8 @@
   }
   ,
   "common": {
-    "edit": "Edit"
+    "edit": "Edit",
+    "not_now": "Not now"
   }
   ,
   "cart": {
@@ -51,7 +52,11 @@
     "orders": "orders",
     "swipe_add_to_cart": "Swipe to add to Cart",
     "not_found": "Food not found",
-    "try_again": "Try Again"
+    "try_again": "Try Again",
+    "combo_includes": "This combo includes:",
+    "individual_items_total": "Individual items total:",
+    "combo_price": "Combo price:",
+    "you_save": "You save:"
   }
   ,
   "tip": {
@@ -89,15 +94,15 @@
     "area_ph": "Enter area",
     "additional_details": "Additional Details",
     "additional_details_ph": "Add text",
-
     "summary_title": "Order Summary",
     "subtotal": "Subtotal",
     "tip": "Tip",
     "total": "Total",
-
-    "processing": "Processing...",
-    "place_order_with_total": "Place Order - {total}",
     "place_order": "Place Order",
+    "phone_contact_title": "Delivery Contact Phone",
+    "phone_contact_hint": "This number will be used by the delivery person if they need help finding you.",
+    "phone_input_ph": "+972501234567",
+    "place_order_with_total": "Place Order - {total}",
     "card_payment_title": "Card Payment",
     "confirm_card_payment": "Confirm Card Payment",
 
@@ -131,9 +136,6 @@
     "location_required": "Location Access Required",
     "location_required_desc": "Please enable location access so we can track your seat location for delivery",
     "enable_location": "Enable Location",
-    "phone_contact_title": "Delivery contact phone",
-    "phone_contact_hint": "This number will be used by the delivery person if they need help finding you.",
-    "phone_input_ph": "+972501234567",
     "err_phone_required": "Please enter a valid phone number (digits, with optional +)."
   }
   ,
@@ -151,9 +153,11 @@
     "forgot_password": "Forgot Password?",
     "back_to_login": "Back to Login",
     "sign_in": "Sign In",
+    "sign_in_required": "Sign in required",
+    "sign_in_required_message": "You need to sign in to place an order. Create an account or sign in to continue to checkout.",
     "create_account": "Create Account",
-    "toggle_no_account": "Don't have an account? ",
-    "toggle_register_now": "Register Now",
+    "already_have_account": "Already have an account?",
+    "dont_have_account": "Don't have an account?",
     "toggle_have_account": "Already have an account? ",
     "toggle_sign_in": "Sign In",
     "please_wait": "Please wait...",
@@ -166,7 +170,9 @@
     "reset_instructions": "Enter your email and we'll send you a password reset link.",
     "send_reset_link": "Send Reset Link",
     "reset_sent": "If an account exists for this email, a reset link has been sent. Please also check your Spam/Junk folder.",
-    "reset_failed": "Failed to send reset link. Please try again."
+    "reset_failed": "Failed to send reset link. Please try again.",
+    "or_sign_in_email": "Or sign in with email",
+    "or_sign_up_email": "Or sign up with email"
   }
   ,
   "onboarding": {

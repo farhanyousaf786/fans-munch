@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from '../../../i18n/i18n';
 
 const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, percentage: 0 }, finalTotal = 0 }) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  
+  // Force re-render when language changes
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  
+  useEffect(() => {
+    console.log('🌐 OrderSummary language:', lang);
+    console.log('🌐 Delivery translation:', t('cart.delivery'));
+    forceUpdate();
+  }, [lang, t]);
   const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="order-summary-section">

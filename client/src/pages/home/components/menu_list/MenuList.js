@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccessTime } from 'react-icons/md';
 import './MenuList.css';
 import { useTranslation } from '../../../../i18n/i18n';
+import { useCombo } from '../../../../contexts/ComboContext';
 
 // Local asset images to use as random placeholders for food items
 const assetPlaceholders = [
@@ -25,7 +26,16 @@ function getPlaceholderByKey(key) {
 function MenuList({ menuItems = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
+  const { fetchComboItems, getCachedComboItems } = useCombo();
   const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+
+  // Preload combo items for all combos in the menu
+  useEffect(() => {
+    const combos = menuItems.filter(item => item.isCombo && item.comboItemIds && item.comboItemIds.length > 0);
+    combos.forEach(combo => {
+      fetchComboItems(combo.id, combo.comboItemIds);
+    });
+  }, [menuItems, fetchComboItems]);
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -105,18 +115,42 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
           {menuItems.map((food) => (
             <div 
               key={food.id} 
-              className="menu-card-grid"
+              className={`menu-card-grid ${food.isCombo ? 'combo-card' : ''}`}
               onClick={() => handleFoodClick(food)}
             >
               {/* Food Image - 120px height like Flutter app */}
               <div className="menu-image-grid">
-                <img 
-                  src={food.getPrimaryImage() || getPlaceholderByKey(food.id || food.name)} 
-                  alt={food.name}
-                  onError={(e) => {
-                    e.currentTarget.src = getPlaceholderByKey(food.id || food.name);
-                  }}
-                />
+                {food.isCombo ? (
+                  // Combo: Show 2 images side by side using actual combo items
+                  <div className="combo-images">
+                    {(() => {
+                      const cachedItems = getCachedComboItems(food.comboItemIds);
+                      const comboImages = food.getComboImages(cachedItems);
+                      return comboImages.map((imageUrl, index) => (
+                        <img 
+                          key={index}
+                          src={imageUrl || getPlaceholderByKey(food.id || food.name)} 
+                          alt={`${food.name} - Item ${index + 1}`}
+                          className="combo-image"
+                          onError={(e) => {
+                            e.currentTarget.src = getPlaceholderByKey(food.id || food.name);
+                          }}
+                        />
+                      ));
+                    })()}
+                    {/* Combo badge */}
+                    <div className="combo-badge">COMBO</div>
+                  </div>
+                ) : (
+                  // Regular item: Single image
+                  <img 
+                    src={food.getPrimaryImage() || getPlaceholderByKey(food.id || food.name)} 
+                    alt={food.name}
+                    onError={(e) => {
+                      e.currentTarget.src = getPlaceholderByKey(food.id || food.name);
+                    }}
+                  />
+                )}
                 
                 {/* Food type badges */}
                 {food.getFoodTypeBadges().length > 0 && (

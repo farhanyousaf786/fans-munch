@@ -12,10 +12,11 @@ import {
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   updateProfile
 } from 'firebase/auth';
-import { db, auth } from '../config/firebase';
+import { db, auth, googleProvider, appleProvider } from '../config/firebase';
 import { User } from '../models/User';
 
 class UserRepository {
@@ -138,6 +139,120 @@ class UserRepository {
   }
 
   /**
+   * Sign in with Google
+   * @returns {Promise<User>}
+   */
+  async signInWithGoogle() {
+    try {
+      console.log('🔑 Signing in with Google...');
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+      
+      // Extract user info from Google profile
+      const userData = {
+        email: firebaseUser.email || '',
+        firstName: firebaseUser.displayName?.split(' ')[0] || '',
+        lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+        phone: firebaseUser.phoneNumber || '', // Usually empty for Google
+        photoURL: firebaseUser.photoURL || ''
+      };
+      
+      // Check if user already exists in Firestore
+      const existingUser = await this.getUserById(firebaseUser.uid);
+      
+      if (existingUser) {
+        console.log('✅ Existing Google user found');
+        // Update last active timestamp
+        await this.updateLastActive(existingUser.id);
+        return existingUser;
+      } else {
+        console.log('📝 Creating new user from Google profile');
+        // Create new user in Firestore with Google data
+        const newUser = new User({
+          id: firebaseUser.uid,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone, // Will be empty string if not provided
+          photoURL: userData.photoURL,
+          fcmToken: '',
+          favoriteFoods: [],
+          favoriteRestaurants: [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isActive: true,
+          type: 'customer',
+          authProvider: 'google'
+        });
+        
+        await setDoc(doc(db, this.collectionName, firebaseUser.uid), newUser.toMap());
+        console.log('✅ Google user created successfully');
+        return newUser;
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      throw new Error(this.getAuthErrorMessage(error.code) || 'Google sign-in failed');
+    }
+  }
+
+  /**
+   * Sign in with Apple
+   * @returns {Promise<User>}
+   */
+  async signInWithApple() {
+    try {
+      console.log('🔑 Signing in with Apple...');
+      const result = await signInWithPopup(auth, appleProvider);
+      const firebaseUser = result.user;
+      
+      // Extract user info from Apple profile (limited data)
+      const userData = {
+        email: firebaseUser.email || '',
+        firstName: firebaseUser.displayName?.split(' ')[0] || '',
+        lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+        phone: firebaseUser.phoneNumber || '', // Usually empty for Apple
+        photoURL: firebaseUser.photoURL || ''
+      };
+      
+      // Check if user already exists in Firestore
+      const existingUser = await this.getUserById(firebaseUser.uid);
+      
+      if (existingUser) {
+        console.log('✅ Existing Apple user found');
+        // Update last active timestamp
+        await this.updateLastActive(existingUser.id);
+        return existingUser;
+      } else {
+        console.log('📝 Creating new user from Apple profile');
+        // Create new user in Firestore with Apple data
+        const newUser = new User({
+          id: firebaseUser.uid,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone, // Will be empty string if not provided
+          photoURL: userData.photoURL,
+          fcmToken: '',
+          favoriteFoods: [],
+          favoriteRestaurants: [],
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isActive: true,
+          type: 'customer',
+          authProvider: 'apple'
+        });
+        
+        await setDoc(doc(db, this.collectionName, firebaseUser.uid), newUser.toMap());
+        console.log('✅ Apple user created successfully');
+        return newUser;
+      }
+    } catch (error) {
+      console.error('Apple sign-in error:', error);
+      throw new Error(this.getAuthErrorMessage(error.code) || 'Apple sign-in failed');
+    }
+  }
+
+  /**
    * Get user by ID
    * @param {string} userId 
    * @returns {Promise<User|null>}
@@ -256,16 +371,15 @@ class UserRepository {
       }
     } catch (error) {
       console.error('Error adding favorite restaurant:', error);
-      throw new Error('Failed to add to favorites. Please try again.');
     }
   }
 
   /**
-   * Get user-friendly error messages
-   * @param {string} errorCode 
+   * Handle Firebase Auth errors and return user-friendly messages
+   * @param {string} errorCode - Firebase error code
    * @returns {string}
    */
-  getErrorMessage(errorCode) {
+  getAuthErrorMessage(errorCode) {
     const errorMessages = {
       'auth/email-already-in-use': 'This email is already registered. Please sign in instead.',
       'auth/invalid-email': 'Please enter a valid email address.',

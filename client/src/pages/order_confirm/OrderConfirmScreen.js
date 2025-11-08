@@ -21,7 +21,9 @@ import QrScanner from '../../components/qr-scanner/QrScanner';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  console.log('🌐 OrderConfirmScreen language:', lang);
+  console.log('🌐 Phone title translation:', t('order.phone_contact_title'));
   const paymentRef = useRef(null);
   const phoneInputRef = useRef(null);
   const [stripeIntent, setStripeIntent] = useState(null); // { id, clientSecret, mode }
@@ -71,9 +73,20 @@ const OrderConfirmScreen = () => {
     
     // Do not show validation errors on initial load; we'll validate on change and on submit
     setOrderTotal(cartTotal);
-    // Delivery fee = 2 ILS per item (sum of quantities)
-    const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
-    const fee = totalQty * 2;
+    // Delivery fee = 2 ILS per regular item, 4 ILS per combo item
+    console.log('🛒 Cart items for fee calculation:', cartItems);
+    const fee = Array.isArray(cartItems) ? cartItems.reduce((s, it) => {
+      // Check if item is combo by multiple methods
+      const isComboItem = it.isCombo === true || 
+                         (it.name && it.name.includes('+')) || 
+                         (it.category && it.category.toLowerCase() === 'combo') ||
+                         (it.comboItemIds && it.comboItemIds.length > 0);
+      
+      const itemFee = isComboItem ? 4 : 2;
+      console.log(`📦 Item: ${it.name}, isCombo: ${it.isCombo}, detectedCombo: ${isComboItem}, quantity: ${it.quantity}, fee: ${itemFee}`);
+      return s + (itemFee * (it.quantity || 0));
+    }, 0) : 0;
+    console.log('💰 Total delivery fee calculated:', fee);
     setDeliveryFee(fee);
     
     // Get tip data

@@ -6,6 +6,8 @@ import { userStorage, stadiumStorage, settingsStorage } from '../../utils/storag
 import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+import { FcGoogle } from 'react-icons/fc';
+// import { SiApple } from 'react-icons/si';
 
 const AuthScreen = () => {
   const { t, lang, setLang } = useTranslation();
@@ -155,6 +157,122 @@ const AuthScreen = () => {
     });
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      console.log('🔑 Google sign-in initiated...');
+      
+      // Sign in with Google
+      const user = await userRepository.signInWithGoogle();
+      
+      // Save user data and token to localStorage
+      userStorage.setUserData(user.toMap());
+      userStorage.setUserToken(`token_${user.id || Date.now()}`);
+
+      // Request FCM token and persist it
+      try {
+        const fcmToken = await requestNotificationPermission();
+        if (fcmToken) {
+          await userRepository.updateUserProfile(user.id, { fcmToken });
+          try { userStorage.setUserData({ ...user.toMap(), fcmToken }); } catch (_) {}
+        }
+      } catch (e) {
+        console.warn('[Auth] FCM token not saved (Google):', e?.message || e);
+      }
+      
+      console.log('✅ Google sign-in completed');
+      
+      // Handle redirect
+      const params = new URLSearchParams(window.location.search);
+      const nextParam = params.get('next');
+      let redirectTo = nextParam && nextParam.startsWith('/') ? nextParam : null;
+      if (!redirectTo) {
+        try {
+          const stored = localStorage.getItem('postLoginNext');
+          if (stored && stored.startsWith('/')) {
+            redirectTo = stored;
+          }
+        } catch (_) {}
+      }
+      
+      try { localStorage.removeItem('postLoginNext'); } catch (_) {}
+      
+      // Check if stadium is selected
+      const hasStadium = stadiumStorage.getSelectedStadium();
+      if (!hasStadium && (redirectTo === '/cart' || redirectTo === '/order/confirm' || redirectTo?.includes('/cart') || redirectTo?.includes('/order'))) {
+        try { localStorage.setItem('postStadiumNext', redirectTo); } catch (_) {}
+        navigate('/stadium-selection', { replace: true });
+        return;
+      }
+      
+      navigate(redirectTo || '/home', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // const handleAppleSignIn = async () => {
+  //   setLoading(true);
+  //   setError('');
+
+  //   try {
+  //     console.log('🔑 Apple sign-in initiated...');
+      
+  //     // Sign in with Apple
+  //     const user = await userRepository.signInWithApple();
+      
+  //     // Save user data and token to localStorage
+  //     userStorage.setUserData(user.toMap());
+  //     userStorage.setUserToken(`token_${user.id || Date.now()}`);
+
+  //     // Request FCM token and persist it
+  //     try {
+  //       const fcmToken = await requestNotificationPermission();
+  //       if (fcmToken) {
+  //         await userRepository.updateUserProfile(user.id, { fcmToken });
+  //         try { userStorage.setUserData({ ...user.toMap(), fcmToken }); } catch (_) {}
+  //       }
+  //     } catch (e) {
+  //       console.warn('[Auth] FCM token not saved (Apple):', e?.message || e);
+  //     }
+      
+  //     console.log('✅ Apple sign-in completed');
+      
+  //     // Handle redirect (same logic as Google)
+  //     const params = new URLSearchParams(window.location.search);
+  //     const nextParam = params.get('next');
+  //     let redirectTo = nextParam && nextParam.startsWith('/') ? nextParam : null;
+  //     if (!redirectTo) {
+  //       try {
+  //         const stored = localStorage.getItem('postLoginNext');
+  //         if (stored && stored.startsWith('/')) {
+  //           redirectTo = stored;
+  //         }
+  //       } catch (_) {}
+  //     }
+      
+  //     try { localStorage.removeItem('postLoginNext'); } catch (_) {}
+      
+  //     // Check if stadium is selected
+  //     const hasStadium = stadiumStorage.getSelectedStadium();
+  //     if (!hasStadium && (redirectTo === '/cart' || redirectTo === '/order/confirm' || redirectTo?.includes('/cart') || redirectTo?.includes('/order'))) {
+  //       try { localStorage.setItem('postStadiumNext', redirectTo); } catch (_) {}
+  //       navigate('/stadium-selection', { replace: true });
+  //       return;
+  //     }
+      
+  //     navigate(redirectTo || '/home', { replace: true });
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   return (
     <div className="auth-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Upper Section */}
@@ -184,9 +302,40 @@ const AuthScreen = () => {
       {/* Lower Section */}
       <div className="auth-container">
 
+        {/* Google Sign-In Button - Top Priority */}
+        <div className="social-auth-section">
+          <button 
+            type="button" 
+            className="social-button google-button full-width"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <FcGoogle size={20} />
+            <span>Continue with Google</span>
+          </button>
+          
+          {/* Apple Sign-In - Commented out for now */}
+          {/* <div className="social-buttons">
+            <button 
+              type="button" 
+              className="social-button apple-button"
+              onClick={handleAppleSignIn}
+              disabled={loading}
+            >
+              <SiApple size={20} />
+              <span>Apple</span>
+            </button>
+          </div> */}
+          
+          <div className="divider">
+            <span className="divider-text">
+              {isLogin ? t('auth.or_sign_in_email') || 'Or sign in with email' : t('auth.or_sign_up_email') || 'Or sign up with email'}
+            </span>
+          </div>
+        </div>
+
         {/* Form */}
         <form className="auth-form" onSubmit={handleSubmit}>
-
 
           {!isLogin && (
             <>

@@ -186,6 +186,41 @@ class FoodRepository {
     }
   }
 
+  // Get combo items by their IDs
+  async getComboItems(comboItemIds) {
+    try {
+      if (!comboItemIds || comboItemIds.length === 0) {
+        return { success: true, foods: [] };
+      }
+
+      console.log('🔍 Fetching combo items:', comboItemIds);
+      
+      const comboItems = [];
+      
+      // Fetch each combo item by ID
+      for (const itemId of comboItemIds) {
+        try {
+          const itemDocRef = doc(db, 'menuItems', itemId);
+          const itemDoc = await getDoc(itemDocRef);
+          
+          if (itemDoc.exists()) {
+            const food = Food.fromMap(itemDoc.id, itemDoc.data());
+            comboItems.push(food);
+          } else {
+            console.warn(`⚠️ Combo item not found: ${itemId}`);
+          }
+        } catch (err) {
+          console.error(`❌ Error fetching combo item ${itemId}:`, err);
+        }
+      }
+      
+      console.log(`✅ Fetched ${comboItems.length} combo items`);
+      return { success: true, foods: comboItems };
+    } catch (error) {
+      console.error('❌ Error fetching combo items:', error);
+      return { success: false, error: 'Failed to fetch combo items' };
+    }
+  }
 
 }
 

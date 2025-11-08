@@ -11,13 +11,15 @@ export class User {
     firstName = '',
     lastName = '',
     image = null,
+    photoURL = '',
     fcmToken = '',
     favoriteFoods = [],
     favoriteRestaurants = [],
     createdAt = new Date(),
     updatedAt = new Date(),
     isActive = true,
-    type = 'customer'
+    type = 'customer',
+    authProvider = 'email'
   } = {}) {
     this.id = id;
     this.email = email;
@@ -25,6 +27,7 @@ export class User {
     this.firstName = firstName;
     this.lastName = lastName;
     this.image = image;
+    this.photoURL = photoURL;
     this.fcmToken = fcmToken;
     this.favoriteFoods = favoriteFoods;
     this.favoriteRestaurants = favoriteRestaurants;
@@ -32,6 +35,7 @@ export class User {
     this.updatedAt = updatedAt;
     this.isActive = isActive;
     this.type = type;
+    this.authProvider = authProvider;
   }
 
   /**
@@ -67,13 +71,15 @@ export class User {
       firstName: data.firstName || '',
       lastName: data.lastName || '',
       image: data.image || null,
+      photoURL: data.photoURL || '',
       fcmToken: data.fcmToken || '',
       favoriteFoods: data.favoriteFoods || [],
       favoriteRestaurants: data.favoriteRestaurants || [],
       createdAt: normalizeTimestamp(data.createdAt),
       updatedAt: normalizeTimestamp(data.updatedAt),
       isActive: data.isActive !== undefined ? data.isActive : true,
-      type: data.type || 'customer'
+      type: data.type || 'customer',
+      authProvider: data.authProvider || 'email'
     });
   }
 
@@ -89,13 +95,15 @@ export class User {
       firstName: this.firstName,
       lastName: this.lastName,
       image: this.image,
+      photoURL: this.photoURL,
       fcmToken: this.fcmToken,
       favoriteFoods: this.favoriteFoods,
       favoriteRestaurants: this.favoriteRestaurants,
       createdAt: this.createdAt,
       updatedAt: new Date(),
       isActive: this.isActive,
-      type: this.type
+      type: this.type,
+      authProvider: this.authProvider
     };
   }
 

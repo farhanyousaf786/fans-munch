@@ -100,9 +100,21 @@ const CartScreen = ({ isFromHome = false }) => {
   };
 
   const calculateDeliveryFee = () => {
-    // Handling & Delivery: 2 ILS per item (sum of quantities)
-    const totalQty = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-    return totalQty * 2; // ILS
+    // Handling & Delivery: 2 ILS per regular item, 4 ILS per combo item
+    console.log('🛒 Cart items for fee calculation:', cartItems);
+    const fee = cartItems.reduce((sum, item) => {
+      // Check if item is combo by multiple methods
+      const isComboItem = item.isCombo === true || 
+                         (item.name && item.name.includes('+')) || 
+                         (item.category && item.category.toLowerCase() === 'combo') ||
+                         (item.comboItemIds && item.comboItemIds.length > 0);
+      
+      const itemFee = isComboItem ? 4 : 2;
+      console.log(`📦 Cart Item: ${item.name}, isCombo: ${item.isCombo}, detectedCombo: ${isComboItem}, quantity: ${item.quantity}, fee: ${itemFee}`);
+      return sum + (itemFee * (item.quantity || 0));
+    }, 0);
+    console.log('💰 Cart delivery fee calculated:', fee);
+    return fee; // ILS
   };
 
   const calculateTip = () => {

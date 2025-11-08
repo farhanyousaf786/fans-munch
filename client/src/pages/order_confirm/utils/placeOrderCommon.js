@@ -9,8 +9,10 @@ import { collection, getDoc, getDocs, doc, query, where } from 'firebase/firesto
 import { db } from '../../../config/firebase';
 import { Order } from '../../../models/Order';
 
-// New: Resolve shop based on selected section (first shop from section.shops[])
-async function resolveShopFromSection(stadiumId, sectionId, strictShopAvailability) {
+// New: Resolve shop based on selected section and stand
+// - Gallery stand: picks last shop ID (gallery shop)
+// - Main stand: picks first shop ID (main shop)
+async function resolveShopFromSection(stadiumId, sectionId, strictShopAvailability, stand) {
   if (!stadiumId || !sectionId) return null;
   try {
     const secRef = doc(db, 'stadiums', stadiumId, 'sections', sectionId);
@@ -18,13 +20,25 @@ async function resolveShopFromSection(stadiumId, sectionId, strictShopAvailabili
     if (!secSnap.exists()) return null;
     const secData = secSnap.data() || {};
     const shops = Array.isArray(secData.shops) ? secData.shops : [];
-    const firstShopId = shops.length > 0 ? shops[0] : null;
-    if (!firstShopId) {
+    
+    if (shops.length === 0) {
       if (strictShopAvailability) throw new Error('No shop is assigned to the selected section.');
       return null;
     }
-    // Directly use the first shop id (no availability check)
-    return String(firstShopId);
+    
+    // Choose shop based on stand selection
+    let selectedShopId;
+    if (stand === 'Gallery') {
+      // Gallery stand: use last shop ID (gallery shop)
+      selectedShopId = shops[shops.length - 1];
+      console.log(`🏟️ [SHOP SELECTION] Gallery stand selected - using last shop: ${selectedShopId}`);
+    } else {
+      // Main stand (or any other): use first shop ID (main shop)
+      selectedShopId = shops[0];
+      console.log(`🏟️ [SHOP SELECTION] Main stand selected - using first shop: ${selectedShopId}`);
+    }
+    
+    return String(selectedShopId);
   } catch (e) {
     if (strictShopAvailability) throw e;
     return null;
@@ -87,9 +101,17 @@ export async function placeOrderAfterPayment({
   
   console.log('🔍 [PLACE ORDER] seatInfo created:', seatInfo);
 
-  // Recompute delivery fee from cart (2 ILS per item)
-  const totalQty = Array.isArray(cartItems) ? cartItems.reduce((s, it) => s + (it.quantity || 0), 0) : 0;
-  const fee = totalQty * 2;
+  // Recompute delivery fee from cart (2 ILS per regular item, 4 ILS per combo item)
+  const fee = Array.isArray(cartItems) ? cartItems.reduce((s, it) => {
+    // Check if item is combo by multiple methods (supports Hebrew and English)
+    const isComboItem = it.isCombo === true || 
+                       (it.name && (it.name.includes('+') || it.name.includes(' ו') || it.name.includes(' + '))) || 
+                       (it.category && (it.category.toLowerCase() === 'combo' || it.category.includes('קומבו'))) ||
+                       (it.comboItemIds && it.comboItemIds.length > 0);
+    
+    const itemFee = isComboItem ? 4 : 2;
+    return s + (itemFee * (it.quantity || 0));
+  }, 0) : 0;
 
   const totals = orderRepository.calculateOrderTotals(
     cartItems,
@@ -98,10 +120,10 @@ export async function placeOrderAfterPayment({
     0
   );
 
-  // Resolve shop from the selected section ONLY (always index 0 of `shops` array)
+  // Resolve shop from the selected section based on stand selection
   let selectedShopId = null;
   try {
-    selectedShopId = await resolveShopFromSection(stadiumData.id, formData.sectionId, strictShopAvailability);
+    selectedShopId = await resolveShopFromSection(stadiumData.id, formData.sectionId, strictShopAvailability, formData.stand);
   } catch (e) {
     throw e;
   }

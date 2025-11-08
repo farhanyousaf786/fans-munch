@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../i18n/i18n';
 
 const backdropStyle = {
   position: 'fixed',
@@ -61,17 +62,19 @@ const buttonSecondary = {
 };
 
 export default function AuthRequiredModal({ open, onCancel, onConfirm }) {
+  const { t } = useTranslation();
+  
   if (!open) return null;
   return (
     <div style={backdropStyle} role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div style={cardStyle}>
-        <div style={headerStyle} id="auth-modal-title">Sign in required</div>
+        <div style={headerStyle} id="auth-modal-title">{t('auth.sign_in_required')}</div>
         <div style={bodyStyle}>
-          You need to sign in to place an order. Create an account or sign in to continue to checkout.
+          {t('auth.sign_in_required_message')}
         </div>
         <div style={actionsStyle}>
-          <button type="button" style={buttonSecondary} onClick={onCancel}>Not now</button>
-          <button type="button" style={buttonPrimary} onClick={onConfirm}>Sign in</button>
+          <button type="button" style={buttonSecondary} onClick={onCancel}>{t('common.not_now')}</button>
+          <button type="button" style={buttonPrimary} onClick={onConfirm}>{t('auth.sign_in')}</button>
         </div>
       </div>
     </div>

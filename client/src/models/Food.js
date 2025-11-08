@@ -53,6 +53,10 @@ class Food {
     createdAt = new Date(),
     updatedAt = new Date(),
 
+    // Combo support
+    isCombo = false,
+    comboItemIds = [],
+
     // Cart/runtime (not stored on item doc normally)
     quantity = 1,
   }) {
@@ -103,6 +107,10 @@ class Food {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
 
+    // Combo support
+    this.isCombo = isCombo;
+    this.comboItemIds = comboItemIds || [];
+
     // Cart/runtime
     this.quantity = quantity;
   }
@@ -149,6 +157,9 @@ class Food {
       // timestamps
       createdAt: Food.parseFirestoreDate(data.createdAt),
       updatedAt: Food.parseFirestoreDate(data.updatedAt),
+      // combo support
+      isCombo: data.isCombo || false,
+      comboItemIds: data.comboItemIds || [],
       // cart/runtime
       quantity: data.quantity || 1,
     });
@@ -192,6 +203,9 @@ class Food {
       // timestamps
       createdAt: Food.parseFirestoreDate(data.createdAt),
       updatedAt: Food.parseFirestoreDate(data.updatedAt),
+      // combo support
+      isCombo: data.isCombo || false,
+      comboItemIds: data.comboItemIds || [],
     });
   }
 
@@ -234,6 +248,9 @@ class Food {
       // timestamps (as Date objects)
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
+      // combo support
+      isCombo: this.isCombo,
+      comboItemIds: this.comboItemIds,
       // runtime/cart
       quantity: this.quantity,
     };
@@ -259,6 +276,8 @@ class Food {
       foodType: this.foodType,
       currency: this.currency,
       docId: this.docId,
+      isCombo: this.isCombo,
+      comboItemIds: this.comboItemIds,
       createdAt: this.createdAt instanceof Date ? Timestamp.fromDate(this.createdAt) : this.createdAt,
       updatedAt: this.updatedAt instanceof Date ? Timestamp.fromDate(this.updatedAt) : this.updatedAt,
     };
@@ -279,7 +298,46 @@ class Food {
    * @returns {string}
    */
   getPrimaryImage() {
-    return this.images.length > 0 ? this.images[0] : '/api/placeholder/200/150';
+    if (this.images.length > 0) {
+      return this.images[0];
+    }
+    // Fallback to local asset instead of broken API endpoint
+    const placeholders = [
+      process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png',
+      process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png',
+      process.env.PUBLIC_URL + '/assets/images/on-boarding-3.png'
+    ];
+    const hash = Math.abs(this.id?.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0) || 0);
+    return placeholders[hash % placeholders.length];
+  }
+
+  /**
+   * Get combo images (first 2 images for combo items)
+   * @param {Array} comboItems - Array of combo item objects (optional)
+   * @returns {string[]}
+   */
+  getComboImages(comboItems = null) {
+    if (!this.isCombo) return [this.getPrimaryImage()];
+    
+    // If combo items are provided, use their images
+    if (comboItems && comboItems.length >= 2) {
+      return [
+        comboItems[0]?.images?.[0] || comboItems[0]?.getPrimaryImage?.() || this.getPrimaryImage(),
+        comboItems[1]?.images?.[0] || comboItems[1]?.getPrimaryImage?.() || this.getPrimaryImage()
+      ];
+    }
+    
+    // Fallback to combo's own images
+    if (this.images && this.images.length >= 2) {
+      return this.images.slice(0, 2);
+    }
+    
+    // If only one image, duplicate it
+    const primaryImage = this.getPrimaryImage();
+    return [primaryImage, primaryImage];
   }
 
   /**

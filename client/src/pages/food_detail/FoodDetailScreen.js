@@ -5,11 +5,13 @@ import { db } from '../../config/firebase';
 import { userStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
+import foodRepository from '../../repositories/foodRepository';
 
 // Import components
 import FoodHeader from './components/FoodHeader';
 import FoodInfo from './components/FoodInfo';
 import FoodDescription from './components/FoodDescription';
+import ComboItemsList from './components/ComboItemsList';
 import AllergensList from './components/AllergensList';
 import TestimonialsList from './components/TestimonialsList';
 import FoodBottomBar from './components/FoodBottomBar';
@@ -24,6 +26,7 @@ const FoodDetailScreen = () => {
   
   // State matching Flutter app
   const [food, setFood] = useState(null);
+  const [comboItems, setComboItems] = useState([]); // For combo details
   const [testimonials, setTestimonials] = useState([]);
   const [rating, setRating] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
@@ -103,6 +106,20 @@ const FoodDetailScreen = () => {
       
       if (foodData) {
         setFood(foodData);
+        
+        // If this is a combo, fetch combo items
+        if (foodData.isCombo && foodData.comboItemIds && foodData.comboItemIds.length > 0) {
+          console.log('🍽️ Fetching combo items for:', foodData.name);
+          try {
+            const comboResult = await foodRepository.getComboItems(foodData.comboItemIds);
+            if (comboResult.success) {
+              setComboItems(comboResult.foods);
+              console.log('✅ Combo items loaded:', comboResult.foods.length);
+            }
+          } catch (err) {
+            console.error('❌ Error fetching combo items:', err);
+          }
+        }
         
         // Check if food is in user's favorites
         checkFavoriteStatus(foodData.id);
@@ -280,6 +297,9 @@ const FoodDetailScreen = () => {
 
         {/* Description Component */}
         <FoodDescription description={food.description} />
+
+        {/* Combo Items Component */}
+        <ComboItemsList comboItems={comboItems} isCombo={food.isCombo} comboPrice={food.price} />
 
         {/* Allergens Component */}
         <AllergensList allergens={food.allergens} />
