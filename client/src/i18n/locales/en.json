@@ -155,6 +155,8 @@
     "sign_in": "Sign In",
     "sign_in_required": "Sign in required",
     "sign_in_required_message": "You need to sign in to place an order. Create an account or sign in to continue to checkout.",
+    "continue_as_guest": "Continue as Guest",
+    "or_continue_as_guest": "or if you don't want to sign up",
     "create_account": "Create Account",
     "already_have_account": "Already have an account?",
     "dont_have_account": "Don't have an account?",
@@ -177,20 +179,21 @@
   ,
   "onboarding": {
     "skip": "Skip",
+    "get_started": "Get Started",
     "step1": {
-      "title": "Tap. Sit. Enjoy.",
-      "subtitle": "A small tap – a big experience!",
-      "description": "Enjoy food, drinks and merch delivered right to your seat—so you can stay in the action, not the line."
+      "title": "Welcome to FanMunch",
+      "subtitle": "Order food directly to your seat",
+      "description": "Browse menus from stadium restaurants and have your order delivered right to your seat."
     },
     "step2": {
-      "title": "Tap. Order. Relax.",
-      "subtitle": "Stay in your seat – we’re on our way!",
-      "description": "Order from your phone and get everything you need without ever leaving your seat. Enjoy!"
+      "title": "Easy Payment",
+      "subtitle": "Pay securely from your phone",
+      "description": "Multiple payment options including credit cards and digital wallets for quick checkout."
     },
     "step3": {
-      "title": "Tap. Order. Experience.",
-      "subtitle": "No getting up. No waiting. No missing out.",
-      "description": "Great food, drinks and products delivered to your seat—so you stay in the game, not the line."
+      "title": "Real-time Tracking",
+      "subtitle": "Track your order every step of the way",
+      "description": "Get real-time updates on your order status and know exactly when it will arrive."
     }
   }
   ,

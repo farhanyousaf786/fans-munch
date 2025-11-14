@@ -4,6 +4,7 @@ import { userStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
 import { stadiumStorage } from '../../utils/storage';
+import { createAnonymousUser } from '../../utils/anonymousUserService';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import CartHeader from './components/CartHeader';
@@ -172,15 +173,10 @@ const CartScreen = ({ isFromHome = false }) => {
     }
   };
 
-  // Handle place order (matches Flutter navigation to tip screen)
-  const handlePlaceOrder = async () => {
+  // Shared checkout logic (used by both regular and guest users)
+  const proceedToCheckout = async () => {
     if (cartItems.length === 0) {
       showToast('Cart is empty', 'error', 3000);
-      return;
-    }
-    // Require sign in before proceeding to checkout flow
-    if (!userStorage.isLoggedIn || !userStorage.isLoggedIn()) {
-      setShowAuthModal(true);
       return;
     }
     
@@ -194,6 +190,17 @@ const CartScreen = ({ isFromHome = false }) => {
     navigate('/tip');
   };
 
+  // Handle place order (matches Flutter navigation to tip screen)
+  const handlePlaceOrder = async () => {
+    // Require sign in before proceeding to checkout flow
+    if (!userStorage.isLoggedIn || !userStorage.isLoggedIn()) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    proceedToCheckout();
+  };
+
   const handleAuthModalConfirm = () => {
     try { localStorage.setItem('postLoginNext', '/cart'); } catch (_) {}
     setShowAuthModal(false);
@@ -202,6 +209,25 @@ const CartScreen = ({ isFromHome = false }) => {
 
   const handleAuthModalCancel = () => {
     setShowAuthModal(false);
+  };
+
+  const handleContinueAsGuest = async () => {
+    try {
+      setShowAuthModal(false);
+      showToast('info', 'Creating guest account...');
+      
+      // Create anonymous user and sign them in
+      const anonymousUser = await createAnonymousUser();
+      
+      showToast('success', `Welcome ${anonymousUser.displayName}!`);
+      
+      // Navigate to stadium selection after successful guest account creation
+      navigate('/stadium');
+      
+    } catch (error) {
+      console.error('Failed to create guest account:', error);
+      showToast('error', 'Failed to create guest account. Please try signing in.');
+    }
   };
 
   if (loading) {
@@ -242,6 +268,7 @@ const CartScreen = ({ isFromHome = false }) => {
         open={showAuthModal}
         onCancel={handleAuthModalCancel}
         onConfirm={handleAuthModalConfirm}
+        onContinueAsGuest={handleContinueAsGuest}
       />
     </div>
   );

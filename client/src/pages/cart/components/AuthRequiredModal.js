@@ -33,11 +33,38 @@ const bodyStyle = {
   lineHeight: 1.5,
 };
 
+const guestTextStyle = {
+  padding: '0 20px',
+  fontSize: 13,
+  color: '#6b7280',
+  lineHeight: 1.4,
+  textAlign: 'center',
+  marginBottom: '8px',
+};
+
 const actionsStyle = {
   display: 'flex',
+  flexDirection: 'column',
   gap: 12,
   padding: 20,
+};
+
+const topButtonsStyle = {
+  display: 'flex',
+  gap: 12,
   justifyContent: 'flex-end',
+};
+
+const guestButtonStyle = {
+  background: '#f3f4f6',
+  color: '#111827',
+  border: '1px solid #e5e7eb',
+  borderRadius: 8,
+  padding: '10px 16px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  width: '100%',
+  justifyContent: 'center',
 };
 
 const buttonPrimary = {
@@ -61,7 +88,7 @@ const buttonSecondary = {
   cursor: 'pointer',
 };
 
-export default function AuthRequiredModal({ open, onCancel, onConfirm }) {
+export default function AuthRequiredModal({ open, onCancel, onConfirm, onContinueAsGuest }) {
   const { t } = useTranslation();
   
   if (!open) return null;
@@ -73,8 +100,14 @@ export default function AuthRequiredModal({ open, onCancel, onConfirm }) {
           {t('auth.sign_in_required_message')}
         </div>
         <div style={actionsStyle}>
-          <button type="button" style={buttonSecondary} onClick={onCancel}>{t('common.not_now')}</button>
-          <button type="button" style={buttonPrimary} onClick={onConfirm}>{t('auth.sign_in')}</button>
+          <div style={topButtonsStyle}>
+            <button type="button" style={buttonSecondary} onClick={onCancel}>{t('common.not_now')}</button>
+            <button type="button" style={buttonPrimary} onClick={onConfirm}>{t('auth.sign_in')}</button>
+          </div>
+          <div style={guestTextStyle}>
+            {t('auth.or_continue_as_guest')}
+          </div>
+          <button type="button" style={guestButtonStyle} onClick={onContinueAsGuest}>{t('auth.continue_as_guest')}</button>
         </div>
       </div>
     </div>
