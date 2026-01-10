@@ -29,8 +29,10 @@
   }
   ,
   "common": {
-    "edit": "ערוך",
-    "not_now": "לא עכשיו"
+    "edit": "עריכה",
+    "not_now": "לא עכשיו",
+    "change_language": "שנה שפה",
+    "select_language": "בחר שפה"
   }
   ,
   "cart": {
@@ -41,7 +43,9 @@
     "tip": "טיפ",
     "discount": "הנחה",
     "total": "סה\"כ",
-    "place_order": "בצע הזמנה"
+    "place_order": "בצע הזמנה",
+    "mixed_shops_error": "פריטים בעגלה שלך מחנויות שונות. אנא הזמן מחנות אחת בכל פעם.",
+    "mixed_shops_detected": "זוהו פריטים מחנויות שונות"
   }
   ,
   "food": {

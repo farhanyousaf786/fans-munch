@@ -1,9 +1,129 @@
 // Cart Management Utility - Matching Flutter app cart logic
 import { userStorage } from './storage';
+import { stadiumStorage } from './storage';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const CART_STORAGE_KEY = 'food_munch_cart';
 
 export const cartUtils = {
+  // Check if a shop is available
+  isShopAvailable: async (shopId) => {
+    try {
+      if (!shopId) return false;
+      
+      const shopsRef = collection(db, 'shops');
+      const q = query(
+        shopsRef,
+        where('id', '==', shopId),
+        where('shopAvailability', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('❌ Error checking shop availability:', error);
+      return false;
+    }
+  },
+
+  // Get available shops for current stadium
+  getAvailableShops: async () => {
+    try {
+      const selectedStadium = stadiumStorage.getSelectedStadium();
+      if (!selectedStadium || !selectedStadium.id) {
+        return [];
+      }
+      
+      const shopsRef = collection(db, 'shops');
+      const q = query(
+        shopsRef,
+        where('stadiumId', '==', selectedStadium.id),
+        where('shopAvailability', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const shops = [];
+      querySnapshot.forEach((doc) => {
+        shops.push(doc.id);
+      });
+      
+      return shops;
+    } catch (error) {
+      console.error('❌ Error getting available shops:', error);
+      return [];
+    }
+  },
+
+  // Check if cart has items from different shops (only consider available shops)
+  hasMixedShops: async () => {
+    try {
+      const cartItems = cartUtils.getCartItems();
+      if (cartItems.length === 0) return false;
+      
+      // Get available shops for current stadium
+      const availableShops = await cartUtils.getAvailableShops();
+      
+      // Get primary shop from each item (only consider available shops)
+      const primaryShops = [];
+      cartItems.forEach(item => {
+        let primaryShop = null;
+        
+        // Try to find an available shop for each item
+        if (item.shopId && availableShops.includes(item.shopId)) {
+          primaryShop = item.shopId;
+        } else if (item.shopIds && item.shopIds.length > 0) {
+          primaryShop = item.shopIds.find(shopId => availableShops.includes(shopId));
+        }
+        
+        if (primaryShop) {
+          primaryShops.push(primaryShop);
+        }
+      });
+      
+      const uniquePrimaryShops = [...new Set(primaryShops)].filter(shop => shop);
+      console.log('🏪 Cart mixed shops check - unique available shops:', uniquePrimaryShops);
+      return uniquePrimaryShops.length > 1;
+    } catch (error) {
+      console.error('❌ Error checking mixed shops:', error);
+      return false;
+    }
+  },
+
+  // Get unique shops in cart (only consider available shops)
+  getCartShops: async () => {
+    try {
+      const cartItems = cartUtils.getCartItems();
+      
+      // Get available shops for current stadium
+      const availableShops = await cartUtils.getAvailableShops();
+      
+      // Get primary shop from each item (only consider available shops)
+      const primaryShops = [];
+      cartItems.forEach(item => {
+        let primaryShop = null;
+        
+        // Try to find an available shop for each item
+        if (item.shopId && availableShops.includes(item.shopId)) {
+          primaryShop = item.shopId;
+        } else if (item.shopIds && item.shopIds.length > 0) {
+          primaryShop = item.shopIds.find(shopId => availableShops.includes(shopId));
+        }
+        
+        if (primaryShop) {
+          primaryShops.push(primaryShop);
+        }
+      });
+      
+      const uniqueShops = [...new Set(primaryShops)].filter(shop => shop);
+      console.log('🏪 Cart shops (available only):', uniqueShops);
+      return uniqueShops;
+    } catch (error) {
+      console.error('❌ Error getting cart shops:', error);
+      return [];
+    }
+  },
+
   // Get all cart items (matches Flutter OrderRepository.cart)
   getCartItems: () => {
     try {
@@ -44,7 +164,7 @@ export const cartUtils = {
   },
 
   // Add item to cart (matching Flutter AddToCart logic exactly)
-  addToCart: (food, quantity = 1) => {
+  addToCart: async (food, quantity = 1) => {
     try {
       console.log('🛒 Adding to cart:', food.name, 'Quantity:', quantity);
       
@@ -57,6 +177,32 @@ export const cartUtils = {
         };
       }
       
+      // Get available shops for current stadium
+      const availableShops = await cartUtils.getAvailableShops();
+      console.log('🏪 Available shops for comparison:', availableShops);
+      
+      // Get primary shop for the new item (first available shop that can serve this item)
+      let newItemPrimaryShop = null;
+      if (food.shopId && availableShops.includes(food.shopId)) {
+        newItemPrimaryShop = food.shopId;
+      } else if (food.shopIds && food.shopIds.length > 0) {
+        // Find first available shop from the item's shopIds
+        const availableShopForItem = food.shopIds.find(shopId => availableShops.includes(shopId));
+        newItemPrimaryShop = availableShopForItem;
+      }
+      
+      console.log('🏪 New item primary shop:', newItemPrimaryShop);
+      
+      // Check if the shop is available (redundant check but safe)
+      if (!newItemPrimaryShop) {
+        console.log('🛒 [NO AVAILABLE SHOP] Item cannot be served by any available shop');
+        return {
+          success: false,
+          message: 'This item is not available from any open shops. Please choose items from available shops.',
+          shopUnavailable: true
+        };
+      }
+      
       let existingCart = cartUtils.getCartItems();
       
       // Ensure existingCart is always an array
@@ -65,9 +211,45 @@ export const cartUtils = {
         existingCart = [];
       }
       
-      // Previously: enforced single-shop cart by clearing when shops differed.
-      // Now: allow multiple shops in one cart (do NOT clear existing items).
-      // This matches the requested UX where users can add different items together.
+      // Check if adding this item would create mixed shops (only consider available shops)
+      if (existingCart.length > 0) {
+        // Get primary shop from existing cart (only consider available shops)
+        const existingPrimaryShops = [];
+        existingCart.forEach(item => {
+          let primaryShop = null;
+          
+          // Try to find an available shop for each existing item
+          if (item.shopId && availableShops.includes(item.shopId)) {
+            primaryShop = item.shopId;
+          } else if (item.shopIds && item.shopIds.length > 0) {
+            primaryShop = item.shopIds.find(shopId => availableShops.includes(shopId));
+          }
+          
+          if (primaryShop) {
+            existingPrimaryShops.push(primaryShop);
+          }
+        });
+        
+        console.log('🏪 Existing primary shops (available only):', [...new Set(existingPrimaryShops)]);
+        
+        // Check if primary shops are different
+        const uniquePrimaryShops = [...new Set([...existingPrimaryShops, newItemPrimaryShop])].filter(shop => shop);
+        
+        if (uniquePrimaryShops.length > 1) {
+          console.log('🛒 [MIXED SHOPS] Attempted to add item from different available shop');
+          console.log('   Existing primary shops:', [...new Set(existingPrimaryShops)]);
+          console.log('   New item primary shop:', newItemPrimaryShop);
+          console.log('   Combined unique primary shops:', uniquePrimaryShops);
+          
+          return {
+            success: false,
+            message: 'cart.mixed_shops_error',
+            mixedShops: true,
+            existingShops: [...new Set(existingPrimaryShops)],
+            newItemShops: [newItemPrimaryShop]
+          };
+        }
+      }
       
       const existingItemIndex = existingCart.findIndex(item => item.id === food.id);
       
@@ -79,7 +261,16 @@ export const cartUtils = {
         // Add new item to cart (matches Flutter logic)
         // Calculate the actual price to use (discounted if it's an offer)
         const hasDiscount = food.discountPercentage && food.discountPercentage > 0;
-        const actualPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food.price;
+        const basePrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food.price;
+
+        // Add price for any selected sauces (if provided on food object)
+        const sauces = Array.isArray(food.selectedSauces) ? food.selectedSauces : [];
+        const extraSauceTotal = sauces.reduce((total, sauce) => {
+          const saucePrice = typeof sauce.price === 'number' ? sauce.price : Number(sauce.price) || 0;
+          return total + saucePrice;
+        }, 0);
+
+        const actualPrice = basePrice + extraSauceTotal;
         
         const cartItem = {
           id: food.id,
@@ -99,6 +290,7 @@ export const cartUtils = {
           allergens: food.allergens || [],
           category: food.category || '', // category ID
           currency: food.currency || 'ILS',
+          selectedSauces: sauces,
           addedAt: new Date().toISOString()
         };
         

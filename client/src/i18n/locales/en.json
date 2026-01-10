@@ -30,7 +30,9 @@
   ,
   "common": {
     "edit": "Edit",
-    "not_now": "Not now"
+    "not_now": "Not now",
+    "change_language": "Change Language",
+    "select_language": "Select Language"
   }
   ,
   "cart": {
@@ -41,7 +43,9 @@
     "tip": "Tip",
     "discount": "Discount",
     "total": "Total",
-    "place_order": "Place Order"
+    "place_order": "Place Order",
+    "mixed_shops_error": "Items in your cart are from different shops. Please order from one shop at a time.",
+    "mixed_shops_detected": "Items from different shops detected"
   }
   ,
   "food": {

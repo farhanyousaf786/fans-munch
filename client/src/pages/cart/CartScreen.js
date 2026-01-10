@@ -221,8 +221,15 @@ const CartScreen = ({ isFromHome = false }) => {
       
       showToast('success', `Welcome ${anonymousUser.displayName}!`);
       
-      // Navigate to stadium selection after successful guest account creation
-      navigate('/stadium');
+      // Check if stadium is already selected
+      const selectedStadium = stadiumStorage.getSelectedStadium();
+      if (selectedStadium) {
+        // Stadium already selected, go directly to checkout
+        proceedToCheckout();
+      } else {
+        // No stadium selected, go to stadium selection
+        navigate('/stadium-selection');
+      }
       
     } catch (error) {
       console.error('Failed to create guest account:', error);

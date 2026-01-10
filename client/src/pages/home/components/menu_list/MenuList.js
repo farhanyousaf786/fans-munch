@@ -1,6 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccessTime } from 'react-icons/md';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../../../config/firebase';
+import { stadiumStorage } from '../../../../utils/storage';
 import './MenuList.css';
 import { useTranslation } from '../../../../i18n/i18n';
 import { useCombo } from '../../../../contexts/ComboContext';
@@ -28,6 +31,9 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   const { t, lang } = useTranslation();
   const { fetchComboItems, getCachedComboItems } = useCombo();
   const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  
+  const [shops, setShops] = useState([]);
+  const [shopsLoading, setShopsLoading] = useState(true);
 
   // Preload combo items for all combos in the menu
   useEffect(() => {
@@ -36,6 +42,49 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
       fetchComboItems(combo.id, combo.comboItemIds);
     });
   }, [menuItems, fetchComboItems]);
+
+  // Fetch available shops for current stadium
+  useEffect(() => {
+    const loadShops = async () => {
+      try {
+        setShopsLoading(true);
+        const selectedStadium = stadiumStorage.getSelectedStadium();
+        
+        if (selectedStadium && selectedStadium.id) {
+          const shopsRef = collection(db, 'shops');
+          const q = query(
+            shopsRef,
+            where('stadiumId', '==', selectedStadium.id),
+            where('shopAvailability', '==', true)
+          );
+          
+          const querySnapshot = await getDocs(q);
+          const shopsData = [];
+          querySnapshot.forEach((doc) => {
+            shopsData.push({
+              id: doc.id,
+              name: doc.data().name || 'Unknown Shop'
+            });
+          });
+          
+          setShops(shopsData);
+        }
+      } catch (error) {
+        console.error('Error loading shops:', error);
+      } finally {
+        setShopsLoading(false);
+      }
+    };
+    
+    loadShops();
+  }, []);
+
+  // Get shop name by ID
+  const getShopName = (shopId) => {
+    if (!shopId) return 'Shop';
+    const shop = shops.find(s => s.id === shopId);
+    return shop ? shop.name : 'Shop';
+  };
 
   const handleFoodClick = (food) => {
     // Navigate to food detail page (matching Flutter app behavior)
@@ -178,6 +227,11 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                 <div className="menu-prep-time">
                   <MdAccessTime className="time-icon-small" />
                   <span>{food.getPreparationTimeText()}</span>
+                </div>
+                
+                {/* Shop name at bottom right */}
+                <div className="menu-shop-name">
+                  {getShopName(food.shopId)}
                 </div>
               </div>
             </div>

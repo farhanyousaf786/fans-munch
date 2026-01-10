@@ -10,6 +10,8 @@ import PromotionBanner from '../../components/promotion/PromotionBanner';
 import foodRepository from '../../repositories/foodRepository';
 import offerRepository from '../../repositories/offerRepository';
 import { stadiumStorage, userStorage } from '../../utils/storage';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import './Home.css';
 
 function Home() {
@@ -21,6 +23,7 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShopId, setSelectedShopId] = useState(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
+  const [availableShops, setAvailableShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,13 +68,14 @@ function Home() {
     
     loadMenuItems();
     loadOffers();
+    loadAvailableShops();
   }, []);
 
   // Filter menu items and offers when search term or selections change
   useEffect(() => {
     filterMenuItems();
     filterOffers();
-  }, [searchTerm, allMenuItems, allOffers, selectedShopId, selectedCategoryId]);
+  }, [searchTerm, allMenuItems, allOffers, selectedShopId, selectedCategoryId, availableShops]);
 
   const loadMenuItems = async () => {
     try {
@@ -134,8 +138,60 @@ function Home() {
     }
   };
 
+  const loadAvailableShops = async () => {
+    try {
+      console.log('🏪 Loading available shops for menu filtering');
+      
+      const selectedStadium = stadiumStorage.getSelectedStadium();
+      if (!selectedStadium || !selectedStadium.id) {
+        console.log('⚠️ No stadium selected, no shop filtering applied');
+        setAvailableShops([]);
+        return;
+      }
+      
+      // Fetch available shops (same logic as ShopList)
+      const shopsRef = collection(db, 'shops');
+      const q = query(
+        shopsRef,
+        where('stadiumId', '==', selectedStadium.id),
+        where('shopAvailability', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const shops = [];
+      querySnapshot.forEach((doc) => {
+        shops.push(doc.id);
+      });
+      
+      setAvailableShops(shops);
+      console.log(`✅ Loaded ${shops.length} available shops for filtering`);
+    } catch (err) {
+      console.error('❌ Error loading available shops:', err);
+      setAvailableShops([]);
+    }
+  };
+
   const filterMenuItems = () => {
     let items = allMenuItems;
+
+    // Filter by available shops (always apply if we have stadium selected)
+    const selectedStadium = stadiumStorage.getSelectedStadium();
+    if (selectedStadium && selectedStadium.id) {
+      items = items.filter(item => {
+        // If item has shopIds, check if any of them are in available shops
+        if (Array.isArray(item.shopIds) && item.shopIds.length > 0) {
+          return item.shopIds.some(shopId => availableShops.includes(shopId));
+        }
+        // If item has a single shopId, check if it's available
+        if (item.shopId) {
+          return availableShops.includes(item.shopId);
+        }
+        // If no shop info, include the item (fallback)
+        return true;
+      });
+      console.log(`🏪 Filtered by available shops: ${allMenuItems.length} → ${items.length} items`);
+      console.log(`   Available shops: ${availableShops.length > 0 ? availableShops.join(', ') : 'None'}`);
+    }
 
     // If a shop is selected, filter by shopIds containing the shop
     if (selectedShopId) {
@@ -200,16 +256,12 @@ function Home() {
       <TopSection />
       
       <div className="home-content">
-
-
-      
-
-
                 <CategoryList 
                   selectedCategory={selectedCategoryId}
                   onSelect={(id) => setSelectedCategoryId(id)}
                 />
 
+        <ShopList onShopSelect={handleShopSelect} />
          
         <MenuList 
           menuItems={filteredMenuItems}
@@ -217,16 +269,6 @@ function Home() {
           error={error}
           searchTerm={searchTerm}
         />
-
-     
-       {/* <OffersList 
-          offers={filteredOffers}
-          loading={offersLoading}
-          error={offersError}
-          searchTerm={searchTerm}
-        />
-         */}
-        <ShopList onShopSelect={handleShopSelect} />
         
       </div>
     </div>

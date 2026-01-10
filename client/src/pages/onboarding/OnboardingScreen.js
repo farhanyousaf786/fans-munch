@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OnboardingScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { settingsStorage } from '../../utils/storage';
 
 const OnboardingScreen = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const navigate = useNavigate();
-  const { t, lang } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
 
   const onboardingSteps = [
     {
@@ -25,7 +27,7 @@ const OnboardingScreen = () => {
     // Go to stadium selection screen
     // Preserve query parameters from QR code
     const search = window.location.search;
-    navigate(`/stadium${search}`);
+    navigate(`/stadium-selection${search}`);
   };
 
   const handleSkip = () => {
@@ -33,7 +35,13 @@ const OnboardingScreen = () => {
     // Go to stadium selection screen
     // Preserve query parameters from QR code
     const search = window.location.search;
-    navigate(`/stadium${search}`);
+    navigate(`/stadium-selection${search}`);
+  };
+
+  const handleLanguageChange = (newLang) => {
+    setLang(newLang);
+    settingsStorage.setLanguagePreference(newLang);
+    setShowLanguageDialog(false);
   };
 
   const currentStepData = onboardingSteps[currentStep];
@@ -46,9 +54,14 @@ const OnboardingScreen = () => {
       />
       <div className="onboarding-overlay" />
       <div className="onboarding-container">
-        {/* Skip Button */}
-        <button className="skip-button" onClick={handleSkip}>
-          {t('onboarding.skip')}
+        {/* Language Button - Top Left */}
+        <button 
+          className="language-button" 
+          onClick={() => setShowLanguageDialog(true)}
+          aria-label="Change language"
+          title={t('common.change_language')}
+        >
+          {lang === 'he' ? 'Change Language' : 'שנה שפה'}
         </button>
 
         {/* Content */}
@@ -73,6 +86,42 @@ const OnboardingScreen = () => {
           </div>
         </div>
       </div>
+
+      {/* Language Selection Dialog */}
+      {showLanguageDialog && (
+        <div className="language-dialog-overlay" onClick={() => setShowLanguageDialog(false)}>
+          <div className="language-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="language-dialog-header">
+              <h3>{t('common.select_language')}</h3>
+              <button 
+                className="close-dialog" 
+                onClick={() => setShowLanguageDialog(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="language-dialog-content">
+              <button
+                className={`language-option ${lang === 'en' ? 'active' : ''}`}
+                onClick={() => handleLanguageChange('en')}
+              >
+                <span className="language-flag">🇺🇸</span>
+                <span className="language-name">English</span>
+                {lang === 'en' && <span className="language-check">✓</span>}
+              </button>
+              <button
+                className={`language-option ${lang === 'he' ? 'active' : ''}`}
+                onClick={() => handleLanguageChange('he')}
+              >
+                <span className="language-flag">🇮🇱</span>
+                <span className="language-name">עברית</span>
+                {lang === 'he' && <span className="language-check">✓</span>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

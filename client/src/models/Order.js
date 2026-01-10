@@ -314,6 +314,8 @@ export class Order {
         seatNo: seatInfo.seatNo || '',
         section: seatInfo.section || '',
         sectionId: seatInfo.sectionId || '',
+        floor: seatInfo.floor || '',
+        room: seatInfo.room || '',
         seatDetails: seatInfo.seatDetails || '',
         area: seatInfo.area || '',
         entrance: seatInfo.entrance || '',

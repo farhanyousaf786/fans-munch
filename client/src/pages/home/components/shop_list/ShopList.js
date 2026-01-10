@@ -104,6 +104,7 @@ const ShopList = ({ onShopSelect }) => {
               stadiumName: data.stadiumName || '',
               shopUserFcmToken: data.shopUserFcmToken || '',
               admins: data.admins || [],
+              image: data.imageUrl || data.image || null, // Use imageUrl or image from Firebase
               createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
               updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date()
             };

@@ -24,6 +24,14 @@ const OrderConfirmScreen = () => {
   const { t, lang } = useTranslation();
   console.log('🌐 OrderConfirmScreen language:', lang);
   console.log('🌐 Phone title translation:', t('order.phone_contact_title'));
+  
+  const stadiumData = stadiumStorage.getSelectedStadium() || {};
+  console.log('🏟️ [DEBUG] Selected stadium data:', stadiumData);
+  console.log('🏟️ [DEBUG] availableSeats:', stadiumData.availableSeats);
+  console.log('🏟️ [DEBUG] availableSections:', stadiumData.availableSections);
+  console.log('🏟️ [DEBUG] availableFloors:', stadiumData.availableFloors);
+  console.log('🏟️ [DEBUG] availableRooms:', stadiumData.availableRooms);
+  
   const paymentRef = useRef(null);
   const phoneInputRef = useRef(null);
   const [stripeIntent, setStripeIntent] = useState(null); // { id, clientSecret, mode }
@@ -36,6 +44,8 @@ const OrderConfirmScreen = () => {
     stand: 'Main', // Default to Main stand
     section: '',
     sectionId: '',
+    floor: '',
+    room: '',
     seatDetails: '',
     area: ''
   });
@@ -65,6 +75,26 @@ const OrderConfirmScreen = () => {
   const [hasPhoneInCustomer, setHasPhoneInCustomer] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
+
+  // Log shop information to console
+  useEffect(() => {
+    const items = cartUtils.getCartItems();
+    const shopIds = new Set();
+    
+    items.forEach(item => {
+      if (item.shopId) shopIds.add(item.shopId);
+      if (item.shopIds && Array.isArray(item.shopIds)) {
+        item.shopIds.forEach(id => shopIds.add(id));
+      }
+    });
+    
+    const shopInfo = {
+      count: shopIds.size,
+      ids: Array.from(shopIds)
+    };
+    
+    console.log('🛍️ Shop Information:', shopInfo);
+  }, []);
 
   useEffect(() => {
     // Initialize order data
@@ -420,6 +450,8 @@ const OrderConfirmScreen = () => {
         stand: field === 'stand' ? value : newData.stand,
         section: field === 'section' ? value : newData.section,
         sectionId: field === 'sectionId' ? value : newData.sectionId,
+        floor: field === 'floor' ? value : newData.floor,
+        room: field === 'room' ? value : newData.room,
       }); } catch (e) { console.warn('seatStorage set error', e); }
       return newData;
     });
@@ -448,16 +480,40 @@ const OrderConfirmScreen = () => {
       stand: formData.stand
     });
     
-    if (!formData.row || !formData.row.trim()) {
-      newErrors.row = t('order.err_row_required');
-    }
-    if (!formData.seatNo || !formData.seatNo.trim()) {
-      newErrors.seatNo = t('order.err_seat_required');
+    const stadiumData = stadiumStorage.getSelectedStadium() || {};
+    const requireSeats = !!stadiumData.availableSeats;
+    const requireSections = stadiumData.availableSections !== false;
+    const requireFloors = !!stadiumData.availableFloors;
+    const requireRooms = !!stadiumData.availableRooms;
+
+    if (requireSeats) {
+      if (!formData.row || !formData.row.trim()) {
+        newErrors.row = t('order.err_row_required');
+      }
+      if (!formData.seatNo || !formData.seatNo.trim()) {
+        newErrors.seatNo = t('order.err_seat_required');
+      }
     }
     // Entrance no longer required
-    // Require section selection
-    if (!formData.sectionId || !String(formData.sectionId).trim()) {
-      newErrors.section = t('order.err_section_required');
+    if (requireSections) {
+      if (!formData.sectionId || !String(formData.sectionId).trim()) {
+        newErrors.section = t('order.err_section_required');
+      }
+    }
+
+    if (requireFloors) {
+      const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
+      if (floorsCount > 0) {
+        if (!formData.floor || !String(formData.floor).trim()) {
+          newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
+        }
+      }
+    }
+
+    if (requireRooms) {
+      if (!formData.room || !String(formData.room).trim()) {
+        newErrors.room = (t('order.err_room_required') || 'Room is required');
+      }
     }
     // Require phone only if it's missing in customer profile
     if (!hasPhoneInCustomer) {
@@ -487,6 +543,16 @@ const OrderConfirmScreen = () => {
     await new Promise(res => setTimeout(res, 60));
     // Location is no longer required
 
+    const td = (key, fallback) => {
+      try {
+        const val = t(key);
+        if (!val || val === key) return fallback;
+        return val;
+      } catch (_) {
+        return fallback;
+      }
+    };
+
     // Surface errors in UI
     if (!showErrors) setShowErrors(true);
 
@@ -503,7 +569,15 @@ const OrderConfirmScreen = () => {
       row: pick(formData.row, savedSeat.row),
       seatNo: pick(formData.seatNo, savedSeat.seatNo),
       sectionId: pick(formData.sectionId, savedSeat.sectionId),
+      floor: pick(formData.floor, savedSeat.floor),
+      room: pick(formData.room, savedSeat.room),
     };
+
+    const stadiumData = stadiumStorage.getSelectedStadium() || {};
+    const requireSeats = !!stadiumData.availableSeats;
+    const requireSections = stadiumData.availableSections !== false;
+    const requireFloors = !!stadiumData.availableFloors;
+    const requireRooms = !!stadiumData.availableRooms;
 
     // Read freshest phone directly from input
     let effectivePhone = customerPhone;
@@ -516,9 +590,24 @@ const OrderConfirmScreen = () => {
     } catch (_) {}
 
     const newErrors = {};
-    if (!effective.row.trim()) newErrors.row = t('order.err_row_required');
-    if (!effective.seatNo.trim()) newErrors.seatNo = t('order.err_seat_required');
-    if (!effective.sectionId || !String(effective.sectionId).trim()) newErrors.section = t('order.err_section_required');
+    if (requireSeats) {
+      if (!effective.row.trim()) newErrors.row = t('order.err_row_required');
+      if (!effective.seatNo.trim()) newErrors.seatNo = t('order.err_seat_required');
+    }
+    if (requireSections) {
+      if (!effective.sectionId || !String(effective.sectionId).trim()) newErrors.section = t('order.err_section_required');
+    }
+
+    if (requireFloors) {
+      const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
+      if (floorsCount > 0) {
+        if (!effective.floor || !String(effective.floor).trim()) newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
+      }
+    }
+
+    if (requireRooms) {
+      if (!effective.room || !String(effective.room).trim()) newErrors.room = (t('order.err_room_required') || 'Room is required');
+    }
     if (!hasPhoneInCustomer) {
       const okPhone = validatePhone(effectivePhone);
       if (!okPhone) newErrors.customerPhone = t('order.err_phone_required');
@@ -538,6 +627,9 @@ const OrderConfirmScreen = () => {
       if (newErrors.row) missing.push(t('order.row'));
       if (newErrors.seatNo) missing.push(t('order.seat'));
       // entrance no longer required
+      if (newErrors.section) missing.push(td('order.section', 'Section'));
+      if (newErrors.floor) missing.push(td('order.floor', 'Floor'));
+      if (newErrors.room) missing.push(td('order.room', 'Room'));
       if (newErrors.customerPhone) missing.push(t('auth.phone'));
 
       const prefix = t('order.complete_required_fields_prefix');
@@ -585,6 +677,8 @@ const OrderConfirmScreen = () => {
         seatNo: seatData.seatNo || prev.seatNo,
         section: seatData.section || prev.section,
         sectionId: seatData.sectionId || prev.sectionId,
+        floor: seatData.floor || prev.floor,
+        room: seatData.room || prev.room,
         entrance: seatData.entrance || prev.entrance,
         stand: seatData.stand || prev.stand || 'Main',
         seatDetails: seatData.seatDetails || prev.seatDetails,
@@ -598,6 +692,8 @@ const OrderConfirmScreen = () => {
           seatNo: seatData.seatNo || formData.seatNo,
           section: seatData.section || formData.section,
           sectionId: seatData.sectionId || formData.sectionId,
+          floor: seatData.floor || formData.floor,
+          room: seatData.room || formData.room,
           entrance: seatData.entrance || formData.entrance,
           stand: seatData.stand || formData.stand || 'Main',
           seatDetails: seatData.seatDetails || formData.seatDetails,
@@ -921,13 +1017,32 @@ const OrderConfirmScreen = () => {
 
 
         {/* Seat Information Form */}
-        <SeatForm 
-          formData={formData} 
-          errors={errors} 
-          onChange={handleInputChange} 
-          sectionsOptions={sectionsOptions}
-          onScanQr={() => setShowQrScanner(true)}
-        />
+        {(() => {
+          const stadium = stadiumStorage.getSelectedStadium() || {};
+          const showSeats = !!stadium.availableSeats;
+          const showSections = stadium.availableSections !== false;
+          const showFloors = !!stadium.availableFloors;
+          const showRooms = !!stadium.availableRooms;
+          const showStands = !!stadium.availableStands;
+          const floorsCount = stadium.floors || 0;
+          console.log('🏟️ [SEATFORM PROPS] showSeats:', showSeats, 'availableSeats:', stadium.availableSeats);
+          console.log('🏟️ [SEATFORM PROPS] showSections:', showSections, 'availableSections:', stadium.availableSections);
+          return (
+            <SeatForm 
+              formData={formData} 
+              errors={errors} 
+              onChange={handleInputChange} 
+              sectionsOptions={sectionsOptions}
+              onScanQr={() => setShowQrScanner(true)}
+              showSeats={showSeats}
+              showSections={showSections}
+              showFloors={showFloors}
+              floorsCount={floorsCount}
+              showRooms={showRooms}
+              showStands={showStands}
+            />
+          );
+        })()}
 
         {/* Customer Phone for Delivery Contact */}
         <div className="seat-info-section phone-section">
@@ -969,6 +1084,7 @@ const OrderConfirmScreen = () => {
 
         {/* Order Summary */}
         <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
+
 
         {/* Stripe Payment Form with integrated Place Order button */}
         <StripePaymentForm

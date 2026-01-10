@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { cartUtils } from '../../../utils/cartUtils';
 import './PriceInfoWidget.css';
 import { useTranslation } from '../../../i18n/i18n';
 
@@ -12,6 +13,27 @@ const PriceInfoWidget = ({
   onPlaceOrder 
 }) => {
   const { t } = useTranslation();
+  const [hasMixedShops, setHasMixedShops] = useState(false);
+  const [cartShops, setCartShops] = useState([]);
+  
+  // Check if cart has items from different shops (only considering available shops)
+  useEffect(() => {
+    const checkMixedShops = async () => {
+      try {
+        const mixed = await cartUtils.hasMixedShops();
+        const shops = await cartUtils.getCartShops();
+        setHasMixedShops(mixed);
+        setCartShops(shops);
+      } catch (error) {
+        console.error('Error checking mixed shops:', error);
+        setHasMixedShops(false);
+        setCartShops([]);
+      }
+    };
+    
+    checkMixedShops();
+  }, [cartItems]);
+  
   if (cartItems.length === 0) {
     return null;
   }
@@ -33,6 +55,17 @@ const PriceInfoWidget = ({
   return (
     <div className="price-info-widget">
       <div className="price-info-content">
+        {/* Mixed Shops Warning */}
+        {hasMixedShops && (
+          <div className="mixed-shops-warning">
+            <div className="warning-icon">⚠️</div>
+            <div className="warning-message">
+              <strong>{t('cart.mixed_shops_detected')}</strong>
+              <p>{t('cart.mixed_shops_error')}</p>
+            </div>
+          </div>
+        )}
+        
         {/* Price breakdown */}
         <div className="price-row">
           <span>{t('cart.subtotal')}</span>
@@ -56,9 +89,13 @@ const PriceInfoWidget = ({
           <span className="currency-badge eur">{formatCurrency(calculateTotal(), 'EUR')}</span>
         </div>
         
-        {/* Place Order Button */}
-        <button className="place-order-button" onClick={onPlaceOrder}>
-          {t('cart.place_order')}
+        {/* Place Order Button - Disable if mixed shops */}
+        <button 
+          className={`place-order-button ${hasMixedShops ? 'disabled' : ''}`} 
+          onClick={onPlaceOrder}
+          disabled={hasMixedShops}
+        >
+          {hasMixedShops ? 'Cannot Place Order' : t('cart.place_order')}
         </button>
       </div>
     </div>

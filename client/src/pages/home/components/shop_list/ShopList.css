@@ -6,7 +6,7 @@
 
 .restaurant-list {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
   padding-bottom: 16px;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
@@ -20,8 +20,8 @@
 
 .restaurant-card {
   flex: 0 0 auto;
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -47,7 +47,7 @@
 .restaurant-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   transition: transform 0.2s ease;
 }

@@ -8,9 +8,9 @@ const FoodBottomBar = ({ onAddToCart }) => {
   const isRTL = lang === 'he';
 
   // Handle add to cart
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     try { 
-      onAddToCart && onAddToCart(1); 
+      await onAddToCart && onAddToCart(1); 
     } catch (_) {}
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
-import { stadiumStorage } from '../../utils/storage';
+import { stadiumStorage, settingsStorage } from '../../utils/storage';
 import Stadium from '../../models/Stadium';
 import stadiumRepository from '../../repositories/stadiumRepository';
 import './StadiumSelectionScreen.css';
@@ -13,9 +13,10 @@ const StadiumSelectionScreen = () => {
   const [stadiums, setStadiums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const navigate = useNavigate();
   // const { } = useTheme(); // Unused for now
-  const { t, lang } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
 
   // Fetch stadiums from Firebase on component mount
   useEffect(() => {
@@ -75,6 +76,12 @@ const StadiumSelectionScreen = () => {
     }
   };
 
+  const handleLanguageChange = (newLang) => {
+    setLang(newLang);
+    settingsStorage.setLanguagePreference(newLang);
+    setShowLanguageDialog(false);
+  };
+
   return (
     <div className="stadium-selection-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Background image and overlay */}
@@ -85,6 +92,16 @@ const StadiumSelectionScreen = () => {
       <div className="stadium-overlay" />
 
       <div className="stadium-container">
+        {/* Language Button - Top Left */}
+        <button 
+          className="language-button-stadium" 
+          onClick={() => setShowLanguageDialog(true)}
+          aria-label="Change language"
+          title={t('common.change_language')}
+        >
+          {lang === 'he' ? 'Change Language' : 'שנה שפה'}
+        </button>
+
         {/* Header */}
         <div className="stadium-header">
           <h1 className="stadium-title animate-down">{t('stadium.title')}</h1>
@@ -150,6 +167,42 @@ const StadiumSelectionScreen = () => {
           </button>
         </div>
       </div>
+
+      {/* Language Selection Dialog */}
+      {showLanguageDialog && (
+        <div className="language-dialog-overlay" onClick={() => setShowLanguageDialog(false)}>
+          <div className="language-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="language-dialog-header">
+              <h3>{t('common.select_language')}</h3>
+              <button 
+                className="close-dialog" 
+                onClick={() => setShowLanguageDialog(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="language-dialog-content">
+              <button
+                className={`language-option ${lang === 'en' ? 'active' : ''}`}
+                onClick={() => handleLanguageChange('en')}
+              >
+                <span className="language-flag">🇺🇸</span>
+                <span className="language-name">English</span>
+                {lang === 'en' && <span className="language-check">✓</span>}
+              </button>
+              <button
+                className={`language-option ${lang === 'he' ? 'active' : ''}`}
+                onClick={() => handleLanguageChange('he')}
+              >
+                <span className="language-flag">🇮🇱</span>
+                <span className="language-name">עברית</span>
+                {lang === 'he' && <span className="language-check">✓</span>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

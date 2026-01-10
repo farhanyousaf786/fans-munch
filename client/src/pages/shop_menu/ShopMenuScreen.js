@@ -5,6 +5,9 @@ import { db } from '../../config/firebase';
 import foodRepository from '../../repositories/foodRepository';
 import './ShopMenuScreen.css';
 
+// Format price in ILS (same as main menu)
+const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+
 function ShopMenuScreen() {
   const { shopId } = useParams();
   const navigate = useNavigate();
@@ -88,7 +91,7 @@ function ShopMenuScreen() {
               <div className="grid-content">
                 <h3 className="grid-name">{food.name}</h3>
                 <div className="grid-bottom">
-                  <span className="grid-price">{food.getFormattedPrice()}</span>
+                  <span className="grid-price">{formatILS(food.price)}</span>
                   <span className="grid-prep">{food.getPreparationTimeText()}</span>
                 </div>
               </div>
