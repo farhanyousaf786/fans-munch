@@ -76,6 +76,34 @@ const OrderConfirmScreen = () => {
   const [editingPhone, setEditingPhone] = useState(false);
   const [showQrScanner, setShowQrScanner] = useState(false);
 
+  // Pickup vs Delivery state
+  const [deliveryMode, setDeliveryMode] = useState('delivery'); // 'pickup' or 'delivery'
+  const [pickupPoints, setPickupPoints] = useState([]);
+  const [selectedPickupPoint, setSelectedPickupPoint] = useState('');
+
+  // Fetch pickup points if available
+  useEffect(() => {
+    const fetchPickupPoints = async () => {
+      try {
+        const stadium = stadiumStorage.getSelectedStadium() || {};
+        if (!stadium.id || !stadium.availablePickupPoints) return;
+
+        const pickupRef = collection(db, 'stadiums', stadium.id, 'pickUpPoints');
+        const querySnapshot = await getDocs(pickupRef);
+        const points = [];
+        querySnapshot.forEach(doc => {
+          points.push({ id: doc.id, ...doc.data() });
+        });
+        setPickupPoints(points);
+        console.log('📍 Pickup points fetched:', points);
+      } catch (error) {
+        console.error('Error fetching pickup points:', error);
+      }
+    };
+
+    fetchPickupPoints();
+  }, [stadiumId]);
+
   // Log shop information to console
   useEffect(() => {
     const items = cartUtils.getCartItems();
@@ -845,6 +873,8 @@ const OrderConfirmScreen = () => {
         notifyDelivery: false,
         strictShopAvailability: true,
         customerPhone: effectivePhoneForCard || undefined,
+        deliveryMethod: deliveryMode,
+        pickupPointId: selectedPickupPoint || null,
       });
 
       // Save phone to customer profile only if it was missing and provided now
@@ -940,6 +970,8 @@ const OrderConfirmScreen = () => {
           notifyDelivery: false,
           strictShopAvailability: true,
           customerPhone: effectivePhoneForWallet || undefined,
+          deliveryMethod: deliveryMode,
+          pickupPointId: selectedPickupPoint || null,
         });
 
         // Save phone to customer profile only if it was missing and provided now
@@ -1006,19 +1038,109 @@ const OrderConfirmScreen = () => {
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           </div>
         )}
-        {/* Header Text Section */}
-        <div className="order-header-section">
-          <h2 className="order-header-title">{t('order.upload_ticket_header')}</h2>
-          <p className="order-header-subtitle">{t('order.upload_ticket_subheader')}</p>
-        </div>
-
-        {/* Ticket Image Upload */}
-        <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
-
-
-        {/* Seat Information Form */}
+        {/* Header Text Section & Ticket Upload (only if availableTickets is true) */}
         {(() => {
           const stadium = stadiumStorage.getSelectedStadium() || {};
+          if (!stadium.availableTickets) return null;
+          
+          return (
+            <>
+              <div className="order-header-section">
+                <h2 className="order-header-title">{t('order.upload_ticket_header')}</h2>
+                <p className="order-header-subtitle">{t('order.upload_ticket_subheader')}</p>
+              </div>
+
+              {/* Ticket Image Upload */}
+              <TicketUpload ticketImage={ticketImage} onImageUpload={handleImageUpload} onCameraCapture={handleCameraCapture} />
+            </>
+          );
+        })()}
+
+        {/* Pickup vs Delivery Toggle */}
+        {(() => {
+          const stadium = stadiumStorage.getSelectedStadium() || {};
+          if (!stadium.availablePickupPoints) return null;
+          
+          return (
+            <div style={{ marginBottom: '20px', padding: '16px', background: '#f3f4f6', borderRadius: '8px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>Delivery Method</h3>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setDeliveryMode('delivery')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    border: deliveryMode === 'delivery' ? '2px solid #3b82f6' : '1px solid #d1d5db',
+                    background: deliveryMode === 'delivery' ? '#eff6ff' : '#fff',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: deliveryMode === 'delivery' ? '600' : '400',
+                    color: deliveryMode === 'delivery' ? '#3b82f6' : '#6b7280'
+                  }}
+                >
+                  🚚 Delivery
+                </button>
+                <button
+                  onClick={() => setDeliveryMode('pickup')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    border: deliveryMode === 'pickup' ? '2px solid #3b82f6' : '1px solid #d1d5db',
+                    background: deliveryMode === 'pickup' ? '#eff6ff' : '#fff',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: deliveryMode === 'pickup' ? '600' : '400',
+                    color: deliveryMode === 'pickup' ? '#3b82f6' : '#6b7280'
+                  }}
+                >
+                  📍 Pickup
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Pickup Points Dropdown */}
+        {(() => {
+          const stadium = stadiumStorage.getSelectedStadium() || {};
+          if (!stadium.availablePickupPoints || deliveryMode !== 'pickup') return null;
+          
+          return (
+            <div style={{ marginBottom: '20px', padding: '16px', background: '#f9fafb', borderRadius: '8px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px' }}>
+                Select Pickup Point
+              </label>
+              <select
+                value={selectedPickupPoint}
+                onChange={(e) => setSelectedPickupPoint(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="">-- Choose a pickup point --</option>
+                {pickupPoints.map(point => (
+                  <option key={point.id} value={point.id}>
+                    {point.name || point.id} {point.address ? `(${point.address})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })()}
+
+        {/* Seat Information Form (only show for delivery mode) */}
+        {(() => {
+          const stadium = stadiumStorage.getSelectedStadium() || {};
+          // Only show delivery info if in delivery mode OR if pickup is not available
+          const shouldShowDeliveryInfo = deliveryMode === 'delivery' || !stadium.availablePickupPoints;
+          
+          if (!shouldShowDeliveryInfo) return null;
+          
           const showSeats = !!stadium.availableSeats;
           const showSections = stadium.availableSections !== false;
           const showFloors = !!stadium.availableFloors;

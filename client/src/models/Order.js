@@ -58,7 +58,9 @@ export class Order {
     isTipAdded = false,
     customerLocation = null,
     location = null,
-    updatedAt = null
+    updatedAt = null,
+    deliveryMethod = 'delivery',
+    pickupPointId = null
   }) {
     this.cart = cart;
     this.subtotal = subtotal;
@@ -82,6 +84,8 @@ export class Order {
     this.customerLocation = customerLocation; // { latitude, longitude } or array
     this.location = location; // optional secondary location
     this.updatedAt = updatedAt;
+    this.deliveryMethod = deliveryMethod; // 'delivery' or 'pickup'
+    this.pickupPointId = pickupPointId; // ID of selected pickup point (if pickup mode)
     this.platform = (typeof arguments[0]?.platform === 'string' && arguments[0].platform.trim()) ? arguments[0].platform : 'Web';
   }
 
@@ -114,7 +118,9 @@ export class Order {
       deliveryTime: data.deliveryTime,
       seatInfo: data.seatInfo || {},
       customerLocation: data.customerLocation || null,
-      location: data.location || null
+      location: data.location || null,
+      deliveryMethod: data.deliveryMethod || 'delivery',
+      pickupPointId: data.pickupPointId || null
     });
     instance.platform = data.platform || 'Web';
     try {
@@ -234,7 +240,9 @@ export class Order {
         return loc;
       })()
       ,
-      platform: (typeof this.platform === 'string' && this.platform.trim()) ? this.platform : 'Web'
+      platform: (typeof this.platform === 'string' && this.platform.trim()) ? this.platform : 'Web',
+      deliveryMethod: this.deliveryMethod || 'delivery',
+      pickupPointId: this.pickupPointId || null
     };
     try { 
       console.log('[Order.toMap] Result payload:', result);
@@ -260,7 +268,9 @@ export class Order {
     shopId,
     customerLocation = null,
     location = null,
-    deliveryUserId = null
+    deliveryUserId = null,
+    deliveryMethod = 'delivery',
+    pickupPointId = null
   }) {
     try {
       console.log('[Order.createFromCart] Input:', {
@@ -323,7 +333,9 @@ export class Order {
         ticketImage: seatInfo.ticketImage || ''
       },
       customerLocation,
-      location: location
+      location: location,
+      deliveryMethod,
+      pickupPointId
     });
     instance.platform = 'Web';
     try { console.log('[Order.createFromCart] New Order instance:', instance); } catch (_) {}

@@ -21,6 +21,7 @@ export class Stadium {
     availableShops = false,
     availableStands = false,
     availablePickupPoints = false,
+    availableTickets = false,
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -40,6 +41,7 @@ export class Stadium {
     this.availableShops = !!availableShops;
     this.availableStands = !!availableStands;
     this.availablePickupPoints = !!availablePickupPoints;
+    this.availableTickets = !!availableTickets;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -67,6 +69,7 @@ export class Stadium {
       availableShops: data.availableShops,
       availableStands: data.availableStands,
       availablePickupPoints: data.availablePickupPoints,
+      availableTickets: data.availableTickets,
       createdAt: data.createdAt || new Date().toISOString(),
       updatedAt: data.updatedAt || new Date().toISOString()
     });
@@ -94,6 +97,7 @@ export class Stadium {
       availableShops: this.availableShops,
       availableStands: this.availableStands,
       availablePickupPoints: this.availablePickupPoints,
+      availableTickets: this.availableTickets,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

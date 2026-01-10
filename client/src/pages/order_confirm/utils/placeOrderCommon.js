@@ -142,6 +142,8 @@ export async function placeOrderAfterPayment({
   notifyDelivery = false,
   strictShopAvailability = false,
   customerPhone,
+  deliveryMethod = 'delivery',
+  pickupPointId = null,
 }) {
   const userData = userStorage.getUserData();
   const userDataWithPhone = { ...userData, phone: customerPhone || userData?.phone };
@@ -270,6 +272,8 @@ export async function placeOrderAfterPayment({
     customerLocation,
     location: null,
     deliveryUserId: "",
+    deliveryMethod,
+    pickupPointId,
   });
 
   const createdOrder = await orderRepository.createOrder(order);
