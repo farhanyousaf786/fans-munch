@@ -7,6 +7,7 @@ import PromotionBanner from '../../components/promotion/PromotionBanner';
 import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useCombo } from '../../contexts/ComboContext';
+import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 import './MenuListPage.css';
 
 const assetPlaceholders = [
@@ -203,7 +204,7 @@ export default function MenuListPage() {
               </div>
               <div className="menu-grid-content">
                 <h3 className="menu-grid-name">{food.name}</h3>
-                <p className="menu-grid-price">₪{food.price.toFixed(2)}</p>
+                <p className="menu-grid-price">{formatPriceWithCurrency(food.price, food.currency)}</p>
               </div>
             </div>
           ))}

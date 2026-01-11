@@ -2,46 +2,47 @@ import React, { useEffect, useState } from 'react';
 import { settingsStorage } from '../../utils/storage';
 import './settings.css';
 import { useTranslation } from '../../i18n/i18n';
+import { setPreferredCurrency } from '../../services/currencyPreferenceService';
 
 const LanguageScreen = () => {
-  const [lang, setLang] = useState(settingsStorage.getLanguagePreference() || 'en');
-  const { t } = useTranslation();
+  const { t, lang, setLang } = useTranslation();
+  const [selectedLang, setSelectedLang] = useState(lang);
 
-  useEffect(() => {
-    // Persist preference
-    settingsStorage.setLanguagePreference(lang);
-    // Update document direction for RTL languages
-    const dir = lang === 'he' ? 'rtl' : 'ltr';
+  const handleLanguageChange = (newLang) => {
+    setLang(newLang);
+    setSelectedLang(newLang);
+    settingsStorage.setLanguagePreference(newLang);
+    const dir = newLang === 'he' ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('dir', dir);
-  }, [lang]);
+    window.dispatchEvent(new CustomEvent('language-changed', { detail: newLang }));
+    
+    // Set default currency based on language
+    const defaultCurrency = newLang === 'he' ? 'ILS' : 'USD';
+    setPreferredCurrency(defaultCurrency);
+    console.log(`🌐 [LANGUAGE SETTINGS] Language: ${newLang} → Default currency: ${defaultCurrency}`);
+  };
 
   return (
     <div className="screen static-screen">
-      <h1>{t('settings.select_language')}</h1>
+      <h1>Settings</h1>
       <div className="section-card">
-        <h2>{t('settings.app_language')}</h2>
+        <h2>App Language</h2>
         <div className="lang-options">
           <button
             className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
-            onClick={() => {
-              setLang('en');
-              window.dispatchEvent(new CustomEvent('language-changed', { detail: 'en' }));
-            }}
+            onClick={() => handleLanguageChange('en')}
           >
-            {t('settings.english')}
+            English
           </button>
           <button
             className={`lang-btn ${lang === 'he' ? 'active' : ''}`}
-            onClick={() => {
-              setLang('he');
-              window.dispatchEvent(new CustomEvent('language-changed', { detail: 'he' }));
-            }}
+            onClick={() => handleLanguageChange('he')}
           >
-            {t('settings.hebrew')}
+            {lang === 'he' ? 'עברית' : 'Hebrew'}
           </button>
         </div>
-        <p className="helper">{t('settings.rtl_note')}</p>
-        <p>{t('settings.current')}: {lang === 'en' ? t('settings.english') : t('settings.hebrew')}</p>
+        <p className="helper">The interface direction will switch automatically for Hebrew (RTL).</p>
+        <p>Current: {lang === 'en' ? 'English' : 'Hebrew'}</p>
       </div>
     </div>
   );

@@ -1,13 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, getDoc } from 'firebase/firestore';
-import { db } from '../../config/firebase';
-import { OrderStatus } from '../../models/Order';
+import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle, MdPhone } from 'react-icons/md';
 import QRCode from 'react-qr-code';
 import './OrderTrackScreen.css';
 import { useTranslation } from '../../i18n/i18n';
-import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle, MdPhone } from 'react-icons/md';
+import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 import { cartStorage } from '../../utils/storage';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+
+// Order status constants
+const OrderStatus = {
+  PENDING: 'pending',
+  PREPARING: 'preparing',
+  DELIVERING: 'delivering',
+  DELIVERED: 'delivered'
+};
 
 const baseSteps = [
   { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
@@ -126,8 +134,6 @@ export default function OrderTrackScreen() {
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
   const code = order?.orderCode || order?.orderId || order?.id || '';
 
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
-
   return (
     <div className="order-track-screen" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="hero">
@@ -219,7 +225,7 @@ export default function OrderTrackScreen() {
                         <div className="name">{item.name || t('track.item')}</div>
                       </div>
                       <div className="desc clamp-2">{item.description || ''}</div>
-                      <div className="price ils">{formatILS(item.price)}</div>
+                      <div className="price ils">{formatPriceWithCurrency(item.price, item.currency || 'ILS')}</div>
                     </div>
                     <div className="item-media">
                       {Array.isArray(item.images) && item.images.length > 0 ? (

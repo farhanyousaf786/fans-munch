@@ -125,22 +125,26 @@ const BottomNavigation = () => {
   };
 
   // Don't show bottom nav on auth, onboarding, stadium selection, or food detail screens
-  // Also check if user is logged in
   const hideNavPaths = ['/auth', '/onboarding', '/stadium-selection', '/food'];
   const shouldHideNav = hideNavPaths.some(path => location.pathname.startsWith(path));
   
   // Check if user is authenticated using storage utility
   const userData = userStorage.getUserData();
   const isAuthenticated = userData && userData !== null;
-  
-  if (shouldHideNav || !isAuthenticated) {
+
+  // Filter nav items based on authentication status
+  const visibleNavItems = isAuthenticated 
+    ? navItems 
+    : navItems.filter(item => ['home', 'profile'].includes(item.id));
+
+  if (shouldHideNav) {
     return null;
   }
 
   return (
     <div className="bottom-navigation">
       <div className="nav-container">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <button
             key={item.id}
             className={`nav-item ${isActive(item.path) ? 'active' : ''}`}

@@ -18,6 +18,8 @@ import { collection, getDocs, doc, getDoc, query } from 'firebase/firestore';
 import { placeOrderAfterPayment } from './utils/placeOrderCommon';
 import { fetchCustomerPhone, validatePhone, saveCustomerPhoneIfMissing, normalizePhone } from './utils/phoneHelper';
 import QrScanner from '../../components/qr-scanner/QrScanner';
+import { getPreferredCurrency } from '../../services/currencyPreferenceService';
+import { convertPrice } from '../../utils/currencyConverter';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -126,36 +128,82 @@ const OrderConfirmScreen = () => {
 
   useEffect(() => {
     // Initialize order data
-    const cartItems = cartUtils.getCartItems();
-    const cartTotal = cartUtils.getTotalPrice();
-    
-    // Do not show validation errors on initial load; we'll validate on change and on submit
-    setOrderTotal(cartTotal);
-    // Delivery fee = 2 ILS per regular item, 4 ILS per combo item
-    console.log('🛒 Cart items for fee calculation:', cartItems);
-    const fee = Array.isArray(cartItems) ? cartItems.reduce((s, it) => {
-      // Check if item is combo by multiple methods
-      const isComboItem = it.isCombo === true || 
-                         (it.name && it.name.includes('+')) || 
-                         (it.category && it.category.toLowerCase() === 'combo') ||
-                         (it.comboItemIds && it.comboItemIds.length > 0);
+    const initializeOrder = async () => {
+      const cartItems = cartUtils.getCartItems();
+      const cartTotal = cartUtils.getTotalPrice();
       
-      const itemFee = isComboItem ? 4 : 2;
-      console.log(`📦 Item: ${it.name}, isCombo: ${it.isCombo}, detectedCombo: ${isComboItem}, quantity: ${it.quantity}, fee: ${itemFee}`);
-      return s + (itemFee * (it.quantity || 0));
-    }, 0) : 0;
-    console.log('💰 Total delivery fee calculated:', fee);
-    setDeliveryFee(fee);
+      // Do not show validation errors on initial load; we'll validate on change and on submit
+      setOrderTotal(cartTotal);
+      
+      // Fetch delivery fee and its currency from shop collection
+      let deliveryFeeAmount = 0;
+      let deliveryFeeCurrency = 'ILS';
+      try {
+        if (cartItems.length > 0) {
+          const firstItem = cartItems[0];
+          const shopId = firstItem.shopId || firstItem.shopIds?.[0];
+          
+          console.log(`🏪 [ORDER] Getting delivery fee from shop ID:`, shopId);
+          
+          if (shopId) {
+            const shopRef = doc(db, 'shops', shopId);
+            const shopSnap = await getDoc(shopRef);
+            
+            if (shopSnap.exists()) {
+              const shopData = shopSnap.data();
+              deliveryFeeAmount = shopData.deliveryFee || 0;
+              deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
+              console.log(`🏪 [ORDER] Shop ID: ${shopId}`);
+              console.log(`💰 deliveryFee: ${deliveryFeeAmount} (number)`);
+              console.log(`💱 deliveryFeeCurrency: "${deliveryFeeCurrency}" (string)`);
+              console.log(`🏪 [ORDER] Full shop delivery data:`, { deliveryFee: deliveryFeeAmount, deliveryFeeCurrency });
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ [ORDER] Failed to fetch delivery fee from shop:', error);
+        deliveryFeeAmount = 0;
+        deliveryFeeCurrency = 'ILS';
+      }
+      
+      // Convert delivery fee to cart item's currency if needed
+      const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+      let deliveryFeeConverted = 0;
+      
+      // Only add delivery fee if delivery mode is 'delivery', not 'pickup'
+      if (deliveryMode === 'pickup') {
+        console.log(`🚗 [ORDER] Pickup mode selected - no delivery fee`);
+        deliveryFeeConverted = 0;
+      } else {
+        deliveryFeeConverted = deliveryFeeAmount;
+        console.log(`💱 [ORDER] Cart item currency: ${cartCurrency}, Delivery fee from shop: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+        
+        // If delivery fee currency matches cart currency, no conversion needed
+        if (deliveryFeeCurrency === cartCurrency) {
+          console.log(`💱 [ORDER] No conversion needed - delivery fee already in ${cartCurrency}`);
+        } else {
+          // Convert from shop's currency to cart currency
+          const conversion = convertPrice(deliveryFeeAmount, deliveryFeeCurrency);
+          deliveryFeeConverted = conversion.convertedPrice;
+          console.log(`💱 [ORDER] Conversion result:`, conversion);
+          console.log(`💱 [ORDER] Converted delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
+        }
+      }
+      
+      setDeliveryFee(deliveryFeeConverted);
+      
+      // Get tip data
+      const savedTip = localStorage.getItem('selectedTip');
+      if (savedTip) {
+        const tip = JSON.parse(savedTip);
+        setTipData(tip);
+        setFinalTotal(cartTotal + deliveryFeeConverted + tip.amount);
+      } else {
+        setFinalTotal(cartTotal + deliveryFeeConverted);
+      }
+    };
     
-    // Get tip data
-    const savedTip = localStorage.getItem('selectedTip');
-    if (savedTip) {
-      const tip = JSON.parse(savedTip);
-      setTipData(tip);
-      setFinalTotal(cartTotal + fee + tip.amount);
-    } else {
-      setFinalTotal(cartTotal + fee);
-    }
+    initializeOrder();
 
     // Priority 1: Check URL parameters (direct QR scan)
     console.log('🔍 [ORDER] Checking for seat data...');
@@ -346,6 +394,57 @@ const OrderConfirmScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stadiumId]);
 
+  // Recalculate delivery fee when delivery mode changes
+  useEffect(() => {
+    const recalculateDeliveryFee = async () => {
+      const cartItems = cartUtils.getCartItems();
+      
+      if (deliveryMode === 'pickup') {
+        console.log(`🚗 [ORDER] Pickup mode selected - setting delivery fee to 0`);
+        setDeliveryFee(0);
+      } else {
+        // Fetch delivery fee for delivery mode
+        let deliveryFeeAmount = 0;
+        let deliveryFeeCurrency = 'ILS';
+        
+        try {
+          if (cartItems.length > 0) {
+            const firstItem = cartItems[0];
+            const shopId = firstItem.shopId || firstItem.shopIds?.[0];
+            
+            if (shopId) {
+              const shopRef = doc(db, 'shops', shopId);
+              const shopSnap = await getDoc(shopRef);
+              
+              if (shopSnap.exists()) {
+                const shopData = shopSnap.data();
+                deliveryFeeAmount = shopData.deliveryFee || 0;
+                deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
+                console.log(`🏪 [ORDER] Delivery mode - fetched fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ [ORDER] Failed to fetch delivery fee:', error);
+        }
+        
+        // Convert to cart currency
+        const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+        let deliveryFeeConverted = deliveryFeeAmount;
+        
+        if (deliveryFeeCurrency !== cartCurrency) {
+          const conversion = convertPrice(deliveryFeeAmount, deliveryFeeCurrency);
+          deliveryFeeConverted = conversion.convertedPrice;
+          console.log(`💱 [ORDER] Converted delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
+        }
+        
+        setDeliveryFee(deliveryFeeConverted);
+      }
+    };
+    
+    recalculateDeliveryFee();
+  }, [deliveryMode]);
+
   // React to stadium changes dynamically via localStorage 'storage' event
   useEffect(() => {
     const handler = (evt) => {
@@ -408,6 +507,29 @@ const OrderConfirmScreen = () => {
     setFinalTotal(total);
   }, [orderTotal, deliveryFee, tipData.amount]);
 
+  // Get payment currency based on user's preference
+  const getPaymentCurrency = () => {
+    const preferredCurrency = getPreferredCurrency();
+    console.log(`💳 [PAYMENT] User preferred currency: ${preferredCurrency}`);
+    return preferredCurrency.toLowerCase(); // Stripe expects lowercase: 'usd', 'eur', 'ils'
+  };
+
+  // Convert final total to payment currency
+  const getPaymentAmount = () => {
+    const cartItems = cartUtils.getCartItems();
+    const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+    const paymentCurrency = getPreferredCurrency();
+    
+    // Convert from cart currency to payment currency
+    if (paymentCurrency === cartCurrency) {
+      return finalTotal; // No conversion needed
+    }
+    
+    const conversion = convertPrice(finalTotal, cartCurrency);
+    console.log(`💱 [PAYMENT] Converting ${finalTotal} ${cartCurrency} → ${conversion.convertedPrice} ${paymentCurrency}`);
+    return conversion.convertedPrice;
+  };
+
   // Pre-create payment intent on load so card UI can render immediately
   useEffect(() => {
     // Only create intent if we have a valid amount
@@ -427,14 +549,16 @@ const OrderConfirmScreen = () => {
         // Do not recreate if we already have a valid Stripe intent
         if (stripeIntent?.id && stripeIntent?.clientSecret) return;
 
-        console.log('[OrderConfirm] Creating payment intent with amount:', finalTotal);
+        const paymentCurrency = getPaymentCurrency();
+        const paymentAmount = getPaymentAmount();
+        console.log(`[OrderConfirm] Creating payment intent with amount: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
 
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            amount: finalTotal,
-            currency: 'ils',
+            amount: paymentAmount,
+            currency: paymentCurrency,
             vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
@@ -532,14 +656,16 @@ const OrderConfirmScreen = () => {
     if (requireFloors) {
       const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
       if (floorsCount > 0) {
-        if (!formData.floor || !String(formData.floor).trim()) {
+        const floorValue = String(formData.floor || '').trim();
+        if (!floorValue) {
           newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
         }
       }
     }
 
     if (requireRooms) {
-      if (!formData.room || !String(formData.room).trim()) {
+      const roomValue = String(formData.room || '').trim();
+      if (!roomValue) {
         newErrors.room = (t('order.err_room_required') || 'Room is required');
       }
     }
@@ -629,12 +755,14 @@ const OrderConfirmScreen = () => {
     if (requireFloors) {
       const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
       if (floorsCount > 0) {
-        if (!effective.floor || !String(effective.floor).trim()) newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
+        const floorValue = String(effective.floor || '').trim();
+        if (!floorValue) newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
       }
     }
 
     if (requireRooms) {
-      if (!effective.room || !String(effective.room).trim()) newErrors.room = (t('order.err_room_required') || 'Room is required');
+      const roomValue = String(effective.room || '').trim();
+      if (!roomValue) newErrors.room = (t('order.err_room_required') || 'Room is required');
     }
     if (!hasPhoneInCustomer) {
       const okPhone = validatePhone(effectivePhone);
@@ -668,7 +796,7 @@ const OrderConfirmScreen = () => {
       return false;
     }
     return true;
-  }, [showErrors, formData, t, hasPhoneInCustomer]);
+  }, [showErrors, formData, t, hasPhoneInCustomer, customerPhone]);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -760,17 +888,21 @@ const OrderConfirmScreen = () => {
 
       // Stripe payment flow only
       if (!stripeIntent?.id || !stripeIntent?.clientSecret) {
+        const userPreferredCurrency = getPreferredCurrency();
+        const paymentCurrency = getPaymentCurrency();
+        const paymentAmount = getPaymentAmount();
+        
+        console.log(`💳 [PAYMENT INTENT] User selected default currency: ${userPreferredCurrency.toUpperCase()}`);
+        console.log(`💳 [PAYMENT INTENT] Creating payment intent: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
+        
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // Testing: force static ₪5.00 amount. Commented out dynamic amount line below.
-          // amount: finalTotal,
           body: JSON.stringify({ 
-            amount: finalTotal, 
-            currency: 'ils',
+            amount: paymentAmount, 
+            currency: paymentCurrency,
             vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
             // Send fee breakdown for payment splitting
-            
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0
           })
@@ -780,6 +912,11 @@ const OrderConfirmScreen = () => {
         if (!res.ok) {
           throw new Error((data && (data.error || data.message)) || text || 'Create Stripe intent failed');
         }
+        
+        console.log(`✅ [PAYMENT INTENT] Payment intent created successfully!`);
+        console.log(`🆔 [PAYMENT INTENT] Intent ID: ${data?.intentId}`);
+        console.log(`💰 [PAYMENT INTENT] Amount: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
+        
         setStripeIntent({ id: data?.intentId, clientSecret: data?.clientSecret, mode: data?.mode });
         showToast('✅ Stripe payment intent ready. Processing your order...', 'success', 2000);
       }

@@ -2,10 +2,10 @@ import React from 'react';
 import { MdStar, MdAccessTime } from 'react-icons/md';
 import './FoodInfo.css';
 import { useTranslation } from '../../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
 const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   // Check if this is an offer item with discount
   const hasDiscount = food?.discountPercentage && food.discountPercentage > 0;
   const discountedPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food?.price;
@@ -25,12 +25,12 @@ const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
         <div className="food-price-container">
           {hasDiscount ? (
             <>
-              <div className="discounted-price">{formatILS(discountedPrice)}</div>
-              <div className="original-price">{formatILS(food?.price)}</div>
+              <div className="discounted-price">{formatPriceWithCurrency(discountedPrice, food?.currency)}</div>
+              <div className="original-price">{formatPriceWithCurrency(food?.price, food?.currency)}</div>
               <div className="discount-badge">{Math.round(food.discountPercentage)}% {t('food.off')}</div>
             </>
           ) : (
-            <div className="food-price">{formatILS(food?.price)}</div>
+            <div className="food-price">{formatPriceWithCurrency(food?.price, food?.currency)}</div>
           )}
         </div>
         <div className="food-prep-time">

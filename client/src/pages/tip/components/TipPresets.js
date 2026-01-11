@@ -1,7 +1,7 @@
 import React from 'react';
+import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
 const TipPresets = ({ options = [2, 4, 6, 8], selected, onChange }) => {
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 }).format(val || 0);
   
   return (
     <div className="tip-options">
@@ -11,7 +11,7 @@ const TipPresets = ({ options = [2, 4, 6, 8], selected, onChange }) => {
           className={`tip-option ${selected === amount ? 'selected' : ''}`}
           onClick={() => onChange(amount)}
         >
-          {formatILS(amount)}
+          {formatPriceWithCurrency(amount, 'ILS')}
         </button>
       ))}
     </div>

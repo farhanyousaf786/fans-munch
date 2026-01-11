@@ -34,6 +34,128 @@
   margin: 0 0 8px;
 }
 
+/* Currency Settings Styles */
+.currency-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.currency-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.currency-option:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.currency-option.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.currency-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e40af;
+  min-width: 30px;
+}
+
+.currency-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.currency-code {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.currency-name {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.currency-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+.rate-label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.rate-value {
+  color: #64748b;
+}
+
+.currency-check {
+  color: #3b82f6;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 12px;
+}
+
+.current-selection {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 6px;
+}
+
+.current-selection p {
+  margin: 0;
+  color: #0c4a6e;
+  font-size: 14px;
+}
+
+.helper-text {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.info-box {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.info-box p {
+  margin: 0;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .simple-form {
   display: flex;
   flex-direction: column;

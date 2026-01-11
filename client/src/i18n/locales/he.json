@@ -248,4 +248,35 @@
     "delivery_person": "שליח",
     "contact_unavailable": "פרטי קשר לא זמינים"
   }
+  ,
+  "profile": {
+    "language": "שפה",
+    "language_sub": "שנה שפה",
+    "currency": "מטבע",
+    "currency_sub": "בחר מטבע מועדף",
+    "about": "אודות",
+    "about_sub": "אודות האפליקציה",
+    "terms": "תנאי שימוש",
+    "terms_sub": "תנאי השירות",
+    "feedback": "משוב",
+    "feedback_sub": "שלח לנו משוב",
+    "privacy": "מדיניות פרטיות",
+    "privacy_sub": "מדיניות הפרטיות",
+    "report": "דווח על בעיה",
+    "report_sub": "דווח על תקלות",
+    "guest": "אורח",
+    "guest_subtitle": "התחבר כדי לראות את הפרופיל שלך",
+    "logout": "התנתק",
+    "settings": "הגדרות",
+    "active": "הזמנות פעילות",
+    "completed": "הושלם"
+  }
+  ,
+  "settings": {
+    "select_currency": "בחר מטבע",
+    "app_currency": "מטבע האפליקציה",
+    "currency_description": "בחר את המטבע המועדף שלך להצגת מחירים",
+    "current": "נוכחי",
+    "currency_info": "המטבע שבחרת יהיה בשימוש להצגת כל המחירים באפליקציה. שערי החליפין מתעדכנים כל 8 שעות."
+  }
 }

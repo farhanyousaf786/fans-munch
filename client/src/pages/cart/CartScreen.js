@@ -14,6 +14,7 @@ import CartItemsList from './components/CartItemsList';
 import PriceInfoWidget from './components/PriceInfoWidget';
 import AuthRequiredModal from './components/AuthRequiredModal';
 import './CartScreen.css';
+import { convertPrice } from '../../utils/currencyConverter';
 
 const CartScreen = ({ isFromHome = false }) => {
   const navigate = useNavigate();
@@ -127,11 +128,10 @@ const CartScreen = ({ isFromHome = false }) => {
   };
 
   const calculateTotal = () => {
+    // Cart total = subtotal only
+    // Delivery fee will be added in order confirmation screen from shop data
     const subtotal = calculateSubtotal();
-    const deliveryFee = calculateDeliveryFee();
-    const tip = calculateTip();
-    const discount = calculateDiscount();
-    return subtotal + deliveryFee + tip - discount;
+    return subtotal;
   };
 
   // Check if any shops are available before allowing order

@@ -7,6 +7,7 @@ import { stadiumStorage } from '../../../../utils/storage';
 import './MenuList.css';
 import { useTranslation } from '../../../../i18n/i18n';
 import { useCombo } from '../../../../contexts/ComboContext';
+import { formatPriceWithCurrency } from '../../../../utils/currencyConverter';
 
 // Local asset images to use as random placeholders for food items
 const assetPlaceholders = [
@@ -30,7 +31,6 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
   const { fetchComboItems, getCachedComboItems } = useCombo();
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   
   const [shops, setShops] = useState([]);
   const [shopsLoading, setShopsLoading] = useState(true);
@@ -221,7 +221,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                     <h3 className="menu-name-grid">{displayName}</h3>
                   );
                 })()}
-                <p className="menu-price-grid">{formatILS(food.price)}</p>
+                <p className="menu-price-grid">{formatPriceWithCurrency(food.price, food.currency)}</p>
                 
                 {/* Preparation time */}
                 <div className="menu-prep-time">

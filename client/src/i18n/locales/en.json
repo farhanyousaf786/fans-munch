@@ -250,4 +250,35 @@
     "delivery_person": "Delivery Person",
     "contact_unavailable": "Contact information unavailable"
   }
+  ,
+  "profile": {
+    "language": "Language",
+    "language_sub": "Change app language",
+    "currency": "Currency",
+    "currency_sub": "Choose your currency",
+    "about": "About",
+    "about_sub": "About this app",
+    "terms": "Terms and Conditions",
+    "terms_sub": "Terms of service",
+    "feedback": "Feedback",
+    "feedback_sub": "Send us feedback",
+    "privacy": "Privacy Policy",
+    "privacy_sub": "Privacy policy",
+    "report": "Report a Problem",
+    "report_sub": "Report issues",
+    "guest": "Guest",
+    "guest_subtitle": "Sign in to see your profile",
+    "logout": "Sign Out",
+    "settings": "Settings",
+    "active": "Active Orders",
+    "completed": "Completed"
+  }
+  ,
+  "settings": {
+    "select_currency": "Select Currency",
+    "app_currency": "App Currency",
+    "currency_description": "Choose your preferred currency for displaying prices",
+    "current": "Current",
+    "currency_info": "Your selected currency will be used to display all prices in the app. Exchange rates are updated every 8 hours."
+  }
 }

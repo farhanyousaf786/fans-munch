@@ -163,10 +163,9 @@ export class Order {
           allergens: item.allergens || [],
           category: resolvedCategory,
           createdAt: item.createdAt instanceof Date ? item.createdAt : (item.createdAt && item.createdAt.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date())),
-          customization: item.customization || {},
+          customization: item.customization || { options: [] },
           description: item.description || '',
           descriptionMap: resolvedDescriptionMap,
-          extras: item.extras || [],
           images: item.images || [],
           isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
           name: item.name || '',
@@ -174,20 +173,19 @@ export class Order {
           nutritionalInfo: item.nutritionalInfo || {},
           preparationTime: item.preparationTime || 15,
           price: parseFloat((item.price || 0).toFixed(2)),
-           currency: item.currency || 'ILS',
-          sauces: item.sauces || [],
+          currency: item.currency || 'ILS',
           // Shops: include all shopIds exactly like menuItems schema; keep shopId for compatibility
           shopIds: Array.isArray(item.shopIds) ? [...item.shopIds] : (item.shopId ? [item.shopId] : []),
           shopId: item.shopId || '',
           stadiumId: item.stadiumId || '',
-          sizes: item.sizes || [],
-          toppings: item.toppings || [],
           updatedAt: item.updatedAt instanceof Date ? item.updatedAt : (item.updatedAt && item.updatedAt.toDate ? item.updatedAt.toDate() : (item.updatedAt ? new Date(item.updatedAt) : new Date())),
           foodType: item.foodType || { halal: false, kosher: false, vegan: false },
           quantity: item.quantity || 1,
           // Additional cart-specific fields
           originalPrice: item.originalPrice || item.price || 0,
-          discountedPrice: item.discountedPrice || null
+          discountedPrice: item.discountedPrice || null,
+          // Store selected options/customizations from cart
+          selectedOptions: item.selectedSauces || []
         };
         try { console.log('[Order.toMap] Cart item mapped:', { id: item.id, shopId: foodData.shopId, shopIds: foodData.shopIds, price: foodData.price }); } catch (_) {}
         return foodData;

@@ -8,6 +8,7 @@ import TipSummary from './components/TipSummary';
 import TipActions from './components/TipActions';
 import './TipScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 
 const TipScreen = () => {
   const navigate = useNavigate();
@@ -25,10 +26,9 @@ const TipScreen = () => {
     // Get order total from cart
     const total = cartUtils.getTotalPrice();
     setOrderTotal(total);
-    // Set default tip amount
-    const defaultTip = 4; // Default to 4 shekels
-    setSelectedTipAmount(defaultTip);
-    setTipAmount(defaultTip);
+    // Start with no tip selected (user must choose)
+    setSelectedTipAmount(0);
+    setTipAmount(0);
   }, []);
 
   const setTip = (amount) => {
@@ -88,7 +88,14 @@ const TipScreen = () => {
 
   const handleBack = () => navigate(-1);
 
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
+  // Get cart currency for conversion
+  const getCartCurrency = () => {
+    const cartItems = cartUtils.getCartItems();
+    if (cartItems.length > 0) {
+      return cartItems[0].currency || 'ILS';
+    }
+    return 'ILS';
+  };
 
   return (
     <div className="tip-screen">
@@ -100,7 +107,7 @@ const TipScreen = () => {
         <h1 className="tip-title">{t('tip.title')}</h1>
         <p className="tip-description">
           {t('tip.supports_runner')} {t('tip.order_total_is')}{' '}
-          <span className="order-total">{formatILS(orderTotal)}</span>.
+          <span className="order-total">{formatPriceWithCurrency(orderTotal, getCartCurrency())}</span>.
         </p>
 
         {/* Illustration */}

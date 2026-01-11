@@ -1,9 +1,9 @@
 import React from 'react';
 import { MdAdd, MdRemove, MdDelete, MdShoppingCart } from 'react-icons/md';
 import './CartItem.css';
+import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
 const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => {
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="cart-item-wrapper">
       {/* Cart Item (matches Flutter CartItem widget) */}
@@ -30,7 +30,7 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
           </div>
           
           <div className="item-price-section">
-            <span className="item-price">{formatILS(item.price)}</span>
+            <span className="item-price">{formatPriceWithCurrency(item.price, item.currency)}</span>
           </div>
         </div>
 

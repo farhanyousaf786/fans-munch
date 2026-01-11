@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './OnboardingScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { settingsStorage } from '../../utils/storage';
+import { setPreferredCurrency } from '../../services/currencyPreferenceService';
 
 const OnboardingScreen = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -41,6 +42,12 @@ const OnboardingScreen = () => {
   const handleLanguageChange = (newLang) => {
     setLang(newLang);
     settingsStorage.setLanguagePreference(newLang);
+    
+    // Set default currency based on language
+    const defaultCurrency = newLang === 'he' ? 'ILS' : 'USD';
+    setPreferredCurrency(defaultCurrency);
+    console.log(`🌐 [ONBOARDING] Language: ${newLang} → Default currency: ${defaultCurrency}`);
+    
     setShowLanguageDialog(false);
   };
 
@@ -92,7 +99,7 @@ const OnboardingScreen = () => {
         <div className="language-dialog-overlay" onClick={() => setShowLanguageDialog(false)}>
           <div className="language-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="language-dialog-header">
-              <h3>{t('common.select_language')}</h3>
+              <h3>Select Language</h3>
               <button 
                 className="close-dialog" 
                 onClick={() => setShowLanguageDialog(false)}
@@ -115,7 +122,7 @@ const OnboardingScreen = () => {
                 onClick={() => handleLanguageChange('he')}
               >
                 <span className="language-flag">🇮🇱</span>
-                <span className="language-name">עברית</span>
+                <span className="language-name">Hebrew</span>
                 {lang === 'he' && <span className="language-check">✓</span>}
               </button>
             </div>

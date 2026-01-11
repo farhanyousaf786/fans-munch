@@ -7,6 +7,7 @@ import stadiumRepository from '../../repositories/stadiumRepository';
 import './StadiumSelectionScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { showToast } from '../../components/toast/ToastContainer';
+import { setPreferredCurrency } from '../../services/currencyPreferenceService';
 
 const StadiumSelectionScreen = () => {
   const [selectedStadium, setSelectedStadium] = useState(null);
@@ -79,6 +80,12 @@ const StadiumSelectionScreen = () => {
   const handleLanguageChange = (newLang) => {
     setLang(newLang);
     settingsStorage.setLanguagePreference(newLang);
+    
+    // Set default currency based on language
+    const defaultCurrency = newLang === 'he' ? 'ILS' : 'USD';
+    setPreferredCurrency(defaultCurrency);
+    console.log(`🌐 [STADIUM] Language: ${newLang} → Default currency: ${defaultCurrency}`);
+    
     setShowLanguageDialog(false);
   };
 
@@ -173,7 +180,7 @@ const StadiumSelectionScreen = () => {
         <div className="language-dialog-overlay" onClick={() => setShowLanguageDialog(false)}>
           <div className="language-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="language-dialog-header">
-              <h3>{t('common.select_language')}</h3>
+              <h3>Select Language</h3>
               <button 
                 className="close-dialog" 
                 onClick={() => setShowLanguageDialog(false)}
@@ -196,7 +203,7 @@ const StadiumSelectionScreen = () => {
                 onClick={() => handleLanguageChange('he')}
               >
                 <span className="language-flag">🇮🇱</span>
-                <span className="language-name">עברית</span>
+                <span className="language-name">Hebrew</span>
                 {lang === 'he' && <span className="language-check">✓</span>}
               </button>
             </div>

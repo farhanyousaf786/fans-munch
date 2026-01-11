@@ -10,6 +10,8 @@ const airwallexRoutes = require('./routes/airwallexRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const currencyRoutes = require('./routes/currencyRoutes');
+const { initializeCurrencyScheduler } = require('./services/currencyService');
 
 const app = express();
 
@@ -22,6 +24,10 @@ app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/currency', currencyRoutes);
+
+// Initialize currency rate scheduler
+initializeCurrencyScheduler();
 
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, 'build')));

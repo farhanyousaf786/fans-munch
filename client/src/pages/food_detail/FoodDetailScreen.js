@@ -7,6 +7,7 @@ import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
 import foodRepository from '../../repositories/foodRepository';
 import { useTranslation } from '../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 
 // Import components
 import FoodHeader from './components/FoodHeader';
@@ -324,26 +325,26 @@ const FoodDetailScreen = () => {
         {/* Description Component */}
         <FoodDescription description={food.description} />
 
-        {/* Sauces selection (from customization.sauces) */}
-        {Array.isArray(food?.customization?.sauces) && food.customization.sauces.length > 0 && (
+        {/* Customization options (from customization.options) */}
+        {Array.isArray(food?.customization?.options) && food.customization.options.length > 0 && (
           <div className="food-sauces-section">
-            <h3 className="food-section-title">Sauces</h3>
+            <h3 className="food-section-title">Options</h3>
             <div className="food-sauces-list">
-              {food.customization.sauces.map((sauce, index) => {
+              {food.customization.options.map((option, index) => {
                 const isSelected = selectedSauces.some(
-                  (s) => s.name === sauce.name && s.price === sauce.price
+                  (s) => s.name === option.name && s.price === option.price
                 );
                 return (
                   <label key={index} className="food-sauce-option">
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => toggleSauceSelection(sauce)}
+                      onChange={() => toggleSauceSelection(option)}
                     />
                     <span className="food-sauce-label">
-                      {sauce.name}
-                      {typeof sauce.price === 'number' && sauce.price > 0 && (
-                        <span className="food-sauce-price">{` + ₪${sauce.price}`}</span>
+                      {option.name}
+                      {typeof option.price === 'number' && option.price > 0 && (
+                        <span className="food-sauce-price">{` + ${formatPriceWithCurrency(option.price, food.currency)}`}</span>
                       )}
                     </span>
                   </label>
@@ -353,10 +354,15 @@ const FoodDetailScreen = () => {
           </div>
         )}
 
-        {/* Combo Items Component */}
-        <ComboItemsList comboItems={comboItems} isCombo={food.isCombo} comboPrice={food.price} />
-
-        {/* Allergens Component */}
+        {/* Combo Items List */}
+        {food.isCombo && comboItems && comboItems.length > 0 && (
+          <ComboItemsList 
+            comboItems={comboItems} 
+            isCombo={food.isCombo} 
+            comboPrice={food.price} 
+            foodCurrency={food.currency || 'ILS'} 
+          />
+        )} {/* Allergens Component */}
         <AllergensList allergens={food.allergens} />
 
         {/* Testimonials Component */}

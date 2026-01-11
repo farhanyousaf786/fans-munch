@@ -5,6 +5,7 @@ import { ComboProvider } from './contexts/ComboContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';
 import LogRocket from 'logrocket';
+import { initializeCurrencyRates, getCacheStatus } from './services/currencyInitService';
 
 // Import all screens
 import SplashScreen from './pages/splash/SplashScreen';
@@ -34,6 +35,7 @@ import PrivacyPolicyScreen from './pages/settings/PrivacyPolicyScreen';
 import FeedbackScreen from './pages/settings/FeedbackScreen';
 import ReportProblemScreen from './pages/settings/ReportProblemScreen';
 import LanguageScreen from './pages/settings/LanguageScreen';
+import CurrencySettingsScreen from './pages/settings/CurrencySettingsScreen';
 import HelpScreen from './pages/settings/HelpScreen';
 
 // Component to conditionally show footer
@@ -85,6 +87,16 @@ try {
 }
 
 function App() {
+  // Initialize currency rates on app startup
+  useEffect(() => {
+    console.log('🚀 [APP] Initializing app...');
+    initializeCurrencyRates();
+    const status = getCacheStatus();
+    if (status) {
+      console.log('📊 [APP] Cache status:', status.message);
+    }
+  }, []);
+
   // Parse QR parameters on first load and store seat info
   // Supports both fanmunch.com and localhost domains
   useEffect(() => {
@@ -168,6 +180,7 @@ function App() {
                 <Route path="/settings/feedback" element={<FeedbackScreen />} />
                 <Route path="/settings/report" element={<ReportProblemScreen />} />
                 <Route path="/settings/language" element={<LanguageScreen />} />
+                <Route path="/settings/currency" element={<CurrencySettingsScreen />} />
                 <Route path="/settings/help" element={<HelpScreen />} />
                 
                 {/* Food Detail Route */}

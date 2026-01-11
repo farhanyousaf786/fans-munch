@@ -1,14 +1,14 @@
 import React from 'react';
 import { useTranslation } from '../../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
 const TipSummary = ({ tipAmount = 0, onCustomTip }) => {
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
   return (
     <div className="tip-amount-section">
       <div className="tip-amount-row">
         <span className="tip-label">{t('tip.tip_amount')}</span>
-        <span className="tip-amount">{formatILS(tipAmount)}</span>
+        <span className="tip-amount">{formatPriceWithCurrency(tipAmount, 'ILS')}</span>
         {onCustomTip && (
           <button type="button" className="custom-tip-link" onClick={onCustomTip}>{t('tip.custom_tip')}</button>
         )}

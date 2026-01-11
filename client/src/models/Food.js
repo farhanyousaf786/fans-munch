@@ -18,7 +18,7 @@ class Food {
 
     // Pricing and currency
     price = 0,
-    currency = 'USD',
+    currency = 'ILS',
 
     // Classification
     category = '', // categoryId string
@@ -33,16 +33,8 @@ class Food {
 
     // Customization
     customization = {
-      toppings: [],
-      extras: [],
-      sauces: [],
-      sizes: []
+      options: []
     },
-    // Legacy separate arrays (still supported)
-    toppings = [],
-    extras = [],
-    sauces = [],
-    sizes = [],
 
     // Nutrition and compliance
     allergens = [],
@@ -92,10 +84,7 @@ class Food {
 
     // Customization
     this.customization = {
-      toppings: customization?.toppings ?? toppings ?? [],
-      extras: customization?.extras ?? extras ?? [],
-      sauces: customization?.sauces ?? sauces ?? [],
-      sizes: customization?.sizes ?? sizes ?? [],
+      options: customization?.options ?? []
     };
 
     // Nutrition/compliance
@@ -145,10 +134,7 @@ class Food {
       stadiumId: data.stadiumId || '',
       // customization
       customization: data.customization || {
-        toppings: data.toppings || [],
-        extras: data.extras || [],
-        sauces: data.sauces || [],
-        sizes: data.sizes || [],
+        options: []
       },
       // nutrition/compliance
       allergens: data.allergens || [],
@@ -191,10 +177,7 @@ class Food {
       stadiumId: data.stadiumId || '',
       // customization
       customization: data.customization || {
-        toppings: data.toppings || [],
-        extras: data.extras || [],
-        sauces: data.sauces || [],
-        sizes: data.sizes || [],
+        options: []
       },
       // nutrition/compliance
       allergens: data.allergens || [],
@@ -235,12 +218,8 @@ class Food {
       shopIds: this.shopIds,
       shopId: this.shopId,
       stadiumId: this.stadiumId,
-      // customization (also expose legacy fields for compatibility)
+      // customization
       customization: this.customization,
-      toppings: this.customization?.toppings || [],
-      extras: this.customization?.extras || [],
-      sauces: this.customization?.sauces || [],
-      sizes: this.customization?.sizes || [],
       // nutrition/compliance
       allergens: this.allergens,
       nutritionalInfo: this.nutritionalInfo,

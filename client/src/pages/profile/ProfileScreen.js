@@ -9,7 +9,8 @@ import {
   IoDocumentTextOutline,
   IoChatboxEllipsesOutline,
   IoLockClosedOutline,
-  IoBugOutline
+  IoBugOutline,
+  IoSwapHorizontalOutline
 } from 'react-icons/io5';
 import { storageManager, userStorage } from '../../utils/storage';
 import orderRepository from '../../repositories/orderRepository';
@@ -35,9 +36,7 @@ const ProfileScreen = () => {
   // Redirect unauthenticated users to auth
   useEffect(() => {
     if (userData === null) return; // wait until loaded
-    if (!userData || !userData.id) {
-      navigate('/auth');
-    }
+    // Don't redirect - allow unauthenticated users to see profile with limited options
   }, [userData, navigate]);
 
   const loadUserData = () => {
@@ -87,13 +86,24 @@ const ProfileScreen = () => {
 
   // helper removed; using compact stats card UI
 
-  const settingsOptions = [
+  const isAuthenticated = userData && userData.id;
+
+  // Settings options - different based on auth status
+  const settingsOptions = isAuthenticated ? [
     { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
+    { icon: IoSwapHorizontalOutline, title: t('profile.currency') || 'Currency', subtitle: t('profile.currency_sub') || 'Choose your currency', action: () => navigate('/settings/currency') },
     { icon: IoInformationCircleOutline, title: t('profile.about'), subtitle: t('profile.about_sub'), action: () => navigate('/settings/about') },
     { icon: IoDocumentTextOutline, title: t('profile.terms'), subtitle: t('profile.terms_sub'), action: () => navigate('/settings/terms') },
     { icon: IoChatboxEllipsesOutline, title: t('profile.feedback'), subtitle: t('profile.feedback_sub'), action: () => navigate('/settings/feedback') },
     { icon: IoLockClosedOutline, title: t('profile.privacy'), subtitle: t('profile.privacy_sub'), action: () => navigate('/settings/privacy') },
     { icon: IoBugOutline, title: t('profile.report'), subtitle: t('profile.report_sub'), action: () => navigate('/settings/report') },
+  ] : [
+    // Not logged in - show only read-only settings
+    { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
+    { icon: IoSwapHorizontalOutline, title: t('profile.currency') || 'Currency', subtitle: t('profile.currency_sub') || 'Choose your currency', action: () => navigate('/settings/currency') },
+    { icon: IoInformationCircleOutline, title: t('profile.about'), subtitle: t('profile.about_sub'), action: () => navigate('/settings/about') },
+    { icon: IoDocumentTextOutline, title: t('profile.terms'), subtitle: t('profile.terms_sub'), action: () => navigate('/settings/terms') },
+    { icon: IoLockClosedOutline, title: t('profile.privacy'), subtitle: t('profile.privacy_sub'), action: () => navigate('/settings/privacy') },
   ];
 
   return (
@@ -101,35 +111,51 @@ const ProfileScreen = () => {
       <div className="profile-hero">
         <div className="hero-overlay" />
         <div className="hero-content">
-          <div className="hero-left">
-            <div className="profile-avatar small">
-              {userData?.photoUrl ? (
-                <img src={userData.photoUrl} alt="Profile" className="avatar-image" />
-              ) : (
+          {isAuthenticated ? (
+            <>
+              <div className="hero-left">
+                <div className="profile-avatar small">
+                  {userData?.photoUrl ? (
+                    <img src={userData.photoUrl} alt="Profile" className="avatar-image" />
+                  ) : (
+                    <IoPersonOutline className="avatar-icon" />
+                  )}
+                </div>
+                <div className="hero-user">
+                  <div className="hero-name">{userData ? `${userData.firstName} ${userData.lastName}` : ''}</div>
+                  <div className="hero-email">{userData?.email || ''}</div>
+                </div>
+              </div>
+              <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
+            </>
+          ) : (
+            <div className="hero-left">
+              <div className="profile-avatar small">
                 <IoPersonOutline className="avatar-icon" />
-              )}
+              </div>
+              <div className="hero-user">
+                <div className="hero-name">{t('profile.guest') || 'Guest'}</div>
+                <div className="hero-email">{t('profile.guest_subtitle') || 'Sign in to see your profile'}</div>
+              </div>
             </div>
-            <div className="hero-user">
-              <div className="hero-name">{userData ? `${userData.firstName} ${userData.lastName}` : ''}</div>
-              <div className="hero-email">{userData?.email || ''}</div>
-            </div>
-          </div>
-          <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
+          )}
         </div>
       </div>
 
       <div className="profile-container">
-        <div className="stats-card">
-          <div className="stats-col">
-            <div className="stats-number">{loading ? '…' : orderStats.active}</div>
-            <div className="stats-label">{t('profile.active')}</div>
+        {isAuthenticated && (
+          <div className="stats-card">
+            <div className="stats-col">
+              <div className="stats-number">{loading ? '…' : orderStats.active}</div>
+              <div className="stats-label">{t('profile.active')}</div>
+            </div>
+            <div className="divider" />
+            <div className="stats-col">
+              <div className="stats-number green">{loading ? '…' : orderStats.completed}</div>
+              <div className="stats-label">{t('profile.completed')}</div>
+            </div>
           </div>
-          <div className="divider" />
-          <div className="stats-col">
-            <div className="stats-number green">{loading ? '…' : orderStats.completed}</div>
-            <div className="stats-label">{t('profile.completed')}</div>
-          </div>
-        </div>
+        )}
 
         <div className="settings-section">
           <div className="section-header">{t('profile.settings')}</div>

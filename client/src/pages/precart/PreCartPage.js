@@ -87,13 +87,13 @@ const PreCartPage = ({ isFromHome = false }) => {
     navigate('/menu'); // Go to menu list page
   };
 
-  // Handle checkout - go to cart page
+  // Handle checkout - go to tip page
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       showToast('error', 'Cart is empty');
       return;
     }
-    navigate('/cart');
+    navigate('/tip');
   };
 
   if (loading) {

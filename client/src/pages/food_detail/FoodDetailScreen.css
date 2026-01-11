@@ -445,6 +445,76 @@
   }
 }
 
+/* Customization Options Section */
+.food-sauces-section {
+  margin: 28px 0;
+  padding: 20px 0;
+  border-top: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.food-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 16px 0;
+  padding: 0;
+}
+
+.food-sauces-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.food-sauce-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #F9FAFB;
+  border: 2px solid #E5E7EB;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.food-sauce-option:hover {
+  background: #F3F4F6;
+  border-color: #3D70FF;
+}
+
+.food-sauce-option input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #3D70FF;
+  flex-shrink: 0;
+}
+
+.food-sauce-option input[type="checkbox"]:checked {
+  background-color: #3D70FF;
+}
+
+.food-sauce-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1F2937;
+  cursor: pointer;
+}
+
+.food-sauce-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3D70FF;
+  margin-left: auto;
+  padding-left: 12px;
+}
+
 @media (max-width: 480px) {
   .food-detail-content {
     padding: 0 12px 120px;
@@ -466,6 +536,29 @@
   
   .section-title {
     font-size: 16px;
+  }
+  
+  .food-sauces-section {
+    margin: 20px 0;
+    padding: 16px 0;
+  }
+  
+  .food-section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .food-sauce-option {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  
+  .food-sauce-label {
+    font-size: 14px;
+  }
+  
+  .food-sauce-price {
+    font-size: 13px;
   }
   
   .food-detail-bottom-bar {

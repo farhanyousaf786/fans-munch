@@ -2,11 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ComboItemsList.css';
 import { useTranslation } from '../../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
-const ComboItemsList = ({ comboItems, isCombo, comboPrice }) => {
+const ComboItemsList = ({ comboItems, isCombo, comboPrice, foodCurrency = 'ILS' }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const formatILS = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 }).format(val || 0);
 
   if (!isCombo || !comboItems || comboItems.length === 0) return null;
 
@@ -30,16 +30,16 @@ const ComboItemsList = ({ comboItems, isCombo, comboPrice }) => {
       <div className="combo-price-comparison">
         <div className="price-row">
           <span className="price-label">{t('food.individual_items_total')}</span>
-          <span className="price-value individual-price">{formatILS(totalIndividualPrice)}</span>
+          <span className="price-value individual-price">{formatPriceWithCurrency(totalIndividualPrice, foodCurrency)}</span>
         </div>
         <div className="price-row">
           <span className="price-label">{t('food.combo_price')}</span>
-          <span className="price-value combo-price">{formatILS(comboPrice || 0)}</span>
+          <span className="price-value combo-price">{formatPriceWithCurrency(comboPrice || 0, foodCurrency)}</span>
         </div>
         {savings > 0 && (
           <div className="price-row savings">
             <span className="price-label">{t('food.you_save')}</span>
-            <span className="price-value savings-amount">{formatILS(savings)}</span>
+            <span className="price-value savings-amount">{formatPriceWithCurrency(savings, foodCurrency)}</span>
           </div>
         )}
       </div>
@@ -70,7 +70,7 @@ const ComboItemsList = ({ comboItems, isCombo, comboPrice }) => {
               <h3 className="combo-item-name">{item.name}</h3>
               <p className="combo-item-description">{item.description}</p>
               <div className="combo-item-meta">
-                <span className="combo-item-price">{formatILS(item.price)}</span>
+                <span className="combo-item-price">{formatPriceWithCurrency(item.price, item.currency || foodCurrency)}</span>
                 {item.preparationTime && (
                   <span className="combo-item-time">{item.preparationTime} min</span>
                 )}
