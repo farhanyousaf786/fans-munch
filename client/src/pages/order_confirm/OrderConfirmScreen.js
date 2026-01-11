@@ -132,6 +132,14 @@ const OrderConfirmScreen = () => {
       const cartItems = cartUtils.getCartItems();
       const cartTotal = cartUtils.getTotalPrice();
       
+      // Reset floor and room when visiting order confirmation screen
+      setFormData(prev => ({
+        ...prev,
+        floor: '',
+        room: ''
+      }));
+      console.log('🔄 [ORDER] Reset floor and room on screen visit');
+      
       // Do not show validation errors on initial load; we'll validate on change and on submit
       setOrderTotal(cartTotal);
       
@@ -278,14 +286,23 @@ const OrderConfirmScreen = () => {
       sessionStorage.removeItem('pending_seat_data');
       console.log('🗑️ [ORDER] Cleared sessionStorage');
     } else {
-      // Priority 3: Fallback to saved seat info from storage
+      // Priority 3: Fallback to saved seat info from storage (but NOT floor/room - those should be fresh)
       console.log('🔍 [ORDER] Checking seatStorage...');
       const savedSeat = seatStorage.getSeatInfo();
       if (savedSeat) {
         console.log('✅ [ORDER] Auto-filling from seatStorage:', savedSeat);
         setFormData(prev => ({
           ...prev,
-          ...savedSeat
+          // Restore saved seat data but exclude floor and room (they should be empty)
+          row: savedSeat.row || prev.row,
+          seatNo: savedSeat.seatNo || prev.seatNo,
+          sectionId: savedSeat.sectionId || prev.sectionId,
+          section: savedSeat.section || prev.section,
+          entrance: savedSeat.entrance || prev.entrance,
+          stand: savedSeat.stand || prev.stand,
+          seatDetails: savedSeat.seatDetails || prev.seatDetails,
+          area: savedSeat.area || prev.area,
+          // floor and room are intentionally NOT restored - they stay empty
         }));
       } else {
         console.log('⚠️ [ORDER] No seat data found anywhere - form will be empty');
@@ -655,8 +672,10 @@ const OrderConfirmScreen = () => {
 
     if (requireFloors) {
       const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
+      console.log('[VALIDATION] Floor check - requireFloors:', requireFloors, 'floorsCount:', floorsCount, 'formData.floor:', formData.floor);
       if (floorsCount > 0) {
         const floorValue = String(formData.floor || '').trim();
+        console.log('[VALIDATION] Floor value after trim:', floorValue, 'isEmpty:', !floorValue);
         if (!floorValue) {
           newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
         }
@@ -723,8 +742,8 @@ const OrderConfirmScreen = () => {
       row: pick(formData.row, savedSeat.row),
       seatNo: pick(formData.seatNo, savedSeat.seatNo),
       sectionId: pick(formData.sectionId, savedSeat.sectionId),
-      floor: pick(formData.floor, savedSeat.floor),
-      room: pick(formData.room, savedSeat.room),
+      floor: String(formData.floor || '').trim(), // Floor is NOT restored from saved seat - must be entered fresh
+      room: String(formData.room || '').trim(), // Room is NOT restored from saved seat - must be entered fresh
     };
 
     const stadiumData = stadiumStorage.getSelectedStadium() || {};
@@ -754,9 +773,18 @@ const OrderConfirmScreen = () => {
 
     if (requireFloors) {
       const floorsCount = typeof stadiumData.floors === 'number' ? stadiumData.floors : parseInt(stadiumData.floors, 10) || 0;
+      console.log('[VALIDATE_AND_TOAST] Floor check - requireFloors:', requireFloors, 'floorsCount:', floorsCount);
+      console.log('[VALIDATE_AND_TOAST] formData.floor:', formData.floor, 'type:', typeof formData.floor, 'length:', formData.floor?.length);
+      console.log('[VALIDATE_AND_TOAST] effective.floor:', effective.floor, 'type:', typeof effective.floor, 'length:', effective.floor?.length);
       if (floorsCount > 0) {
         const floorValue = String(effective.floor || '').trim();
-        if (!floorValue) newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
+        console.log('[VALIDATE_AND_TOAST] Floor value after String() and trim():', floorValue, 'isEmpty:', !floorValue, 'length:', floorValue.length);
+        if (!floorValue) {
+          console.log('❌ [VALIDATE_AND_TOAST] Floor validation FAILED - value is empty');
+          newErrors.floor = (t('order.err_floor_required') || 'Floor is required');
+        } else {
+          console.log('✅ [VALIDATE_AND_TOAST] Floor validation PASSED - value is:', floorValue);
+        }
       }
     }
 
@@ -983,6 +1011,8 @@ const OrderConfirmScreen = () => {
         stand: pickTrimCard(formData.stand, savedSeatForCard.stand),
         section: pickTrimCard(formData.section, savedSeatForCard.section),
         sectionId: pickTrimCard(formData.sectionId, savedSeatForCard.sectionId),
+        floor: pickTrimCard(formData.floor, savedSeatForCard.floor),
+        room: pickTrimCard(formData.room, savedSeatForCard.room),
         seatDetails: pickTrimCard(formData.seatDetails, savedSeatForCard.seatDetails),
         area: pickTrimCard(formData.area, savedSeatForCard.area),
       };
