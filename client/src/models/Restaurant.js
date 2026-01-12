@@ -10,9 +10,11 @@ class Restaurant {
     reviewCount = 0,
     deliveryTime = '',
     deliveryFee = 0,
+    deliveryFeeCurrency = 'USD',
     minOrder = 0,
     cuisine = [],
-    isOpen = true
+    isOpen = true,
+    stripeConnectedAccountId = null
   }) {
     this.id = id;
     this.name = name;
@@ -24,9 +26,11 @@ class Restaurant {
     this.reviewCount = reviewCount;
     this.deliveryTime = deliveryTime;
     this.deliveryFee = deliveryFee;
+    this.deliveryFeeCurrency = deliveryFeeCurrency;
     this.minOrder = minOrder;
     this.cuisine = cuisine;
     this.isOpen = isOpen;
+    this.stripeConnectedAccountId = stripeConnectedAccountId;
   }
 
   static fromMap(data, id = null) {
@@ -41,9 +45,11 @@ class Restaurant {
       reviewCount: data.reviewCount || 0,
       deliveryTime: data.deliveryTime || '',
       deliveryFee: data.deliveryFee || 0,
+      deliveryFeeCurrency: data.deliveryFeeCurrency || 'USD',
       minOrder: data.minOrder || 0,
       cuisine: data.cuisine || [],
-      isOpen: data.isOpen !== undefined ? data.isOpen : true
+      isOpen: data.isOpen !== undefined ? data.isOpen : true,
+      stripeConnectedAccountId: data.stripeConnectedAccountId || null
     });
   }
 
@@ -59,9 +65,11 @@ class Restaurant {
       reviewCount: this.reviewCount,
       deliveryTime: this.deliveryTime,
       deliveryFee: this.deliveryFee,
+      deliveryFeeCurrency: this.deliveryFeeCurrency,
       minOrder: this.minOrder,
       cuisine: this.cuisine,
-      isOpen: this.isOpen
+      isOpen: this.isOpen,
+      stripeConnectedAccountId: this.stripeConnectedAccountId
     };
   }
 

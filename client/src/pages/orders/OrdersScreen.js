@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import './OrdersScreen.css';
 import { useTranslation } from '../../i18n/i18n';
+import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 
 const OrdersScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -221,7 +222,16 @@ const OrdersScreen = () => {
                     <span className="meta-dot">•</span>
                     <span className="meta-item">{order.getFormattedDate()}</span>
                   </div>
-                  <div className="order-price">₪{order.total.toFixed(2)}</div>
+                  <div className="order-price">
+                    {(() => {
+                      // Get the first cart item to determine original currency
+                      const firstItem = Array.isArray(order.cart) && order.cart.length > 0 ? order.cart[0] : null;
+                      const originalCurrency = firstItem?.currency || 'ILS';
+                      
+                      // Format price with conversion
+                      return formatPriceWithCurrency(order.total, originalCurrency);
+                    })()}
+                  </div>
                 </div>
 
                 {/* Instruction text for delivery orders */}

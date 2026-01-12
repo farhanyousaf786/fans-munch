@@ -17,10 +17,18 @@ exports.createPaymentIntent = async (req, res) => {
   try {
     const stripeClient = initStripe();
     
-    console.log('[Stripe] Creating payment intent...');
+    console.log('\n' + '='.repeat(60));
+    console.log('📥 [SERVER] Received Payment Intent Request');
+    console.log('='.repeat(60));
     
     // Get amount, currency, fees, and optional vendor connected account from request
-    const { amount, currency = 'ils', vendorConnectedAccountId, deliveryFee = 0, tipAmount = 0 } = req.body;
+    const { amount, currency = 'ils', stripeConnectedAccountId, deliveryFee = 0, tipAmount = 0 } = req.body;
+    
+    console.log(`💰 Amount: ${amount} ${currency.toUpperCase()}`);
+    console.log(`💳 Vendor Account Received: ${stripeConnectedAccountId || 'null/missing'}`);
+    console.log(`🚚 Delivery Fee: ${deliveryFee}`);
+    console.log(`💵 Tip Amount: ${tipAmount}`);
+    console.log('='.repeat(60) + '\n');
     
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -34,7 +42,7 @@ exports.createPaymentIntent = async (req, res) => {
 
     // Calculate platform fees (delivery fee + tip) and vendor amount
     let vendorAmount;
-    if (vendorConnectedAccountId) {
+    if (stripeConnectedAccountId) {
       const deliveryFeeInCents = Math.round((deliveryFee || 0) * 100);
       const tipAmountInCents = Math.round((tipAmount || 0) * 100);
       const platformFees = deliveryFeeInCents + tipAmountInCents;
@@ -70,7 +78,7 @@ exports.createPaymentIntent = async (req, res) => {
     };
 
     // If vendor account provided, calculate proportional Stripe fee sharing
-    if (vendorConnectedAccountId) {
+    if (stripeConnectedAccountId) {
       const deliveryFeeInCents = Math.round((deliveryFee || 0) * 100);
       const tipAmountInCents = Math.round((tipAmount || 0) * 100);
       const basePlatformFees = deliveryFeeInCents + tipAmountInCents;
@@ -97,9 +105,9 @@ exports.createPaymentIntent = async (req, res) => {
       
       paymentIntentData.application_fee_amount = finalPlatformFee;
       paymentIntentData.transfer_data = {
-        destination: vendorConnectedAccountId,
+        destination: stripeConnectedAccountId,
       };
-      paymentIntentData.metadata.vendorAccountId = vendorConnectedAccountId;
+      paymentIntentData.metadata.stripeConnectedAccountId = stripeConnectedAccountId;
       paymentIntentData.metadata.deliveryFee = deliveryFee;
       paymentIntentData.metadata.tipAmount = tipAmount;
       paymentIntentData.metadata.basePlatformFee = basePlatformFees / 100;
@@ -108,6 +116,15 @@ exports.createPaymentIntent = async (req, res) => {
       paymentIntentData.metadata.vendorStripeFee = vendorStripeFee / 100;
       paymentIntentData.metadata.finalPlatformFee = finalPlatformFee / 100;
       paymentIntentData.metadata.feeSharing = 'proportional_prededucted';
+      
+      console.log('\n' + '='.repeat(60));
+      console.log('💸 [PAYMENT ROUTING] Vendor Transfer Configuration');
+      console.log('='.repeat(60));
+      console.log(`✅ Payment will be routed to: ${stripeConnectedAccountId}`);
+      console.log(`💰 Total Amount: $${(amountInCents / 100).toFixed(2)}`);
+      console.log(`🏪 Vendor Receives: $${(finalVendorAmount / 100).toFixed(2)}`);
+      console.log(`🏢 Platform Keeps: $${(finalPlatformFee / 100).toFixed(2)}`);
+      console.log('='.repeat(60) + '\n');
       
       console.log('[Stripe] Proportional fee pre-deduction structure:', {
         totalAmount: amountInCents / 100,

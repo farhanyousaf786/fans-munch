@@ -11,7 +11,7 @@ const PromotionBanner = () => {
   const [loading, setLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const navigate = useNavigate();
-  const { t, lang } = useTranslation();
+  const { lang } = useTranslation();
 
   useEffect(() => {
     fetchPromotion();

@@ -57,6 +57,7 @@ const OrderConfirmScreen = () => {
   const [deliveryFee, setDeliveryFee] = useState(0); // ILS per item
   const [tipData, setTipData] = useState({ amount: 0, percentage: 0 });
   const [finalTotal, setFinalTotal] = useState(0);
+  const [vendorAccountId, setVendorAccountId] = useState(null); // Stripe Connected Account ID
   // Stadium and sections state
   const [stadiumId, setStadiumId] = useState(() => stadiumStorage.getSelectedStadium()?.id || null);
   const [sectionsOptions, setSectionsOptions] = useState([]); // [{id,name,shops:[], no:number}]
@@ -143,15 +144,18 @@ const OrderConfirmScreen = () => {
       // Do not show validation errors on initial load; we'll validate on change and on submit
       setOrderTotal(cartTotal);
       
-      // Fetch delivery fee and its currency from shop collection
+      // Fetch delivery fee, currency, and vendor account from shop collection
       let deliveryFeeAmount = 0;
       let deliveryFeeCurrency = 'ILS';
+      let shopVendorAccountId = null;
+      let shopId = null; // Declare outside try block for logging
+      
       try {
         if (cartItems.length > 0) {
           const firstItem = cartItems[0];
-          const shopId = firstItem.shopId || firstItem.shopIds?.[0];
+          shopId = firstItem.shopId || firstItem.shopIds?.[0];
           
-          console.log(`🏪 [ORDER] Getting delivery fee from shop ID:`, shopId);
+          console.log(`🏪 [ORDER] Getting shop data from shop ID:`, shopId);
           
           if (shopId) {
             const shopRef = doc(db, 'shops', shopId);
@@ -161,18 +165,42 @@ const OrderConfirmScreen = () => {
               const shopData = shopSnap.data();
               deliveryFeeAmount = shopData.deliveryFee || 0;
               deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
+              shopVendorAccountId = shopData.stripeConnectedAccountId || null;
+              
               console.log(`🏪 [ORDER] Shop ID: ${shopId}`);
               console.log(`💰 deliveryFee: ${deliveryFeeAmount} (number)`);
               console.log(`💱 deliveryFeeCurrency: "${deliveryFeeCurrency}" (string)`);
-              console.log(`🏪 [ORDER] Full shop delivery data:`, { deliveryFee: deliveryFeeAmount, deliveryFeeCurrency });
+              console.log(`💳 stripeConnectedAccountId: "${shopVendorAccountId}" (string)`);
+              console.log(`🏪 [ORDER] Full shop data:`, { 
+                deliveryFee: deliveryFeeAmount, 
+                deliveryFeeCurrency,
+                stripeConnectedAccountId: shopVendorAccountId
+              });
             }
           }
         }
       } catch (error) {
-        console.warn('⚠️ [ORDER] Failed to fetch delivery fee from shop:', error);
+        console.warn('⚠️ [ORDER] Failed to fetch shop data:', error);
         deliveryFeeAmount = 0;
         deliveryFeeCurrency = 'ILS';
+        shopVendorAccountId = null;
       }
+      
+      // Set vendor account ID
+      const finalVendorId = shopVendorAccountId || process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID;
+      setVendorAccountId(finalVendorId);
+      
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`💳 [VENDOR ACCOUNT] Payment Routing Information`);
+      console.log(`${'='.repeat(60)}`);
+      console.log(`📍 Source: ${shopVendorAccountId ? 'Firebase Shop Data' : '.env Fallback'}`);
+      console.log(`🏪 Shop ID: ${shopId || 'N/A'}`);
+      console.log(`💳 Vendor Account from Firebase: ${shopVendorAccountId || 'null/missing'}`);
+      console.log(`🔧 Fallback from .env: ${process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID || 'not set'}`);
+      console.log(`✅ Final Vendor Account Used: ${finalVendorId}`);
+      console.log(`${'='.repeat(60)}\n`);
+
+      
       
       // Convert delivery fee to cart item's currency if needed
       const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
@@ -568,7 +596,16 @@ const OrderConfirmScreen = () => {
 
         const paymentCurrency = getPaymentCurrency();
         const paymentAmount = getPaymentAmount();
-        console.log(`[OrderConfirm] Creating payment intent with amount: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
+        const vendorIdToSend = vendorAccountId || process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID;
+        
+        console.log(`\n${'='.repeat(60)}`);
+        console.log(`📤 [CLIENT → SERVER] Sending Payment Intent Request`);
+        console.log(`${'='.repeat(60)}`);
+        console.log(`💰 Amount: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
+        console.log(`💳 Vendor Account Sending: ${vendorIdToSend}`);
+        console.log(`🚚 Delivery Fee: ${deliveryFee}`);
+        console.log(`💵 Tip Amount: ${tipData.amount || 0}`);
+        console.log(`${'='.repeat(60)}\n`);
 
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
@@ -576,7 +613,7 @@ const OrderConfirmScreen = () => {
           body: JSON.stringify({ 
             amount: paymentAmount,
             currency: paymentCurrency,
-            vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
+            stripeConnectedAccountId: vendorIdToSend,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0

@@ -26,6 +26,7 @@ async function fetchExchangeRates() {
       throw new Error('Invalid API response');
     }
 
+    
     const rates = {};
     CURRENCIES.forEach(currency => {
       if (response.data.rates[currency]) {
