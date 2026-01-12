@@ -209,6 +209,7 @@ const CartScreen = ({ isFromHome = false }) => {
 
   const handleAuthModalCancel = () => {
     setShowAuthModal(false);
+    // Just close the modal, don't navigate anywhere
   };
 
   const handleContinueAsGuest = async () => {
@@ -269,6 +270,8 @@ const CartScreen = ({ isFromHome = false }) => {
         calculateDiscount={calculateDiscount}
         calculateTotal={calculateTotal}
         onPlaceOrder={handlePlaceOrder}
+        onContinueAsGuest={handleContinueAsGuest}
+        onCancel={handleAuthModalCancel}
       />
 
       <AuthRequiredModal 

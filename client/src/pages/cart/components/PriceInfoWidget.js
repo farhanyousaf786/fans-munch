@@ -12,7 +12,9 @@ const PriceInfoWidget = ({
   calculateTip, 
   calculateDiscount, 
   calculateTotal, 
-  onPlaceOrder 
+  onPlaceOrder,
+  onContinueAsGuest,
+  onCancel
 }) => {
   const { t } = useTranslation();
   const [hasMixedShops, setHasMixedShops] = useState(false);
@@ -98,6 +100,44 @@ const PriceInfoWidget = ({
         >
           {hasMixedShops ? 'Cannot Place Order' : t('cart.place_order')}
         </button>
+
+        {/* Guest & Cancel Options */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+          <button 
+            className="guest-option-button"
+            onClick={onContinueAsGuest}
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              background: '#f3f4f6',
+              color: '#111827',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {t('auth.continue_as_guest')}
+          </button>
+          <button 
+            className="cancel-option-button"
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              background: '#fff',
+              color: '#6b7280',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            {t('common.cancel')}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { userStorage } from '../../utils/storage';
+import { stadiumStorage } from '../../utils/storage';
 import { cartUtils } from '../../utils/cartUtils';
 import { showToast } from '../../components/toast/ToastContainer';
+import { createAnonymousUser } from '../../utils/anonymousUserService';
 import CartHeader from '../cart/components/CartHeader';
 import CartLoadingState from '../cart/components/CartLoadingState';
 import CartEmptyState from '../cart/components/CartEmptyState';
 import CartItemsList from '../cart/components/CartItemsList';
+import AuthRequiredModal from '../cart/components/AuthRequiredModal';
 import './PreCartPage.css';
 
 const PreCartPage = ({ isFromHome = false }) => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Load cart data from cartUtils
   useEffect(() => {
@@ -87,13 +92,58 @@ const PreCartPage = ({ isFromHome = false }) => {
     navigate('/menu'); // Go to menu list page
   };
 
-  // Handle checkout - go to tip page
+  // Handle checkout - check auth first
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       showToast('error', 'Cart is empty');
       return;
     }
+    
+    // Check if user is logged in
+    if (!userStorage.isLoggedIn || !userStorage.isLoggedIn()) {
+      // Show auth modal if not logged in
+      setShowAuthModal(true);
+      return;
+    }
+    
+    // User is logged in, proceed to tip page
     navigate('/tip');
+  };
+
+  const handleAuthModalConfirm = () => {
+    try { localStorage.setItem('postLoginNext', '/tip'); } catch (_) {}
+    setShowAuthModal(false);
+    navigate('/auth?next=%2Ftip');
+  };
+
+  const handleAuthModalCancel = () => {
+    setShowAuthModal(false);
+  };
+
+  const handleContinueAsGuest = async () => {
+    try {
+      setShowAuthModal(false);
+      showToast('info', 'Creating guest account...');
+      
+      // Create anonymous user and sign them in
+      const anonymousUser = await createAnonymousUser();
+      
+      showToast('success', `Welcome ${anonymousUser.displayName}!`);
+      
+      // Check if stadium is already selected
+      const selectedStadium = stadiumStorage.getSelectedStadium();
+      if (selectedStadium) {
+        // Stadium already selected, go directly to tip page
+        navigate('/tip');
+      } else {
+        // No stadium selected, go to stadium selection
+        navigate('/stadium-selection');
+      }
+      
+    } catch (error) {
+      console.error('Failed to create guest account:', error);
+      showToast('error', 'Failed to create guest account. Please try signing in.');
+    }
   };
 
   if (loading) {
@@ -135,6 +185,13 @@ const PreCartPage = ({ isFromHome = false }) => {
           Checkout
         </button>
       </div>
+
+      <AuthRequiredModal 
+        open={showAuthModal}
+        onCancel={handleAuthModalCancel}
+        onConfirm={handleAuthModalConfirm}
+        onContinueAsGuest={handleContinueAsGuest}
+      />
     </div>
   );
 };
