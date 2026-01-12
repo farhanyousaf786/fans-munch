@@ -43,7 +43,7 @@ const OrderConfirmScreen = () => {
     row: '',
     seatNo: '',
     entrance: '',
-    stand: 'Main', // Default to Main stand
+    stand: '', // Will be set based on stadium configuration
     section: '',
     sectionId: '',
     floor: '',
@@ -303,8 +303,8 @@ const OrderConfirmScreen = () => {
         const newData = { 
           ...prev, 
           ...sessionSeatData,
-          // Default stand to 'Main' if not provided in QR code
-          stand: sessionSeatData.stand || 'Main'
+          // Only set stand if it's provided in QR code data
+          stand: sessionSeatData.stand || ''
         };
         console.log('📝 [ORDER] Form data updated:', newData);
         return newData;
@@ -1092,7 +1092,7 @@ const OrderConfirmScreen = () => {
 
       // 4) Cleanup and reset UI (cart/tip already cleared in helper)
       try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-      setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
+      setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: '' });
       setErrors({});
       setShowErrors(false);
       setIsFormValid(false);
@@ -1189,7 +1189,7 @@ const OrderConfirmScreen = () => {
 
         // Cleanup form inputs and notify & navigate
         try { seatStorage.clearSeatInfo && seatStorage.clearSeatInfo(); } catch (_) {}
-        setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: 'Main' });
+        setFormData({ row: '', seatNo: '', section: '', sectionId: '', seatDetails: '', area: '', entrance: '', stand: '' });
         setErrors({});
         setShowErrors(false);
         setIsFormValid(false);
