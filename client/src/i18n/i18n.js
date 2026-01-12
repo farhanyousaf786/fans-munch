@@ -214,7 +214,7 @@ const I18nContext = createContext({
 });
 
 export const I18nProvider = ({ children }) => {
-  const [lang, setLang] = useState(settingsStorage.getLanguagePreference() || 'he');
+  const [lang, setLang] = useState(settingsStorage.getLanguagePreference() || 'en');
 
   useEffect(() => {
     const handler = (e) => {

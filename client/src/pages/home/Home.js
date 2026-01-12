@@ -6,7 +6,6 @@ import OffersList from './components/offers_list/OffersList';
 import CategoryList from './components/category_list/CategoryList';
 import MenuList from './components/menu_list/MenuList';
 import ShopList from './components/shop_list/ShopList';
-import PromotionBanner from '../../components/promotion/PromotionBanner';
 import foodRepository from '../../repositories/foodRepository';
 import offerRepository from '../../repositories/offerRepository';
 import { stadiumStorage, userStorage } from '../../utils/storage';
@@ -252,7 +251,6 @@ function Home() {
 
   return (
     <div className="home-page">
-      <PromotionBanner />
       <TopSection />
       
       <div className="home-content">

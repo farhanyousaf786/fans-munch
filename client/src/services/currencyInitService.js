@@ -38,15 +38,44 @@ export async function initializeCurrencyRates() {
 
     // Fetch fresh rates from server
     console.log('🔄 [CURRENCY INIT] Fetching from /api/currency/rates');
-    const response = await fetch('/api/currency/rates');
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    let data;
+    try {
+      const response = await fetch('/api/currency/rates', { timeout: 5000 });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      data = await response.json();
+    } catch (serverError) {
+      console.warn('⚠️ [CURRENCY INIT] Server unavailable, fetching directly from API:', serverError.message);
+      
+      // Fallback: Fetch directly from ExchangeRate API
+      try {
+        const directResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const directData = await directResponse.json();
+        
+        if (directData && directData.rates) {
+          // Extract only the currencies we need
+          const currencies = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'INR', 'MXN', 'BRL', 'ZAR', 'SGD', 'HKD', 'NZD', 'SEK', 'NOK', 'DKK', 'AED'];
+          const rates = {};
+          currencies.forEach(currency => {
+            if (directData.rates[currency]) {
+              rates[currency] = directData.rates[currency];
+            }
+          });
+          
+          data = { success: true, rates };
+          console.log('✅ [CURRENCY INIT] Fetched directly from ExchangeRate API');
+        }
+      } catch (fallbackError) {
+        console.error('❌ [CURRENCY INIT] Fallback also failed:', fallbackError.message);
+        throw new Error('Both server and direct API failed');
+      }
     }
 
-    const data = await response.json();
-
-    if (data.success && data.rates) {
+    if (data && data.success && data.rates) {
       // Store in localStorage
       const cacheData = {
         rates: data.rates,

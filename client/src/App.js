@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { seatStorage, stadiumStorage, userStorage } from './utils/storage';
+import { seatStorage, userStorage } from './utils/storage';
 import { ComboProvider } from './contexts/ComboContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';

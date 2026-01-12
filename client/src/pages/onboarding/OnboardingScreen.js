@@ -61,14 +61,14 @@ const OnboardingScreen = () => {
       />
       <div className="onboarding-overlay" />
       <div className="onboarding-container">
-        {/* Language Button - Top Left */}
+        {/* Language Button - Top Center */}
         <button 
           className="language-button" 
           onClick={() => setShowLanguageDialog(true)}
           aria-label="Change language"
           title={t('common.change_language')}
         >
-          {lang === 'he' ? 'Change Language' : 'שנה שפה'}
+          {lang === 'en' ? 'עברית' : 'English'}
         </button>
 
         {/* Content */}

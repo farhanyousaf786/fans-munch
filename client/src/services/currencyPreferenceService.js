@@ -4,7 +4,7 @@
  */
 
 const CURRENCY_PREFERENCE_KEY = 'user_currency_preference';
-const DEFAULT_CURRENCY = 'ILS';
+const DEFAULT_CURRENCY = 'USD';
 const AVAILABLE_CURRENCIES = [
   { code: 'ILS', name: 'Israeli Shekel', symbol: '₪' },
   { code: 'USD', name: 'US Dollar', symbol: '$' },
