@@ -219,7 +219,8 @@
     "delivering": "בדרך",
     "delivered": "נמסר",
     "cancelled": "בוטל",
-    "track_for_qr": "לחץ על 'עקוב אחר הזמנה' להצגת קוד QR לשליח"
+    "track_for_qr": "לחץ על 'עקוב אחר הזמנה' להצגת קוד QR לשליח",
+    "track_for_qr_pickup": "לחץ על 'עקוב אחר הזמנה' להוראות איסוף וקוד QR"
   },
   "track": {
     "order": "מעקב הזמנה",
@@ -237,7 +238,10 @@
     "delivery_contact": "פרטי שליח",
     "loading_contact": "טוען פרטי קשר...",
     "delivery_person": "שליח",
-    "contact_unavailable": "פרטי קשר לא זמינים"
+    "contact_unavailable": "פרטי קשר לא זמינים",
+    "ready_to_pick_up": "מוכן לאיסוף",
+    "picked_up": "נאסף",
+    "pick_spot": "נקודת איסוף"
   },
   "profile": {
     "language": "שפה",

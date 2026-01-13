@@ -9,13 +9,7 @@ import { cartStorage } from '../../utils/storage';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
-// Order status constants
-const OrderStatus = {
-  PENDING: 'pending',
-  PREPARING: 'preparing',
-  DELIVERING: 'delivering',
-  DELIVERED: 'delivered'
-};
+import { OrderStatus } from '../../models/Order';
 
 const baseSteps = [
   { key: OrderStatus.PENDING, labelKey: 'track.order_received' },
@@ -34,6 +28,7 @@ export default function OrderTrackScreen() {
   const [error, setError] = useState('');
   const [deliveryUser, setDeliveryUser] = useState(null);
   const [loadingDeliveryUser, setLoadingDeliveryUser] = useState(false);
+  const [pickupPoint, setPickupPoint] = useState(null);
 
   // Ensure page starts at the top after navigating here
   useEffect(() => {
@@ -95,6 +90,28 @@ export default function OrderTrackScreen() {
     return () => unsub();
   }, [orderId]);
 
+  // Fetch pickup point details if it's a pickup order
+  useEffect(() => {
+    const fetchPickupPoint = async () => {
+      if (order?.deliveryMethod === 'pickup' && order?.stadiumId && order?.pickupPointId) {
+        try {
+          const pointRef = doc(db, 'stadiums', order.stadiumId, 'pickUpPoints', order.pickupPointId);
+          const pointSnap = await getDoc(pointRef);
+          if (pointSnap.exists()) {
+            setPickupPoint({ id: pointSnap.id, ...pointSnap.data() });
+          } else {
+            console.warn('Pickup point not found:', order.pickupPointId);
+          }
+        } catch (e) {
+          console.error('Error fetching pickup point:', e);
+        }
+      } else {
+        setPickupPoint(null);
+      }
+    };
+    fetchPickupPoint();
+  }, [order?.deliveryMethod, order?.stadiumId, order?.pickupPointId]);
+
   // Fetch delivery user details from deliveryUsers collection
   const fetchDeliveryUser = async (deliveryUserId) => {
     if (!deliveryUserId) return;
@@ -130,7 +147,14 @@ export default function OrderTrackScreen() {
     }
   };
 
-  const steps = baseSteps.map(s => ({ ...s, label: t(s.labelKey), icon: iconFor(s.key) }));
+  const steps = baseSteps.map(s => {
+    let labelKey = s.labelKey;
+    if (order?.deliveryMethod === 'pickup') {
+      if (s.key === OrderStatus.DELIVERING) labelKey = 'track.ready_to_pick_up';
+      if (s.key === OrderStatus.DELIVERED) labelKey = 'track.picked_up';
+    }
+    return { ...s, label: t(labelKey), icon: iconFor(s.key) };
+  });
   const statusIndex = order ? steps.findIndex(s => s.key === order.status) : -1;
   const code = order?.orderCode || order?.orderId || order?.id || '';
 
@@ -184,6 +208,22 @@ export default function OrderTrackScreen() {
                 );
               })}
             </div>
+
+            {/* Pickup Point Information */}
+            {order?.deliveryMethod === 'pickup' && pickupPoint && (
+              <div className="pickup-point-section">
+                <div className="pickup-point-title">
+                  <span className="icon">📍</span>
+                  {t('track.pick_spot')}
+                </div>
+                <div className="pickup-point-card">
+                  <div className="pickup-name">{pickupPoint.name}</div>
+                  {pickupPoint.location && <div className="pickup-location">{pickupPoint.location}</div>}
+                  {pickupPoint.description && <div className="pickup-description">{pickupPoint.description}</div>}
+                  {pickupPoint.area && <div className="pickup-area">{pickupPoint.area}</div>}
+                </div>
+              </div>
+            )}
 
             {/* Delivery Contact Information */}
             {order?.status === OrderStatus.DELIVERING && (

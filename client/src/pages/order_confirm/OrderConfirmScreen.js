@@ -292,7 +292,6 @@ const OrderConfirmScreen = () => {
         console.log('📝 [ORDER] Form data updated:', newData);
         return newData;
       });
-      showToast('Seat info loaded from QR code!', 'success', 2000);
       // Clear session data after using URL params
       sessionStorage.removeItem('pending_seat_data');
       console.log('🗑️ [ORDER] Cleared sessionStorage');
@@ -309,7 +308,6 @@ const OrderConfirmScreen = () => {
         console.log('📝 [ORDER] Form data updated:', newData);
         return newData;
       });
-      showToast('Seat info loaded from QR code!', 'success', 2000);
       // Clear session data after using it
       sessionStorage.removeItem('pending_seat_data');
       console.log('🗑️ [ORDER] Cleared sessionStorage');
@@ -363,7 +361,6 @@ const OrderConfirmScreen = () => {
               sid = stadSnap.docs[0].id;
               setStadiumId(sid);
               console.log('[Sections] Using fallback stadium id from collection:', sid);
-              try { showToast(`Using default stadium ${sid}`, 'info', 2500); } catch (_) {}
             }
           } catch (e) {
             console.warn('[Sections] Failed to load fallback stadium list:', e);
@@ -399,13 +396,6 @@ const OrderConfirmScreen = () => {
             return String(a.name).localeCompare(String(b.name));
           });
           setSectionsOptions(allSorted);
-          try {
-            if (allSorted.length > 0) {
-              showToast(`Loaded ${allSorted.length} sections for stadium ${sid}`, 'success', 2000);
-            } else {
-              showToast(`No sections found for stadium ${sid}`, 'error', 3000);
-            }
-          } catch (_) {}
           console.log('[Sections] Options after sort (all):', allSorted);
           // Auto-preselect if only one and none chosen yet
           if (allSorted.length === 1 && !formData.sectionId) {
@@ -422,12 +412,10 @@ const OrderConfirmScreen = () => {
           }
         } else {
           setSectionsOptions([]);
-          try { showToast('No stadium selected. Please choose a stadium first.', 'error', 3000); } catch (_) {}
         }
       } catch (e) {
         console.warn('[OrderConfirm] Failed to load sections:', e?.message || e);
         setSectionsOptions([]);
-        try { showToast(`Failed to load sections: ${e?.message || e}`, 'error', 4000); } catch (_) {}
       }
     })();
 

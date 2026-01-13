@@ -272,6 +272,7 @@ const CartScreen = ({ isFromHome = false }) => {
         onPlaceOrder={handlePlaceOrder}
         onContinueAsGuest={handleContinueAsGuest}
         onCancel={handleAuthModalCancel}
+        isLoggedIn={userStorage.isLoggedIn()}
       />
 
       <AuthRequiredModal 

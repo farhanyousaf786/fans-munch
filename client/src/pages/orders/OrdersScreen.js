@@ -97,7 +97,12 @@ const OrdersScreen = () => {
 
   // getStatusColor removed (unused)
 
-  const getStatusText = (status) => {
+  const getStatusText = (order) => {
+    const { status, deliveryMethod } = order;
+    if (deliveryMethod === 'pickup') {
+      if (status === OrderStatus.DELIVERING) return t('track.ready_to_pick_up');
+      if (status === OrderStatus.DELIVERED) return t('track.picked_up');
+    }
     switch (status) {
       case OrderStatus.PENDING: return t('orders.pending');
       case OrderStatus.PREPARING: return t('orders.preparing');
@@ -201,7 +206,7 @@ const OrdersScreen = () => {
                 {/* Top: Order number + status */}
                 <div className="order-top">
                   <div className="order-number">{t('orders.order')} #{order.orderId}</div>
-                  <span className={`status-badge ${getStatusClass(order.status)}`}>{getStatusText(order.status)}</span>
+                  <span className={`status-badge ${getStatusClass(order.status)}`}>{getStatusText(order)}</span>
                 </div>
 
                 {/* Shop row */}
@@ -237,7 +242,9 @@ const OrdersScreen = () => {
                 {/* Instruction text for delivery orders */}
                 {order.status === OrderStatus.DELIVERING && (
                   <div className="order-delivery-instruction">
-                    <span className="delivery-instruction-text">{t('orders.track_for_qr')}</span>
+                    <span className="delivery-instruction-text">
+                      {order.deliveryMethod === 'pickup' ? t('orders.track_for_qr_pickup') : t('orders.track_for_qr')}
+                    </span>
                   </div>
                 )}
 
