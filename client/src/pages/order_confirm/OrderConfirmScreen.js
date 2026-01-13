@@ -687,10 +687,17 @@ const OrderConfirmScreen = () => {
     });
     
     const stadiumData = stadiumStorage.getSelectedStadium() || {};
-    const requireSeats = !!stadiumData.availableSeats;
-    const requireSections = stadiumData.availableSections !== false;
-    const requireFloors = !!stadiumData.availableFloors;
-    const requireRooms = !!stadiumData.availableRooms;
+    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats;
+    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false;
+    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors;
+    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms;
+    const requirePickupPoint = deliveryMode === 'pickup' && !!stadiumData.availablePickupPoints;
+
+    if (requirePickupPoint) {
+      if (!selectedPickupPoint) {
+        newErrors.pickupPoint = (t('order.err_pickup_point_required') || 'Please select a pickup point');
+      }
+    }
 
     if (requireSeats) {
       if (!formData.row || !formData.row.trim()) {
@@ -734,6 +741,7 @@ const OrderConfirmScreen = () => {
     }
     
     console.log('[VALIDATION] Validation result:', {
+      deliveryMode,
       errors: newErrors,
       isValid: Object.keys(newErrors).length === 0
     });
@@ -745,8 +753,13 @@ const OrderConfirmScreen = () => {
     return isValid;
   };
 
+  // Re-validate when delivery mode or pickup point changes
+  useEffect(() => {
+    validateForm();
+  }, [deliveryMode, selectedPickupPoint]);
+
   // Unified validation with user feedback for both wallet and card flows
-  const validateAndToast = useCallback(async () => {
+  const validateAndToast = async () => {
     // Ensure any focused input commits its latest value (mobile keyboards)
     try { if (document && document.activeElement && typeof document.activeElement.blur === 'function') { document.activeElement.blur(); } } catch (_) {}
     // Give the browser a moment to commit input value after blur (helps on mobile)
@@ -784,10 +797,13 @@ const OrderConfirmScreen = () => {
     };
 
     const stadiumData = stadiumStorage.getSelectedStadium() || {};
-    const requireSeats = !!stadiumData.availableSeats;
-    const requireSections = stadiumData.availableSections !== false;
-    const requireFloors = !!stadiumData.availableFloors;
-    const requireRooms = !!stadiumData.availableRooms;
+    
+    
+    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats;
+    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false;
+    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors;
+    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms;
+    const requirePickupPoint = deliveryMode === 'pickup' && !!stadiumData.availablePickupPoints;
 
     // Read freshest phone directly from input
     let effectivePhone = customerPhone;
@@ -829,6 +845,12 @@ const OrderConfirmScreen = () => {
       const roomValue = String(effective.room || '').trim();
       if (!roomValue) newErrors.room = (t('order.err_room_required') || 'Room is required');
     }
+
+    if (requirePickupPoint) {
+      if (!selectedPickupPoint) {
+        newErrors.pickupPoint = (t('order.err_pickup_point_required') || 'Please select a pickup point');
+      }
+    }
     if (!hasPhoneInCustomer) {
       const okPhone = validatePhone(effectivePhone);
       if (!okPhone) newErrors.customerPhone = t('order.err_phone_required');
@@ -851,6 +873,7 @@ const OrderConfirmScreen = () => {
       if (newErrors.section) missing.push(td('order.section', 'Section'));
       if (newErrors.floor) missing.push(td('order.floor', 'Floor'));
       if (newErrors.room) missing.push(td('order.room', 'Room'));
+      if (newErrors.pickupPoint) missing.push(t('order.pickup_point') || 'Pickup Point');
       if (newErrors.customerPhone) missing.push(t('auth.phone'));
 
       const prefix = t('order.complete_required_fields_prefix');
@@ -861,7 +884,7 @@ const OrderConfirmScreen = () => {
       return false;
     }
     return true;
-  }, [showErrors, formData, t, hasPhoneInCustomer, customerPhone]);
+  };
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];

@@ -26,15 +26,13 @@
     "retry": "נסה שוב",
     "no_shops": "אין חנויות זמינות",
     "more_suffix": "עוד"
-  }
-  ,
+  },
   "common": {
     "edit": "עריכה",
     "not_now": "לא עכשיו",
     "change_language": "שנה שפה",
     "select_language": "בחר שפה"
-  }
-  ,
+  },
   "cart": {
     "add_to_cart": "הוסף לעגלה",
     "empty": "העגלה ריקה",
@@ -46,8 +44,7 @@
     "place_order": "בצע הזמנה",
     "mixed_shops_error": "פריטים בעגלה שלך מחנויות שונות. אנא הזמן מחנות אחת בכל פעם.",
     "mixed_shops_detected": "זוהו פריטים מחנויות שונות"
-  }
-  ,
+  },
   "food": {
     "description": "תיאור",
     "no_description": "אין תאור זמין",
@@ -62,8 +59,7 @@
     "individual_items_total": "סה\"כ פריטים בודדים:",
     "combo_price": "מחיר קומבו:",
     "you_save": "חיסכון שלך:"
-  }
-  ,
+  },
   "tip": {
     "title": "הוסף טיפ",
     "supports_runner": "כל הטיפ שלך תומך בשליח.",
@@ -75,8 +71,7 @@
     "custom_tip_placeholder": "הכנס אחוז מותאם",
     "add_tip": "הוסף טיפ",
     "skip": "דלג"
-  }
-  ,
+  },
   "order": {
     "confirm_title": "אישור הזמנה",
     "ticket_image_title": "צילום כרטיס מושב (אופציונלי)",
@@ -85,7 +80,6 @@
     "front_camera": "מצלמה",
     "or": "או",
     "ticket_alt": "כרטיס",
-
     "seat_info_title": "פרטי מושב",
     "seat_number": "מספר מושב",
     "seat_number_ph": "הכניסו מספר מושב",
@@ -99,7 +93,6 @@
     "area_ph": "הכניסו אזור",
     "additional_details": "פרטים נוספים",
     "additional_details_ph": "הוסיפו טקסט",
-
     "summary_title": "סיכום הזמנה",
     "subtotal": "סכום ביניים",
     "tip": "טיפ",
@@ -108,12 +101,10 @@
     "phone_contact_title": "טלפון איש קשר למשלוח",
     "phone_contact_hint": "מספר זה ישמש את איש המשלוח אם יזדקק לעזרה במציאתך.",
     "phone_input_ph": "+972501234567",
-
     "processing": "מעבד...",
     "place_order_with_total": "בצע הזמנה - {total}",
     "card_payment_title": "תשלום בכרטיס",
     "confirm_card_payment": "אשר תשלום בכרטיס",
-
     "order_placed": "הזמנה בוצעה בהצלחה!",
     "order_id": "מספר הזמנה",
     "payment_failed_generic": "התשלום נכשל. נסו שוב.",
@@ -136,11 +127,15 @@
     "complete_required_fields_prefix": "נא להשלים את השדות החסרים:",
     "location_required": "נדרש גישה למיקום",
     "location_required_desc": "אנא אפשרו גישה למיקום כדי שנוכל לעקוב אחר מיקום המושב שלכם למשלוח",
-    "enable_location": "אפשר מיקום"
-    ,
-    "err_phone_required": "נא להזין מספר טלפון תקין (ספרות, עם + אופציונלי)."
-  }
-  ,
+    "enable_location": "אפשר מיקום",
+    "err_phone_required": "נא להזין מספר טלפון תקין (ספרות, עם + אופציונלי).",
+    "err_floor_required": "קומה היא שדה חובה",
+    "err_room_required": "חדר הוא שדה חובה",
+    "err_pickup_point_required": "נא לבחור נקודת איסוף",
+    "floor": "קומה",
+    "room": "חדר",
+    "pickup_point": "נקודת איסוף"
+  },
   "auth": {
     "title_login": "התחבר לחשבון שלך",
     "title_register": "צור חשבון",
@@ -177,8 +172,7 @@
     "back_to_login": "חזרה להתחברות",
     "or_sign_in_email": "או התחבר עם אימייל",
     "or_sign_up_email": "או הירשם עם אימייל"
-  }
-  ,
+  },
   "onboarding": {
     "skip": "דלג",
     "get_started": "התחל",
@@ -197,8 +191,7 @@
       "subtitle": "עקוב אחר ההזמנה שלך בכל שלב",
       "description": "קבל עדכונים בזמן אמת על סטטוס ההזמנה ודע בדיוק מתי היא תגיע."
     }
-  }
-  ,
+  },
   "stadium": {
     "title": "בחר את האצטדיון שלך",
     "subtitle": "בחר מאיפה אתה רוצה להזמין אוכל",
@@ -207,8 +200,7 @@
     "capacity": "קיבולת",
     "select_button": "בחר אצטדיון",
     "continue_to": "המשך אל"
-  }
-  ,
+  },
   "orders": {
     "my_orders": "ההזמנות שלי",
     "subtitle": "עקוב אחר הזמנות האוכל שלך",
@@ -228,8 +220,7 @@
     "delivered": "נמסר",
     "cancelled": "בוטל",
     "track_for_qr": "לחץ על 'עקוב אחר הזמנה' להצגת קוד QR לשליח"
-  }
-  ,
+  },
   "track": {
     "order": "מעקב הזמנה",
     "loading": "טוען הזמנה...",
@@ -247,8 +238,7 @@
     "loading_contact": "טוען פרטי קשר...",
     "delivery_person": "שליח",
     "contact_unavailable": "פרטי קשר לא זמינים"
-  }
-  ,
+  },
   "profile": {
     "language": "שפה",
     "language_sub": "שנה שפה",
@@ -270,8 +260,7 @@
     "settings": "הגדרות",
     "active": "הזמנות פעילות",
     "completed": "הושלם"
-  }
-  ,
+  },
   "settings": {
     "select_currency": "בחר מטבע",
     "app_currency": "מטבע האפליקציה",

@@ -140,7 +140,13 @@
     "location_required": "Location Access Required",
     "location_required_desc": "Please enable location access so we can track your seat location for delivery",
     "enable_location": "Enable Location",
-    "err_phone_required": "Please enter a valid phone number (digits, with optional +)."
+    "err_phone_required": "Please enter a valid phone number (digits, with optional +).",
+    "err_floor_required": "Floor is required",
+    "err_room_required": "Room is required",
+    "err_pickup_point_required": "Please select a pickup point",
+    "floor": "Floor",
+    "room": "Room",
+    "pickup_point": "Pickup Point"
   }
   ,
   "auth": {

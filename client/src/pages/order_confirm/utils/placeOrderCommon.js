@@ -150,11 +150,18 @@ export async function placeOrderAfterPayment({
   const stadiumData = stadiumStorage.getSelectedStadium();
   const cartItems = cartUtils.getCartItems();
 
-  // Minimal validation (conditional by stadium)
-  const requireSeats = !!stadiumData?.availableSeats;
-  const requireSections = stadiumData?.availableSections !== false;
-  const requireFloors = !!stadiumData?.availableFloors;
-  const requireRooms = !!stadiumData?.availableRooms;
+  // Minimal validation (conditional by stadium and delivery method)
+  const requireSeats = deliveryMethod === 'delivery' && !!stadiumData?.availableSeats;
+  const requireSections = deliveryMethod === 'delivery' && stadiumData?.availableSections !== false;
+  const requireFloors = deliveryMethod === 'delivery' && !!stadiumData?.availableFloors;
+  const requireRooms = deliveryMethod === 'delivery' && !!stadiumData?.availableRooms;
+  const requirePickupPoint = deliveryMethod === 'pickup' && !!stadiumData?.availablePickupPoints;
+
+  if (requirePickupPoint) {
+    if (!pickupPointId) {
+      throw new Error('Please select a pickup point');
+    }
+  }
 
   if (requireSeats) {
     if (!formData?.row || !String(formData.row).trim()) {
