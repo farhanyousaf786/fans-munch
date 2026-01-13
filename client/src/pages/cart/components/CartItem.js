@@ -1,9 +1,12 @@
 import React from 'react';
 import { MdAdd, MdRemove, MdDelete, MdShoppingCart } from 'react-icons/md';
 import './CartItem.css';
+import { useTranslation } from '../../../i18n/i18n';
 import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 
 const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="cart-item-wrapper">
       {/* Cart Item (matches Flutter CartItem widget) */}
@@ -30,6 +33,7 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
           </div>
           
           <div className="item-price-section">
+            <span style={{ color: '#444', fontWeight: '500' }}>{t('cart.price')}</span>
             <span className="item-price">{formatPriceWithCurrency(item.price, item.currency)}</span>
           </div>
         </div>

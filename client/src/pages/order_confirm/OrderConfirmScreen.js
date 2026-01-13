@@ -20,6 +20,8 @@ import { fetchCustomerPhone, validatePhone, saveCustomerPhoneIfMissing, normaliz
 import QrScanner from '../../components/qr-scanner/QrScanner';
 import { getPreferredCurrency } from '../../services/currencyPreferenceService';
 import { convertPrice } from '../../utils/currencyConverter';
+import DeliveryTypeSelector from './components/DeliveryTypeSelector';
+import DeliveryNotesField from './components/DeliveryNotesField';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -83,6 +85,13 @@ const OrderConfirmScreen = () => {
   const [deliveryMode, setDeliveryMode] = useState('delivery'); // 'pickup' or 'delivery'
   const [pickupPoints, setPickupPoints] = useState([]);
   const [selectedPickupPoint, setSelectedPickupPoint] = useState('');
+  
+  // Inside/Outside delivery state
+  const [deliveryType, setDeliveryType] = useState(null); // null, 'inside', or 'outside' - no default selection
+  const [deliveryNotes, setDeliveryNotes] = useState('');
+  const [deliveryLocation, setDeliveryLocation] = useState('');
+  const [shopData, setShopData] = useState(null);
+
 
   // Fetch pickup points if available
   useEffect(() => {
@@ -162,10 +171,15 @@ const OrderConfirmScreen = () => {
             const shopSnap = await getDoc(shopRef);
             
             if (shopSnap.exists()) {
-              const shopData = shopSnap.data();
-              deliveryFeeAmount = shopData.deliveryFee || 0;
-              deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
-              shopVendorAccountId = shopData.stripeConnectedAccountId || null;
+              const fetchedShopData = shopSnap.data();
+              setShopData(fetchedShopData); // Store shop data for delivery type selector
+              
+              // Default to legacy delivery fee - will be updated when user selects inside/outside
+              deliveryFeeAmount = fetchedShopData.deliveryFee || 0;
+              deliveryFeeCurrency = fetchedShopData.deliveryFeeCurrency || 'ILS';
+              console.log(`📦 [ORDER] Initial delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+              
+              shopVendorAccountId = fetchedShopData.stripeConnectedAccountId || null;
               
               console.log(`🏪 [ORDER] Shop ID: ${shopId}`);
               console.log(`💰 deliveryFee: ${deliveryFeeAmount} (number)`);
@@ -174,7 +188,9 @@ const OrderConfirmScreen = () => {
               console.log(`🏪 [ORDER] Full shop data:`, { 
                 deliveryFee: deliveryFeeAmount, 
                 deliveryFeeCurrency,
-                stripeConnectedAccountId: shopVendorAccountId
+                stripeConnectedAccountId: shopVendorAccountId,
+                insideDelivery: fetchedShopData.insideDelivery,
+                outsideDelivery: fetchedShopData.outsideDelivery
               });
             }
           }
@@ -451,9 +467,22 @@ const OrderConfirmScreen = () => {
               
               if (shopSnap.exists()) {
                 const shopData = shopSnap.data();
-                deliveryFeeAmount = shopData.deliveryFee || 0;
-                deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
-                console.log(`🏪 [ORDER] Delivery mode - fetched fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+                
+                // Check for new inside/outside delivery structure
+                if (shopData.insideDelivery?.enabled) {
+                  deliveryFeeAmount = shopData.insideDelivery.fee || 0;
+                  deliveryFeeCurrency = shopData.insideDelivery.currency || 'ILS';
+                  console.log(`🏟️ [ORDER] Delivery mode - using inside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+                } else if (shopData.outsideDelivery?.enabled) {
+                  deliveryFeeAmount = shopData.outsideDelivery.fee || 0;
+                  deliveryFeeCurrency = shopData.outsideDelivery.currency || 'ILS';
+                  console.log(`� [ORDER] Delivery mode - using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+                } else {
+                  // Fallback to old deliveryFee field
+                  deliveryFeeAmount = shopData.deliveryFee || 0;
+                  deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
+                  console.log(`📦 [ORDER] Delivery mode - using legacy fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+                }
               }
             }
           }
@@ -477,6 +506,47 @@ const OrderConfirmScreen = () => {
     
     recalculateDeliveryFee();
   }, [deliveryMode]);
+
+  // Update delivery fee when user selects inside/outside delivery type
+  useEffect(() => {
+    const updateDeliveryFeeByType = async () => {
+      if (deliveryMode !== 'delivery' || !shopData) return;
+
+      const cartItems = cartUtils.getCartItems();
+      const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+      
+      let deliveryFeeAmount = 0;
+      let deliveryFeeCurrency = 'ILS';
+
+      // Determine which fee to use based on delivery type selection
+      if (deliveryType === 'inside' && shopData.insideDelivery?.enabled) {
+        deliveryFeeAmount = shopData.insideDelivery.fee || 0;
+        deliveryFeeCurrency = shopData.insideDelivery.currency || 'ILS';
+        console.log(`🏟️ [FEE UPDATE] Using inside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+      } else if (deliveryType === 'outside' && shopData.outsideDelivery?.enabled) {
+        deliveryFeeAmount = shopData.outsideDelivery.fee || 0;
+        deliveryFeeCurrency = shopData.outsideDelivery.currency || 'ILS';
+        console.log(`🌍 [FEE UPDATE] Using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+      } else {
+        // Traditional delivery (room/section/floor) - use shop's default delivery fee
+        deliveryFeeAmount = shopData.deliveryFee || 0;
+        deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
+        console.log(`📦 [FEE UPDATE] Using traditional delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+      }
+
+      // Convert to cart currency if needed
+      let deliveryFeeConverted = deliveryFeeAmount;
+      if (deliveryFeeCurrency !== cartCurrency) {
+        const conversion = convertPrice(deliveryFeeAmount, deliveryFeeCurrency);
+        deliveryFeeConverted = conversion.convertedPrice;
+        console.log(`💱 [FEE UPDATE] Converted: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
+      }
+
+      setDeliveryFee(deliveryFeeConverted);
+    };
+
+    updateDeliveryFeeByType();
+  }, [deliveryType, shopData, deliveryMode]);
 
   // React to stadium changes dynamically via localStorage 'storage' event
   useEffect(() => {
@@ -675,10 +745,14 @@ const OrderConfirmScreen = () => {
     });
     
     const stadiumData = stadiumStorage.getSelectedStadium() || {};
-    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats;
-    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false;
-    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors;
-    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms;
+    
+    // Skip seat/room/floor validation if user selected inside or outside delivery
+    const usingInsideOutsideDelivery = deliveryType === 'inside' || deliveryType === 'outside';
+    
+    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats && !usingInsideOutsideDelivery;
+    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false && !usingInsideOutsideDelivery;
+    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors && !usingInsideOutsideDelivery;
+    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms && !usingInsideOutsideDelivery;
     const requirePickupPoint = deliveryMode === 'pickup' && !!stadiumData.availablePickupPoints;
 
     if (requirePickupPoint) {
@@ -786,11 +860,13 @@ const OrderConfirmScreen = () => {
 
     const stadiumData = stadiumStorage.getSelectedStadium() || {};
     
+    // Skip seat/room/floor validation if user selected inside or outside delivery
+    const usingInsideOutsideDelivery = deliveryType === 'inside' || deliveryType === 'outside';
     
-    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats;
-    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false;
-    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors;
-    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms;
+    const requireSeats = deliveryMode === 'delivery' && !!stadiumData.availableSeats && !usingInsideOutsideDelivery;
+    const requireSections = deliveryMode === 'delivery' && stadiumData.availableSections !== false && !usingInsideOutsideDelivery;
+    const requireFloors = deliveryMode === 'delivery' && !!stadiumData.availableFloors && !usingInsideOutsideDelivery;
+    const requireRooms = deliveryMode === 'delivery' && !!stadiumData.availableRooms && !usingInsideOutsideDelivery;
     const requirePickupPoint = deliveryMode === 'pickup' && !!stadiumData.availablePickupPoints;
 
     // Read freshest phone directly from input
@@ -1090,6 +1166,9 @@ const OrderConfirmScreen = () => {
         customerPhone: effectivePhoneForCard || undefined,
         deliveryMethod: deliveryMode,
         pickupPointId: selectedPickupPoint || null,
+        deliveryType,
+        deliveryLocation,
+        deliveryNotes,
       });
 
       // Save phone to customer profile only if it was missing and provided now
@@ -1187,6 +1266,9 @@ const OrderConfirmScreen = () => {
           customerPhone: effectivePhoneForWallet || undefined,
           deliveryMethod: deliveryMode,
           pickupPointId: selectedPickupPoint || null,
+          deliveryType,
+          deliveryLocation,
+          deliveryNotes,
         });
 
         // Save phone to customer profile only if it was missing and provided now
@@ -1348,13 +1430,39 @@ const OrderConfirmScreen = () => {
           );
         })()}
 
-        {/* Seat Information Form (only show for delivery mode) */}
+        {/* Delivery Type Selector (Inside/Outside) - Show when shop has these options */}
+        {(() => {
+          const shouldShowDeliveryTypeSelector = deliveryMode === 'delivery' && shopData && (shopData.insideDelivery?.enabled || shopData.outsideDelivery?.enabled);
+          
+          if (!shouldShowDeliveryTypeSelector) return null;
+          
+          return (
+            <DeliveryTypeSelector
+              shopData={shopData}
+              selectedType={deliveryType}
+              onTypeChange={setDeliveryType}
+              deliveryNotes={deliveryNotes}
+              onNotesChange={setDeliveryNotes}
+              notesError={errors.deliveryNotes}
+              deliveryLocation={deliveryLocation}
+              onLocationChange={setDeliveryLocation}
+              t={t}
+            />
+          );
+        })()}
+
+        {/* Seat Information Form (only show when NOT using inside/outside delivery) */}
         {(() => {
           const stadium = stadiumStorage.getSelectedStadium() || {};
           // Only show delivery info if in delivery mode OR if pickup is not available
           const shouldShowDeliveryInfo = deliveryMode === 'delivery' || !stadium.availablePickupPoints;
           
-          if (!shouldShowDeliveryInfo) return null;
+          // Check if user has selected inside/outside delivery
+          const hasInsideOutsideDelivery = shopData?.insideDelivery?.enabled || shopData?.outsideDelivery?.enabled;
+          const userSelectedInsideOutside = hasInsideOutsideDelivery && (deliveryType === 'inside' || deliveryType === 'outside');
+          
+          // Hide seat form if user selected inside/outside delivery
+          if (!shouldShowDeliveryInfo || userSelectedInsideOutside) return null;
           
           const showSeats = !!stadium.availableSeats;
           const showSections = stadium.availableSections !== false;
@@ -1362,8 +1470,11 @@ const OrderConfirmScreen = () => {
           const showRooms = !!stadium.availableRooms;
           const showStands = !!stadium.availableStands;
           const floorsCount = stadium.floors || 0;
+          
           console.log('🏟️ [SEATFORM PROPS] showSeats:', showSeats, 'availableSeats:', stadium.availableSeats);
           console.log('🏟️ [SEATFORM PROPS] showSections:', showSections, 'availableSections:', stadium.availableSections);
+          console.log('🏟️ [SEATFORM PROPS] userSelectedInsideOutside:', userSelectedInsideOutside);
+          
           return (
             <SeatForm 
               formData={formData} 

@@ -144,18 +144,31 @@ export async function placeOrderAfterPayment({
   customerPhone,
   deliveryMethod = 'delivery',
   pickupPointId = null,
+  deliveryType = null,
+  deliveryLocation = null,
+  deliveryNotes = null,
 }) {
   const userData = userStorage.getUserData();
   const userDataWithPhone = { ...userData, phone: customerPhone || userData?.phone };
   const stadiumData = stadiumStorage.getSelectedStadium();
   const cartItems = cartUtils.getCartItems();
 
+
+
   // Minimal validation (conditional by stadium and delivery method)
-  const requireSeats = deliveryMethod === 'delivery' && !!stadiumData?.availableSeats;
-  const requireSections = deliveryMethod === 'delivery' && stadiumData?.availableSections !== false;
-  const requireFloors = deliveryMethod === 'delivery' && !!stadiumData?.availableFloors;
-  const requireRooms = deliveryMethod === 'delivery' && !!stadiumData?.availableRooms;
+  // Skip seat/room/floor validation if user selected inside or outside delivery
+  const usingInsideOutsideDelivery = deliveryType === 'inside' || deliveryType === 'outside';
+  
+  console.log('🔍 [VALIDATION] deliveryType:', deliveryType);
+  console.log('🔍 [VALIDATION] usingInsideOutsideDelivery:', usingInsideOutsideDelivery);
+  
+  const requireSeats = deliveryMethod === 'delivery' && !!stadiumData?.availableSeats && !usingInsideOutsideDelivery;
+  const requireSections = deliveryMethod === 'delivery' && stadiumData?.availableSections !== false && !usingInsideOutsideDelivery;
+  const requireFloors = deliveryMethod === 'delivery' && !!stadiumData?.availableFloors && !usingInsideOutsideDelivery;
+  const requireRooms = deliveryMethod === 'delivery' && !!stadiumData?.availableRooms && !usingInsideOutsideDelivery;
   const requirePickupPoint = deliveryMethod === 'pickup' && !!stadiumData?.availablePickupPoints;
+  
+  console.log('🔍 [VALIDATION] requireRooms:', requireRooms);
 
   if (requirePickupPoint) {
     if (!pickupPointId) {
@@ -265,6 +278,44 @@ export async function placeOrderAfterPayment({
     }
   }
 
+
+  // Build delivery configuration object if inside/outside delivery is selected
+  let deliveryConfig = {};
+  if (deliveryType === 'inside' || deliveryType === 'outside') {
+    try {
+      const shopRef = doc(db, 'shops', selectedShopId);
+      const shopSnap = await getDoc(shopRef);
+      if (shopSnap.exists()) {
+        const shopDoc = shopSnap.data();
+        const deliveryData = deliveryType === 'inside' ? shopDoc.insideDelivery : shopDoc.outsideDelivery;
+        
+        if (deliveryData && deliveryData.enabled) {
+          // Find the selected location from the locations array
+          let selectedLocationObj = null;
+          if (deliveryData.locations && Array.isArray(deliveryData.locations)) {
+            selectedLocationObj = deliveryData.locations.find(loc => {
+              const locName = typeof loc === 'string' ? loc : loc.name;
+              return locName === deliveryLocation;
+            });
+          }
+          
+          // Build the delivery configuration
+          const deliveryKey = deliveryType === 'inside' ? 'insideDelivery' : 'outsideDelivery';
+          deliveryConfig[deliveryKey] = {
+            fee: deliveryData.fee,
+            currency: deliveryData.currency,
+            location: selectedLocationObj || deliveryLocation, // Use object if found, otherwise just the name
+            notes: deliveryNotes || '',
+          };
+          
+          console.log(`📦 [ORDER] ${deliveryKey} config:`, deliveryConfig[deliveryKey]);
+        }
+      }
+    } catch (err) {
+      console.error('❌ [ORDER] Failed to fetch shop delivery config:', err);
+    }
+  }
+
   const order = Order.createFromCart({
     cartItems,
     subtotal: totals.subtotal,
@@ -281,6 +332,8 @@ export async function placeOrderAfterPayment({
     deliveryUserId: "",
     deliveryMethod,
     pickupPointId,
+    deliveryType: deliveryType || '', // Empty string if not selected
+    ...deliveryConfig, // Add insideDelivery or outsideDelivery
   });
 
   const createdOrder = await orderRepository.createOrder(order);

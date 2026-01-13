@@ -43,7 +43,8 @@
     "total": "סה\"כ",
     "place_order": "בצע הזמנה",
     "mixed_shops_error": "פריטים בעגלה שלך מחנויות שונות. אנא הזמן מחנות אחת בכל פעם.",
-    "mixed_shops_detected": "זוהו פריטים מחנויות שונות"
+    "mixed_shops_detected": "זוהו פריטים מחנויות שונות",
+    "price": "מחיר"
   },
   "food": {
     "description": "תיאור",
@@ -134,7 +135,15 @@
     "err_pickup_point_required": "נא לבחור נקודת איסוף",
     "floor": "קומה",
     "room": "חדר",
-    "pickup_point": "נקודת איסוף"
+    "pickup_point": "נקודת איסוף",
+    "delivery_type": "סוג משלוח",
+    "inside_delivery": "משלוח פנימי",
+    "outside_delivery": "משלוח חיצוני",
+    "open": "פתוח",
+    "closed": "סגור",
+    "delivery_notes": "הערות למשלוח",
+    "delivery_notes_placeholder": "הוסף הוראות מיוחדות למשלוח...",
+    "delivery_notes_hint": "דוגמה: שער 3, מגרש A, שורה 5, מושב 12"
   },
   "auth": {
     "title_login": "התחבר לחשבון שלך",
@@ -241,7 +250,9 @@
     "contact_unavailable": "פרטי קשר לא זמינים",
     "ready_to_pick_up": "מוכן לאיסוף",
     "picked_up": "נאסף",
-    "pick_spot": "נקודת איסוף"
+    "pick_spot": "נקודת איסוף",
+    "order_status_update": "סטטוס ההזמנה עודכן",
+    "order_is_now": "ההזמנה שלך כרגע:"
   },
   "profile": {
     "language": "שפה",

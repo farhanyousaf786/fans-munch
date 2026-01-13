@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdArrowBack, MdArrowForward, MdReceiptLong, MdRestaurantMenu, MdLocalShipping, MdCheckCircle, MdPhone } from 'react-icons/md';
 import QRCode from 'react-qr-code';
@@ -8,6 +8,7 @@ import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 import { cartStorage } from '../../utils/storage';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../config/firebase';
+import notificationService from '../../services/notificationService';
 
 import { OrderStatus } from '../../models/Order';
 
@@ -29,10 +30,16 @@ export default function OrderTrackScreen() {
   const [deliveryUser, setDeliveryUser] = useState(null);
   const [loadingDeliveryUser, setLoadingDeliveryUser] = useState(false);
   const [pickupPoint, setPickupPoint] = useState(null);
+  const prevStatusRef = useRef();
 
-  // Ensure page starts at the top after navigating here
+  // Ensure page starts at the top and request notification permission
   useEffect(() => {
     try { window && window.scrollTo && window.scrollTo({ top: 0, behavior: 'auto' }); } catch (_) {}
+    
+    // Request notification permission if not already granted
+    if ('Notification' in window && Notification.permission === 'default') {
+      notificationService.init().catch(console.error);
+    }
   }, [orderId]);
 
   // Handle back button - clear cart and go to home
@@ -72,6 +79,18 @@ export default function OrderTrackScreen() {
       }
       setError('');
       const orderData = { id: snap.id, ...snap.data() };
+      
+      // Notify if status changed
+      if (prevStatusRef.current !== undefined && prevStatusRef.current !== orderData.status) {
+        const statusText = getStatusText(orderData);
+        notificationService.showBrowserNotification(
+          t('track.order_status_update'),
+          `${t('track.order_is_now')} ${statusText}`,
+          { type: 'order_status_update', orderId: orderData.id }
+        );
+      }
+      prevStatusRef.current = orderData.status;
+
       setOrder(orderData);
       setLoading(false);
       
@@ -111,6 +130,21 @@ export default function OrderTrackScreen() {
     };
     fetchPickupPoint();
   }, [order?.deliveryMethod, order?.stadiumId, order?.pickupPointId]);
+
+  const getStatusText = (orderData) => {
+    const { status, deliveryMethod } = orderData;
+    if (deliveryMethod === 'pickup') {
+      if (status === OrderStatus.DELIVERING) return t('track.ready_to_pick_up');
+      if (status === OrderStatus.DELIVERED) return t('track.picked_up');
+    }
+    switch (status) {
+      case OrderStatus.PENDING: return t('track.order_received');
+      case OrderStatus.PREPARING: return t('track.preparing');
+      case OrderStatus.DELIVERING: return t('track.on_the_way');
+      case OrderStatus.DELIVERED: return t('track.delivered');
+      default: return t('track.order_received');
+    }
+  };
 
   // Fetch delivery user details from deliveryUsers collection
   const fetchDeliveryUser = async (deliveryUserId) => {

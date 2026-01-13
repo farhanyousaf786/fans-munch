@@ -60,7 +60,10 @@ export class Order {
     location = null,
     updatedAt = null,
     deliveryMethod = 'delivery',
-    pickupPointId = null
+    pickupPointId = null,
+    deliveryType = '',
+    insideDelivery = null,
+    outsideDelivery = null
   }) {
     this.cart = cart;
     this.subtotal = subtotal;
@@ -86,6 +89,9 @@ export class Order {
     this.updatedAt = updatedAt;
     this.deliveryMethod = deliveryMethod; // 'delivery' or 'pickup'
     this.pickupPointId = pickupPointId; // ID of selected pickup point (if pickup mode)
+    this.deliveryType = deliveryType; // 'inside', 'outside' or null
+    this.insideDelivery = insideDelivery;
+    this.outsideDelivery = outsideDelivery;
     this.platform = (typeof arguments[0]?.platform === 'string' && arguments[0].platform.trim()) ? arguments[0].platform : 'Web';
   }
 
@@ -120,7 +126,10 @@ export class Order {
       customerLocation: data.customerLocation || null,
       location: data.location || null,
       deliveryMethod: data.deliveryMethod || 'delivery',
-      pickupPointId: data.pickupPointId || null
+      pickupPointId: data.pickupPointId || null,
+      deliveryType: data.deliveryType || '',
+      insideDelivery: data.insideDelivery || null,
+      outsideDelivery: data.outsideDelivery || null
     });
     instance.platform = data.platform || 'Web';
     try {
@@ -240,7 +249,10 @@ export class Order {
       ,
       platform: (typeof this.platform === 'string' && this.platform.trim()) ? this.platform : 'Web',
       deliveryMethod: this.deliveryMethod || 'delivery',
-      pickupPointId: this.pickupPointId || null
+      pickupPointId: this.pickupPointId || null,
+      deliveryType: this.deliveryType || '',
+      insideDelivery: this.insideDelivery || null,
+      outsideDelivery: this.outsideDelivery || null
     };
     try { 
       console.log('[Order.toMap] Result payload:', result);
@@ -268,7 +280,10 @@ export class Order {
     location = null,
     deliveryUserId = null,
     deliveryMethod = 'delivery',
-    pickupPointId = null
+    pickupPointId = null,
+    deliveryType = '',
+    insideDelivery = null,
+    outsideDelivery = null
   }) {
     try {
       console.log('[Order.createFromCart] Input:', {
@@ -283,7 +298,10 @@ export class Order {
         stadiumId,
         shopId,
         customerLocation,
-        location
+        location,
+        deliveryType,
+        insideDelivery,
+        outsideDelivery
       });
     } catch (_) {}
     const total = subtotal + deliveryFee + tipAmount - discount;
@@ -333,7 +351,10 @@ export class Order {
       customerLocation,
       location: location,
       deliveryMethod,
-      pickupPointId
+      pickupPointId,
+      deliveryType,
+      insideDelivery,
+      outsideDelivery
     });
     instance.platform = 'Web';
     try { console.log('[Order.createFromCart] New Order instance:', instance); } catch (_) {}
