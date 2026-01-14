@@ -228,30 +228,67 @@ export async function placeOrderAfterPayment({
   
   console.log('🔍 [PLACE ORDER] seatInfo created:', seatInfo);
 
-  // 1. Resolve shop ID first
-  const allShopIds = [];
+  // 1. Resolve shop ID from cart items
+  const allShopIdItems = [];
   cartItems.forEach(item => {
-    if (item.shopId) allShopIds.push(item.shopId);
-    if (item.shopIds && Array.isArray(item.shopIds)) {
-      allShopIds.push(...item.shopIds);
+    // Ensure we handle IDs as strings and normalize them
+    const sid = item.shopId !== undefined && item.shopId !== null ? String(item.shopId).trim() : '';
+    if (sid) allShopIdItems.push(sid);
+    
+    if (Array.isArray(item.shopIds)) {
+      item.shopIds.forEach(id => {
+        const sid2 = id !== undefined && id !== null ? String(id).trim() : '';
+        if (sid2) allShopIdItems.push(sid2);
+      });
     }
   });
   
-  const uniqueShopIds = [...new Set(allShopIds)];
+  const uniqueShopIds = [...new Set(allShopIdItems)];
   let selectedShopId = null;
   
-  if (uniqueShopIds.length === 1) {
+  console.log(`🛒 [SHOP SELECTION] Unique shop IDs in cart:`, uniqueShopIds);
+  console.log(`🛒 [SHOP SELECTION] Context: method=${deliveryMethod}, type=${deliveryType}`);
+
+  // Logic: 
+  // - If Inside/Outside delivery is picked, we MUST use a shop from the cart (those are shop-specific options)
+  // - Otherwise, if exactly 1 shop is in cart, use it
+  // - Otherwise (traditional delivery with mixed or no shops), resolve from section.
+  
+  if ((deliveryType === 'inside' || deliveryType === 'outside') && uniqueShopIds.length > 0) {
     selectedShopId = uniqueShopIds[0];
-    console.log(`🛒 [SHOP SELECTION] Using single shop ID from cart items: ${selectedShopId}`);
+    console.log(`🛒 [SHOP SELECTION] Pro-actively using cart shop for ${deliveryType} delivery: ${selectedShopId}`);
+  } else if (uniqueShopIds.length === 1) {
+    selectedShopId = uniqueShopIds[0];
+    console.log(`🛒 [SHOP SELECTION] Found exactly one shop in cart: ${selectedShopId}`);
   } else {
+    // Fallback: Traditional delivery or cart has multiple/no shops
     try {
-      selectedShopId = await resolveShopFromSection(stadiumData.id, formData.sectionId, strictShopAvailability, formData.stand);
-      if (!selectedShopId) {
+      console.log(`🔍 [SHOP SELECTION] Resolving shop from section: "${formData?.sectionId || ''}" stand: "${formData?.stand || ''}"`);
+      selectedShopId = await resolveShopFromSection(stadiumData.id, formData?.sectionId, false, formData?.stand);
+      
+      // If resolving from section failed but we have a shop in the cart, use the cart shop as a safety fallback
+      // This is helpful for stadiums with no sections configured.
+      if (!selectedShopId && uniqueShopIds.length > 0) {
+        selectedShopId = uniqueShopIds[0];
+        console.log(`🛒 [SHOP SELECTION] Section resolution failed/skipped, falling back to cart shop: ${selectedShopId}`);
+      }
+      
+      if (!selectedShopId && strictShopAvailability) {
         throw new Error('No shop is assigned to the selected section. Please choose a different section.');
       }
     } catch (e) {
-      throw e;
+      // Final attempt: if it's venue delivery, we really want to use the shop ID from the cart if possible
+      if (uniqueShopIds.length > 0) {
+        selectedShopId = uniqueShopIds[0];
+        console.log(`🛒 [SHOP SELECTION] Error in resolution, using cart shop fallback: ${selectedShopId}`);
+      } else {
+        throw e;
+      }
     }
+  }
+
+  if (!selectedShopId) {
+    throw new Error('Unable to determine the shop for this order. Please try again or re-add items to your cart.');
   }
 
   // 2. Fetch shop data for fees and config
