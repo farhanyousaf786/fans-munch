@@ -512,3 +512,39 @@
   margin-top: 6px;
   font-style: italic;
 }
+
+/* Order Summary Section */
+.order-summary-card {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #EEF1F6;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.06);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.summary-row.discount {
+  color: #10B981;
+}
+
+.summary-row.total-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid #F1F5F9;
+  font-weight: 800;
+  color: #101828;
+  font-size: 16px;
+}
+
+.summary-row.total-row .total-price {
+  color: #2F6BFF;
+  font-size: 18px;
+}

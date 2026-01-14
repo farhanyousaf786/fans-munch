@@ -443,74 +443,19 @@ const OrderConfirmScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stadiumId]);
 
-  // Recalculate delivery fee when delivery mode changes
-  useEffect(() => {
-    const recalculateDeliveryFee = async () => {
-      const cartItems = cartUtils.getCartItems();
-      
-      if (deliveryMode === 'pickup') {
-        console.log(`🚗 [ORDER] Pickup mode selected - setting delivery fee to 0`);
-        setDeliveryFee(0);
-      } else {
-        // Fetch delivery fee for delivery mode
-        let deliveryFeeAmount = 0;
-        let deliveryFeeCurrency = 'ILS';
-        
-        try {
-          if (cartItems.length > 0) {
-            const firstItem = cartItems[0];
-            const shopId = firstItem.shopId || firstItem.shopIds?.[0];
-            
-            if (shopId) {
-              const shopRef = doc(db, 'shops', shopId);
-              const shopSnap = await getDoc(shopRef);
-              
-              if (shopSnap.exists()) {
-                const shopData = shopSnap.data();
-                
-                // Check for new inside/outside delivery structure
-                if (shopData.insideDelivery?.enabled) {
-                  deliveryFeeAmount = shopData.insideDelivery.fee || 0;
-                  deliveryFeeCurrency = shopData.insideDelivery.currency || 'ILS';
-                  console.log(`🏟️ [ORDER] Delivery mode - using inside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
-                } else if (shopData.outsideDelivery?.enabled) {
-                  deliveryFeeAmount = shopData.outsideDelivery.fee || 0;
-                  deliveryFeeCurrency = shopData.outsideDelivery.currency || 'ILS';
-                  console.log(`� [ORDER] Delivery mode - using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
-                } else {
-                  // Fallback to old deliveryFee field
-                  deliveryFeeAmount = shopData.deliveryFee || 0;
-                  deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
-                  console.log(`📦 [ORDER] Delivery mode - using legacy fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.warn('⚠️ [ORDER] Failed to fetch delivery fee:', error);
-        }
-        
-        // Convert to cart currency
-        const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
-        let deliveryFeeConverted = deliveryFeeAmount;
-        
-        if (deliveryFeeCurrency !== cartCurrency) {
-          const conversion = convertPrice(deliveryFeeAmount, deliveryFeeCurrency);
-          deliveryFeeConverted = conversion.convertedPrice;
-          console.log(`💱 [ORDER] Converted delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
-        }
-        
-        setDeliveryFee(deliveryFeeConverted);
-      }
-    };
-    
-    recalculateDeliveryFee();
-  }, [deliveryMode]);
 
   // Update delivery fee when user selects inside/outside delivery type
   useEffect(() => {
     const updateDeliveryFeeByType = async () => {
-      if (deliveryMode !== 'delivery' || !shopData) return;
+      // Handle Pickup - always 0
+      if (deliveryMode === 'pickup') {
+        console.log(`🚗 [FEE] Pickup mode - setting delivery fee to 0`);
+        setDeliveryFee(0);
+        return;
+      }
+
+      // If we don't have shop data yet, we can't calculate delivery fee
+      if (!shopData) return;
 
       const cartItems = cartUtils.getCartItems();
       const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
@@ -520,18 +465,20 @@ const OrderConfirmScreen = () => {
 
       // Determine which fee to use based on delivery type selection
       if (deliveryType === 'inside' && shopData.insideDelivery?.enabled) {
-        deliveryFeeAmount = shopData.insideDelivery.fee || 0;
+        const itemQuantity = cartUtils.getTotalItems();
+        const baseFee = shopData.insideDelivery.fee || 0;
+        deliveryFeeAmount = baseFee * itemQuantity;
         deliveryFeeCurrency = shopData.insideDelivery.currency || 'ILS';
-        console.log(`🏟️ [FEE UPDATE] Using inside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+        console.log(`🏟️ [FEE] Using inside delivery fee: ${baseFee} x ${itemQuantity} items = ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
       } else if (deliveryType === 'outside' && shopData.outsideDelivery?.enabled) {
         deliveryFeeAmount = shopData.outsideDelivery.fee || 0;
         deliveryFeeCurrency = shopData.outsideDelivery.currency || 'ILS';
-        console.log(`🌍 [FEE UPDATE] Using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+        console.log(`🌍 [FEE] Using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
       } else {
         // Traditional delivery (room/section/floor) - use shop's default delivery fee
         deliveryFeeAmount = shopData.deliveryFee || 0;
         deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
-        console.log(`📦 [FEE UPDATE] Using traditional delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+        console.log(`📦 [FEE] Using traditional delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
       }
 
       // Convert to cart currency if needed
@@ -539,7 +486,7 @@ const OrderConfirmScreen = () => {
       if (deliveryFeeCurrency !== cartCurrency) {
         const conversion = convertPrice(deliveryFeeAmount, deliveryFeeCurrency);
         deliveryFeeConverted = conversion.convertedPrice;
-        console.log(`💱 [FEE UPDATE] Converted: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
+        console.log(`💱 [FEE] Converted: ${deliveryFeeAmount} ${deliveryFeeCurrency} → ${deliveryFeeConverted} ${cartCurrency}`);
       }
 
       setDeliveryFee(deliveryFeeConverted);
@@ -1359,38 +1306,40 @@ const OrderConfirmScreen = () => {
           if (!stadium.availablePickupPoints) return null;
           
           return (
-            <div style={{ marginBottom: '20px', padding: '16px', background: '#f3f4f6', borderRadius: '8px' }}>
-              <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600' }}>Delivery Method</h3>
+            <div style={{ marginBottom: '20px', padding: '16px', background: 'transparent', borderRadius: '8px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>{t('order.delivery_method')}</h3>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => setDeliveryMode('delivery')}
                   style={{
                     flex: 1,
-                    padding: '10px',
+                    padding: '12px',
                     border: deliveryMode === 'delivery' ? '2px solid #3b82f6' : '1px solid #d1d5db',
                     background: deliveryMode === 'delivery' ? '#eff6ff' : '#fff',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
-                    fontWeight: deliveryMode === 'delivery' ? '600' : '400',
-                    color: deliveryMode === 'delivery' ? '#3b82f6' : '#6b7280'
+                    fontWeight: '700',
+                    color: deliveryMode === 'delivery' ? '#3b82f6' : '#6b7280',
+                    fontSize: '15px'
                   }}
                 >
-                  🚚 Delivery
+                  {t('order.delivery')}
                 </button>
                 <button
                   onClick={() => setDeliveryMode('pickup')}
                   style={{
                     flex: 1,
-                    padding: '10px',
+                    padding: '12px',
                     border: deliveryMode === 'pickup' ? '2px solid #3b82f6' : '1px solid #d1d5db',
                     background: deliveryMode === 'pickup' ? '#eff6ff' : '#fff',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
-                    fontWeight: deliveryMode === 'pickup' ? '600' : '400',
-                    color: deliveryMode === 'pickup' ? '#3b82f6' : '#6b7280'
+                    fontWeight: '700',
+                    color: deliveryMode === 'pickup' ? '#3b82f6' : '#6b7280',
+                    fontSize: '15px'
                   }}
                 >
-                  📍 Pickup
+                  {t('order.pickup')}
                 </button>
               </div>
             </div>
@@ -1447,6 +1396,12 @@ const OrderConfirmScreen = () => {
               deliveryLocation={deliveryLocation}
               onLocationChange={setDeliveryLocation}
               t={t}
+              cartSubtotal={orderTotal}
+              stadiumData={stadiumStorage.getSelectedStadium() || {}}
+              formData={formData}
+              errors={errors}
+              onInputChange={handleInputChange}
+              sectionsOptions={sectionsOptions}
             />
           );
         })()}
@@ -1457,12 +1412,12 @@ const OrderConfirmScreen = () => {
           // Only show delivery info if in delivery mode OR if pickup is not available
           const shouldShowDeliveryInfo = deliveryMode === 'delivery' || !stadium.availablePickupPoints;
           
-          // Check if user has selected inside/outside delivery
+          // Check if shop has inside/outside delivery enabled
           const hasInsideOutsideDelivery = shopData?.insideDelivery?.enabled || shopData?.outsideDelivery?.enabled;
-          const userSelectedInsideOutside = hasInsideOutsideDelivery && (deliveryType === 'inside' || deliveryType === 'outside');
           
-          // Hide seat form if user selected inside/outside delivery
-          if (!shouldShowDeliveryInfo || userSelectedInsideOutside) return null;
+          // Hide general seat form if shop has inside/outside options.
+          // In this case, seat details are handled AFTER selecting 'Inside Delivery' -> 'Add specific details'.
+          if (!shouldShowDeliveryInfo || hasInsideOutsideDelivery) return null;
           
           const showSeats = !!stadium.availableSeats;
           const showSections = stadium.availableSections !== false;
@@ -1473,7 +1428,6 @@ const OrderConfirmScreen = () => {
           
           console.log('🏟️ [SEATFORM PROPS] showSeats:', showSeats, 'availableSeats:', stadium.availableSeats);
           console.log('🏟️ [SEATFORM PROPS] showSections:', showSections, 'availableSections:', stadium.availableSections);
-          console.log('🏟️ [SEATFORM PROPS] userSelectedInsideOutside:', userSelectedInsideOutside);
           
           return (
             <SeatForm 

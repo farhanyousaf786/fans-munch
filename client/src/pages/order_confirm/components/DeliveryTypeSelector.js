@@ -1,6 +1,10 @@
 import React from 'react';
 import './DeliveryTypeSelector.css';
 import DeliveryNotesField from './DeliveryNotesField';
+import { showToast } from '../../../components/toast/ToastContainer';
+import { getCachedRates } from '../../../services/currencyInitService';
+import { cartUtils } from '../../../utils/cartUtils';
+import SeatForm from './SeatForm';
 
 /**
  * Component to select between inside and outside delivery options
@@ -15,8 +19,15 @@ const DeliveryTypeSelector = ({
   notesError,
   deliveryLocation,
   onLocationChange,
-  t 
+  t,
+  cartSubtotal,
+  stadiumData = {},
+  formData = {},
+  errors = {},
+  onInputChange = () => {},
+  sectionsOptions = []
 }) => {
+  const MANUAL_ENTRY_KEY = 'manual_delivery_entry';
   // Check if shop has inside or outside delivery enabled
   const hasInsideDelivery = shopData?.insideDelivery?.enabled;
   const hasOutsideDelivery = shopData?.outsideDelivery?.enabled;
@@ -37,12 +48,47 @@ const DeliveryTypeSelector = ({
     const openTime = delivery.openTime || '00:00';
     const closeTime = delivery.closeTime || '23:59';
 
-    return currentTime >= openTime && currentTime <= closeTime;
+    if (openTime === closeTime) return true;
+    
+    if (openTime < closeTime) {
+      return currentTime >= openTime && currentTime <= closeTime;
+    } else {
+      // Midnight crossover (e.g. 22:00 - 02:00)
+      return currentTime >= openTime || currentTime <= closeTime;
+    }
   };
 
   const insideOpen = hasInsideDelivery && isDeliveryOpen('inside');
   const outsideOfVenueOpen = hasOutsideDelivery && isDeliveryOpen('outside');
   const userSelectedInsideOutside = selectedType === 'inside' || selectedType === 'outside';
+
+  const handleTypeChange = (type) => {
+    if (type === 'outside') {
+      // Check for $50 minimum order
+      const cartItems = cartUtils.getCartItems();
+      const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+      const rates = getCachedRates() || { 'ILS': 3.7, 'USD': 1 }; // Fallback rates
+      
+      const cartRate = rates[cartCurrency] || 1;
+      const subtotalInUSD = cartSubtotal / cartRate;
+      
+      console.log(`🌍 [MIN ORDER CHECK] Subtotal: ${cartSubtotal} ${cartCurrency}, Rate: ${cartRate}, In USD: ${subtotalInUSD.toFixed(2)}`);
+      
+      if (subtotalInUSD < 50) {
+        showToast(t?.('order.err_outside_min_order') || 'Outside delivery requires a minimum order of $50.', 'error', 4000);
+        return;
+      }
+    }
+
+    // Show toast if the selected delivery type is closed
+    if (type === 'inside' && !insideOpen) {
+      showToast(t?.('order.err_delivery_closed') || 'Inside delivery is currently closed.', 'warning', 3000);
+    } else if (type === 'outside' && !outsideOfVenueOpen) {
+      showToast(t?.('order.err_delivery_closed') || 'Outside delivery is currently closed.', 'warning', 3000);
+    }
+
+    onTypeChange(type);
+  };
 
   return (
     <div className="delivery-type-selector">
@@ -56,15 +102,14 @@ const DeliveryTypeSelector = ({
           <button
             type="button"
             className={`delivery-type-option ${selectedType === 'inside' ? 'selected' : ''} ${!insideOpen ? 'closed' : ''}`}
-            onClick={() => insideOpen && onTypeChange('inside')}
-            disabled={!insideOpen}
+            onClick={() => handleTypeChange('inside')}
           >
             {selectedType === 'inside' && (
               <div
                 className="clear-selection"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTypeChange(null);
+                  handleTypeChange(null);
                 }}
                 aria-label="Clear selection"
               >
@@ -75,9 +120,11 @@ const DeliveryTypeSelector = ({
               <div className="delivery-type-name">
                 {t?.('order.inside_delivery') || 'Inside Venue Delivery'}
               </div>
-              <div className="delivery-type-fee">
-                {shopData.insideDelivery.fee} {shopData.insideDelivery.currency}
-              </div>
+              {!insideOpen && (
+                <div className="delivery-type-status closed" style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
+                  {t?.('order.closed') || 'Offline'}
+                </div>
+              )}
             </div>
           </button>
         )}
@@ -87,15 +134,14 @@ const DeliveryTypeSelector = ({
           <button
             type="button"
             className={`delivery-type-option ${selectedType === 'outside' ? 'selected' : ''} ${!outsideOfVenueOpen ? 'closed' : ''}`}
-            onClick={() => outsideOfVenueOpen && onTypeChange('outside')}
-            disabled={!outsideOfVenueOpen}
+            onClick={() => handleTypeChange('outside')}
           >
             {selectedType === 'outside' && (
               <div
                 className="clear-selection"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTypeChange(null);
+                  handleTypeChange(null);
                 }}
                 aria-label="Clear selection"
               >
@@ -106,9 +152,11 @@ const DeliveryTypeSelector = ({
               <div className="delivery-type-name">
                 {t?.('order.outside_delivery') || 'Outside Delivery'}
               </div>
-              <div className="delivery-type-fee">
-                {shopData.outsideDelivery.fee} {shopData.outsideDelivery.currency}
-              </div>
+              {!outsideOfVenueOpen && (
+                <div className="delivery-type-status closed" style={{ fontSize: '10px', marginTop: '4px', opacity: 0.8 }}>
+                  {t?.('order.closed') || 'Offline'}
+                </div>
+              )}
             </div>
           </button>
         )}
@@ -123,10 +171,11 @@ const DeliveryTypeSelector = ({
               ? shopData.insideDelivery?.locations || []
               : shopData.outsideDelivery?.locations || [];
             
-            if (locations.length === 0) return null;
+            // Allow showing the dropdown if inside delivery to support manual entry
+            if (locations.length === 0 && selectedType !== 'inside') return null;
             
             return (
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', marginTop: '20px' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '8px',
@@ -151,46 +200,50 @@ const DeliveryTypeSelector = ({
                 >
                   <option value="">-- Choose a location --</option>
                   {locations.map((location, index) => {
-                    // Handle both string and object formats
                     const locationName = typeof location === 'string' ? location : location.name;
                     const locationValue = typeof location === 'string' ? location : location.name;
-                    
                     return (
                       <option key={index} value={locationValue}>
                         {locationName}
                       </option>
                     );
                   })}
+                  
+                  {/* Append General Delivery Option for Inside Delivery */}
+                  {selectedType === 'inside' && (
+                    <option value={MANUAL_ENTRY_KEY}>
+                      ➕ {t?.('order.manual_location_entry') || 'Add specific room/section details'}
+                    </option>
+                  )}
                 </select>
               </div>
             );
           })()}
 
-          {/* Alternative option to use traditional delivery */}
-          <div style={{
-            textAlign: 'center',
-            padding: '12px',
-            marginBottom: '20px',
-            background: '#f8fafc',
-            borderRadius: '8px',
-            border: '1px dashed #cbd5e1'
-          }}>
-            <button
-              type="button"
-              onClick={() => onTypeChange(null)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#3b82f6',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                textDecoration: 'underline'
-              }}
-            >
-              Or add room/section details instead →
-            </button>
-          </div>
+          {/* Show SeatForm if manual entry is selected in the dropdown */}
+          {selectedType === 'inside' && deliveryLocation === MANUAL_ENTRY_KEY && (
+            <div style={{ 
+              marginTop: '10px', 
+              marginBottom: '20px', 
+              padding: '16px', 
+              background: '#f8fafc', 
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <SeatForm 
+                formData={formData} 
+                errors={errors} 
+                onChange={onInputChange} 
+                sectionsOptions={sectionsOptions}
+                showSeats={!!stadiumData.availableSeats}
+                showSections={stadiumData.availableSections !== false}
+                showFloors={!!stadiumData.availableFloors}
+                floorsCount={stadiumData.floors || 0}
+                showRooms={!!stadiumData.availableRooms}
+                showStands={!!stadiumData.availableStands}
+              />
+            </div>
+          )}
 
           <DeliveryNotesField
             value={deliveryNotes}
@@ -205,5 +258,3 @@ const DeliveryTypeSelector = ({
 };
 
 export default DeliveryTypeSelector;
-
-

@@ -228,26 +228,7 @@ export async function placeOrderAfterPayment({
   
   console.log('🔍 [PLACE ORDER] seatInfo created:', seatInfo);
 
-  // Recompute delivery fee from cart (2 ILS per regular item, 4 ILS per combo item)
-  const fee = Array.isArray(cartItems) ? cartItems.reduce((s, it) => {
-    // Check if item is combo by multiple methods (supports Hebrew and English)
-    const isComboItem = it.isCombo === true || 
-                       (it.name && (it.name.includes('+') || it.name.includes(' ו') || it.name.includes(' + '))) || 
-                       (it.category && (it.category.toLowerCase() === 'combo' || it.category.includes('קומבו'))) ||
-                       (it.comboItemIds && it.comboItemIds.length > 0);
-    
-    const itemFee = isComboItem ? 4 : 2;
-    return s + (itemFee * (it.quantity || 0));
-  }, 0) : 0;
-
-  const totals = orderRepository.calculateOrderTotals(
-    cartItems,
-    fee,
-    tipData?.amount || 0,
-    0
-  );
-
-  // Check if all cart items have the same single shopId
+  // 1. Resolve shop ID first
   const allShopIds = [];
   cartItems.forEach(item => {
     if (item.shopId) allShopIds.push(item.shopId);
@@ -257,19 +238,14 @@ export async function placeOrderAfterPayment({
   });
   
   const uniqueShopIds = [...new Set(allShopIds)];
-  
   let selectedShopId = null;
   
-  // If there's only one unique shop ID across all items, use it
   if (uniqueShopIds.length === 1) {
     selectedShopId = uniqueShopIds[0];
     console.log(`🛒 [SHOP SELECTION] Using single shop ID from cart items: ${selectedShopId}`);
   } else {
-    // Otherwise, resolve shop from section as before
     try {
       selectedShopId = await resolveShopFromSection(stadiumData.id, formData.sectionId, strictShopAvailability, formData.stand);
-      
-      // Enforce that a shop is resolved from section if we couldn't determine from cart
       if (!selectedShopId) {
         throw new Error('No shop is assigned to the selected section. Please choose a different section.');
       }
@@ -278,41 +254,86 @@ export async function placeOrderAfterPayment({
     }
   }
 
+  // 2. Fetch shop data for fees and config
+  let shopDoc = null;
+  try {
+    const shopRef = doc(db, 'shops', selectedShopId);
+    const shopSnap = await getDoc(shopRef);
+    if (shopSnap.exists()) {
+      shopDoc = shopSnap.data();
+    }
+  } catch (err) {
+    console.error('❌ [ORDER] Failed to fetch shop data:', err);
+  }
+
+  // 3. Determine final delivery fee based on method and type
+  let finalFee = 0;
+  let deliveryFeeCurrency = 'ILS';
+
+  if (deliveryMethod === 'pickup') {
+    finalFee = 0;
+    console.log(`🚗 [ORDER] Pickup mode - fee 0`);
+  } else if (deliveryType === 'inside' && shopDoc?.insideDelivery?.enabled) {
+    const totalItems = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+    const baseFee = shopDoc.insideDelivery.fee || 0;
+    finalFee = baseFee * totalItems;
+    deliveryFeeCurrency = shopDoc.insideDelivery.currency || 'ILS';
+    console.log(`🏟️ [ORDER] Inside delivery - fee ${baseFee} x ${totalItems} items = ${finalFee} ${deliveryFeeCurrency}`);
+  } else if (deliveryType === 'outside' && shopDoc?.outsideDelivery?.enabled) {
+    finalFee = shopDoc.outsideDelivery.fee || 0;
+    deliveryFeeCurrency = shopDoc.outsideDelivery.currency || 'ILS';
+    console.log(`🌍 [ORDER] Outside delivery - fee ${finalFee} ${deliveryFeeCurrency}`);
+  } else {
+    // Traditional delivery (room/section/floor)
+    finalFee = shopDoc?.deliveryFee || 0;
+    deliveryFeeCurrency = shopDoc?.deliveryFeeCurrency || 'ILS';
+    console.log(`📦 [ORDER] Traditional delivery - fee ${finalFee} ${deliveryFeeCurrency}`);
+  }
+
+  // Handle currency conversion for fee (matching UI logic)
+  const cartCurrency = cartItems.length > 0 ? cartItems[0].currency || 'ILS' : 'ILS';
+  let feeInCartCurrency = finalFee;
+  if (deliveryFeeCurrency !== cartCurrency) {
+    const { convertPrice } = require('../../../utils/currencyConverter');
+    const conversion = convertPrice(finalFee, deliveryFeeCurrency);
+    feeInCartCurrency = conversion.convertedPrice;
+    console.log(`💱 [ORDER] Fee converted to cart currency: ${feeInCartCurrency} ${cartCurrency}`);
+  }
+
+  const totals = orderRepository.calculateOrderTotals(
+    cartItems,
+    feeInCartCurrency,
+    tipData?.amount || 0,
+    0
+  );
 
   // Build delivery configuration object if inside/outside delivery is selected
   let deliveryConfig = {};
   if (deliveryType === 'inside' || deliveryType === 'outside') {
-    try {
-      const shopRef = doc(db, 'shops', selectedShopId);
-      const shopSnap = await getDoc(shopRef);
-      if (shopSnap.exists()) {
-        const shopDoc = shopSnap.data();
-        const deliveryData = deliveryType === 'inside' ? shopDoc.insideDelivery : shopDoc.outsideDelivery;
-        
-        if (deliveryData && deliveryData.enabled) {
-          // Find the selected location from the locations array
-          let selectedLocationObj = null;
-          if (deliveryData.locations && Array.isArray(deliveryData.locations)) {
-            selectedLocationObj = deliveryData.locations.find(loc => {
-              const locName = typeof loc === 'string' ? loc : loc.name;
-              return locName === deliveryLocation;
-            });
-          }
-          
-          // Build the delivery configuration
-          const deliveryKey = deliveryType === 'inside' ? 'insideDelivery' : 'outsideDelivery';
-          deliveryConfig[deliveryKey] = {
-            fee: deliveryData.fee,
-            currency: deliveryData.currency,
-            location: selectedLocationObj || deliveryLocation, // Use object if found, otherwise just the name
-            notes: deliveryNotes || '',
-          };
-          
-          console.log(`📦 [ORDER] ${deliveryKey} config:`, deliveryConfig[deliveryKey]);
+    if (shopDoc) {
+      const deliveryData = deliveryType === 'inside' ? shopDoc.insideDelivery : shopDoc.outsideDelivery;
+      
+      if (deliveryData && deliveryData.enabled) {
+        // Find the selected location from the locations array
+        let selectedLocationObj = null;
+        if (deliveryData.locations && Array.isArray(deliveryData.locations)) {
+          selectedLocationObj = deliveryData.locations.find(loc => {
+            const locName = typeof loc === 'string' ? loc : loc.name;
+            return locName === deliveryLocation;
+          });
         }
+        
+        // Build the delivery configuration
+        const deliveryKey = deliveryType === 'inside' ? 'insideDelivery' : 'outsideDelivery';
+        deliveryConfig[deliveryKey] = {
+          fee: deliveryData.fee,
+          currency: deliveryData.currency,
+          location: selectedLocationObj || deliveryLocation, // Use object if found, otherwise just the name
+          notes: deliveryNotes || '',
+        };
+        
+        console.log(`📦 [ORDER] ${deliveryKey} config:`, deliveryConfig[deliveryKey]);
       }
-    } catch (err) {
-      console.error('❌ [ORDER] Failed to fetch shop delivery config:', err);
     }
   }
 
