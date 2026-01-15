@@ -26,46 +26,38 @@
 }
 
 .delivery-type-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
+    display: flex;
+    gap: 12px;
 }
 
 .delivery-type-option {
     position: relative;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1.25rem 1rem;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px;
     background: #ffffff;
-    border: 2px solid #eef2f6;
-    border-radius: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
     overflow: hidden;
-}
-
-.delivery-type-option:hover:not(:disabled) {
-    transform: translateY(-4px);
-    border-color: #3b82f633;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    min-height: 48px;
 }
 
 .delivery-type-option.closed {
     opacity: 0.7;
     cursor: pointer;
     background: #f8fafc;
-    filter: grayscale(0.2);
 }
 
 .delivery-type-option.selected {
-    border-color: #3b82f6;
-    background: #f0f7ff;
-    box-shadow: 0 0 0 1px #3b82f6, 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+    border: 2px solid #3b82f6;
+    background: #eff6ff;
     opacity: 1;
-    filter: none;
 }
 
 .delivery-type-option:disabled {
@@ -73,25 +65,20 @@
 }
 
 .delivery-type-icon {
-    font-size: 2.25rem;
-    transition: transform 0.3s ease;
-}
-
-.delivery-type-option:hover .delivery-type-icon {
-    transform: scale(1.1);
+    display: none;
 }
 
 .delivery-type-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
-    text-align: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .delivery-type-name {
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 15px;
     color: #334155;
 }
 
@@ -153,22 +140,16 @@
 /* Mobile adjustments */
 @media (max-width: 640px) {
     .delivery-type-options {
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        gap: 8px;
     }
 
     .delivery-type-option {
-        padding: 1rem 0.75rem;
-    }
-
-    .delivery-type-icon {
-        font-size: 2rem;
+        padding: 10px 4px;
+        min-height: 44px;
     }
 
     .delivery-type-name {
-        font-size: 0.85rem;
-    }
-
-    .delivery-type-fee {
-        font-size: 1rem;
+        font-size: 14px;
     }
 }

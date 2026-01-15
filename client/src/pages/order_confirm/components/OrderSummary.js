@@ -3,7 +3,7 @@ import { useTranslation } from '../../../i18n/i18n';
 import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
 import { cartUtils } from '../../../utils/cartUtils';
 
-const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, percentage: 0 }, finalTotal = 0 }) => {
+const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, percentage: 0 }, finalTotal = 0, deliveryType = null }) => {
   const { t, lang } = useTranslation();
   
   // Force re-render when language changes
@@ -23,6 +23,10 @@ const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, 
     }
     return 'ILS';
   };
+
+  // Only show delivery fee if a delivery type is selected
+  const showDeliveryFee = deliveryType === 'inside' || deliveryType === 'outside';
+
   return (
     <div className="order-summary-section">
       <h2 className="section-title">{t('order.summary_title')}</h2>
@@ -32,10 +36,12 @@ const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, 
         <span className="summary-value">{formatPriceWithCurrency(orderTotal, getCartCurrency())}</span>
       </div>
 
-      <div className="summary-row">
-        <span className="summary-label">{t('cart.delivery')}</span>
-        <span className="summary-value">{formatPriceWithCurrency(deliveryFee, getCartCurrency())}</span>
-      </div>
+      {showDeliveryFee && (
+        <div className="summary-row">
+          <span className="summary-label">{t('cart.delivery')}</span>
+          <span className="summary-value">{formatPriceWithCurrency(deliveryFee, getCartCurrency())}</span>
+        </div>
+      )}
 
       <div className="summary-row">
         <span className="summary-label">{t('order.tip')}</span>

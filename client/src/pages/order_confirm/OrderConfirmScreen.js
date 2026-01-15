@@ -1306,7 +1306,7 @@ const OrderConfirmScreen = () => {
           if (!stadium.availablePickupPoints) return null;
           
           return (
-            <div style={{ marginBottom: '20px', padding: '16px', background: 'transparent', borderRadius: '8px' }}>
+            <div style={{ marginBottom: '20px', padding: '0', background: 'transparent' }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>{t('order.delivery_method')}</h3>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
@@ -1319,8 +1319,11 @@ const OrderConfirmScreen = () => {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontWeight: '700',
-                    color: deliveryMode === 'delivery' ? '#3b82f6' : '#6b7280',
-                    fontSize: '15px'
+                    color: deliveryMode === 'delivery' ? '#3b82f6' : '#334155',
+                    fontSize: '15px',
+                    minHeight: '48px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: 'none'
                   }}
                 >
                   {t('order.delivery')}
@@ -1335,8 +1338,11 @@ const OrderConfirmScreen = () => {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontWeight: '700',
-                    color: deliveryMode === 'pickup' ? '#3b82f6' : '#6b7280',
-                    fontSize: '15px'
+                    color: deliveryMode === 'pickup' ? '#3b82f6' : '#334155',
+                    fontSize: '15px',
+                    minHeight: '48px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: 'none'
                   }}
                 >
                   {t('order.pickup')}
@@ -1485,7 +1491,13 @@ const OrderConfirmScreen = () => {
         </div>
 
         {/* Order Summary */}
-        <OrderSummary orderTotal={orderTotal} deliveryFee={deliveryFee} tipData={tipData} finalTotal={finalTotal} />
+        <OrderSummary 
+          orderTotal={orderTotal} 
+          deliveryFee={deliveryFee} 
+          tipData={tipData} 
+          finalTotal={finalTotal} 
+          deliveryType={deliveryType}
+        />
 
 
         {/* Stripe Payment Form with integrated Place Order button */}
