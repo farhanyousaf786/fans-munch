@@ -183,6 +183,9 @@ export class Order {
           preparationTime: item.preparationTime || 15,
           price: parseFloat((item.price || 0).toFixed(2)),
           currency: item.currency || 'ILS',
+          // ✅ NEW: Cost of Goods
+          costOfGoods: parseFloat((item.costOfGoods || 0).toFixed(2)),
+          hasCOG: item.hasCOG || false,
           // Shops: include all shopIds exactly like menuItems schema; keep shopId for compatibility
           shopIds: Array.isArray(item.shopIds) ? [...item.shopIds] : (item.shopId ? [item.shopId] : []),
           shopId: item.shopId || '',

@@ -26,15 +26,9 @@ import DeliveryNotesField from './components/DeliveryNotesField';
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
-  console.log('🌐 OrderConfirmScreen language:', lang);
-  console.log('🌐 Phone title translation:', t('order.phone_contact_title'));
   
   const stadiumData = stadiumStorage.getSelectedStadium() || {};
-  console.log('🏟️ [DEBUG] Selected stadium data:', stadiumData);
-  console.log('🏟️ [DEBUG] availableSeats:', stadiumData.availableSeats);
-  console.log('🏟️ [DEBUG] availableSections:', stadiumData.availableSections);
-  console.log('🏟️ [DEBUG] availableFloors:', stadiumData.availableFloors);
-  console.log('🏟️ [DEBUG] availableRooms:', stadiumData.availableRooms);
+  
   
   const paymentRef = useRef(null);
   const phoneInputRef = useRef(null);
@@ -92,6 +86,9 @@ const OrderConfirmScreen = () => {
   const [deliveryLocation, setDeliveryLocation] = useState('');
   const [shopData, setShopData] = useState(null);
 
+  // Track last intent to avoid redundant calls but allow updates
+  const lastIntentRef = useRef({ total: 0, type: null, tip: 0 });
+
 
   // Fetch pickup points if available
   useEffect(() => {
@@ -148,7 +145,6 @@ const OrderConfirmScreen = () => {
         floor: '',
         room: ''
       }));
-      console.log('🔄 [ORDER] Reset floor and room on screen visit');
       
       // Do not show validation errors on initial load; we'll validate on change and on submit
       setOrderTotal(cartTotal);
@@ -164,7 +160,6 @@ const OrderConfirmScreen = () => {
           const firstItem = cartItems[0];
           shopId = firstItem.shopId || firstItem.shopIds?.[0];
           
-          console.log(`🏪 [ORDER] Getting shop data from shop ID:`, shopId);
           
           if (shopId) {
             const shopRef = doc(db, 'shops', shopId);
@@ -175,23 +170,15 @@ const OrderConfirmScreen = () => {
               setShopData(fetchedShopData); // Store shop data for delivery type selector
               
               // Default to legacy delivery fee - will be updated when user selects inside/outside
-              deliveryFeeAmount = fetchedShopData.deliveryFee || 0;
+              // Calculate per item as requested
+              const itemQuantity = cartUtils.getTotalItems();
+              const baseFee = fetchedShopData.deliveryFee || 0;
+              deliveryFeeAmount = baseFee * itemQuantity;
               deliveryFeeCurrency = fetchedShopData.deliveryFeeCurrency || 'ILS';
-              console.log(`📦 [ORDER] Initial delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
               
               shopVendorAccountId = fetchedShopData.stripeConnectedAccountId || null;
               
-              console.log(`🏪 [ORDER] Shop ID: ${shopId}`);
-              console.log(`💰 deliveryFee: ${deliveryFeeAmount} (number)`);
-              console.log(`💱 deliveryFeeCurrency: "${deliveryFeeCurrency}" (string)`);
-              console.log(`💳 stripeConnectedAccountId: "${shopVendorAccountId}" (string)`);
-              console.log(`🏪 [ORDER] Full shop data:`, { 
-                deliveryFee: deliveryFeeAmount, 
-                deliveryFeeCurrency,
-                stripeConnectedAccountId: shopVendorAccountId,
-                insideDelivery: fetchedShopData.insideDelivery,
-                outsideDelivery: fetchedShopData.outsideDelivery
-              });
+              
             }
           }
         }
@@ -206,15 +193,7 @@ const OrderConfirmScreen = () => {
       const finalVendorId = shopVendorAccountId || process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID;
       setVendorAccountId(finalVendorId);
       
-      console.log(`\n${'='.repeat(60)}`);
-      console.log(`💳 [VENDOR ACCOUNT] Payment Routing Information`);
-      console.log(`${'='.repeat(60)}`);
-      console.log(`📍 Source: ${shopVendorAccountId ? 'Firebase Shop Data' : '.env Fallback'}`);
-      console.log(`🏪 Shop ID: ${shopId || 'N/A'}`);
-      console.log(`💳 Vendor Account from Firebase: ${shopVendorAccountId || 'null/missing'}`);
-      console.log(`🔧 Fallback from .env: ${process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID || 'not set'}`);
-      console.log(`✅ Final Vendor Account Used: ${finalVendorId}`);
-      console.log(`${'='.repeat(60)}\n`);
+    
 
       
       
@@ -258,11 +237,8 @@ const OrderConfirmScreen = () => {
     initializeOrder();
 
     // Priority 1: Check URL parameters (direct QR scan)
-    console.log('🔍 [ORDER] Checking for seat data...');
-    console.log('🔍 [ORDER] Current URL:', window.location.href);
     
     const urlParams = new URLSearchParams(window.location.search);
-    console.log('🔍 [ORDER] URL params:', Object.fromEntries(urlParams.entries()));
     
     const urlSeatData = {
       row: urlParams.get('row') || '',
@@ -464,21 +440,25 @@ const OrderConfirmScreen = () => {
       let deliveryFeeCurrency = 'ILS';
 
       // Determine which fee to use based on delivery type selection
-      if (deliveryType === 'inside' && shopData.insideDelivery?.enabled) {
+      if (deliveryType === 'inside') {
         const itemQuantity = cartUtils.getTotalItems();
-        const baseFee = shopData.insideDelivery.fee || 0;
+        const baseFee = shopData.insideDelivery?.fee || 0;
         deliveryFeeAmount = baseFee * itemQuantity;
-        deliveryFeeCurrency = shopData.insideDelivery.currency || 'ILS';
+        deliveryFeeCurrency = shopData.insideDelivery?.currency || 'ILS';
         console.log(`🏟️ [FEE] Using inside delivery fee: ${baseFee} x ${itemQuantity} items = ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
-      } else if (deliveryType === 'outside' && shopData.outsideDelivery?.enabled) {
-        deliveryFeeAmount = shopData.outsideDelivery.fee || 0;
-        deliveryFeeCurrency = shopData.outsideDelivery.currency || 'ILS';
-        console.log(`🌍 [FEE] Using outside delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+      } else if (deliveryType === 'outside') {
+        // Outside Delivery is a FLAT FEE (not per item)
+        deliveryFeeAmount = shopData.outsideDelivery?.fee || 0;
+        deliveryFeeCurrency = shopData.outsideDelivery?.currency || 'ILS';
+        console.log(`🌍 [FEE] Using outside delivery fee (Flat): ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
       } else {
         // Traditional delivery (room/section/floor) - use shop's default delivery fee
-        deliveryFeeAmount = shopData.deliveryFee || 0;
+        // Calculate per item as requested
+        const itemQuantity = cartUtils.getTotalItems();
+        const baseFee = shopData.deliveryFee || 0;
+        deliveryFeeAmount = baseFee * itemQuantity;
         deliveryFeeCurrency = shopData.deliveryFeeCurrency || 'ILS';
-        console.log(`📦 [FEE] Using traditional delivery fee: ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
+        console.log(`📦 [FEE] Using traditional delivery fee: ${baseFee} x ${itemQuantity} items = ${deliveryFeeAmount} ${deliveryFeeCurrency}`);
       }
 
       // Convert to cart currency if needed
@@ -596,18 +576,63 @@ const OrderConfirmScreen = () => {
           : (window.location.port === '3000' ? 'http://localhost:5001' : '');
         
 
-        // Do not recreate if we already have a valid Stripe intent
-        if (stripeIntent?.id && stripeIntent?.clientSecret) return;
+        // Determine if we should wait for delivery selection
+        const shouldShowSelector = deliveryMode === 'delivery' && shopData && (shopData.insideDelivery?.enabled || shopData.outsideDelivery?.enabled);
+        if (shouldShowSelector && deliveryType === null) {
+          console.log('[OrderConfirm] Skipping intent creation - waiting for delivery type selection');
+          return;
+        }
 
         const paymentCurrency = getPaymentCurrency();
         const paymentAmount = getPaymentAmount();
-        const vendorIdToSend = vendorAccountId || process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID;
+
+        // 🔄 Refreshed Logic: Do not recreate if parameters haven't changed
+        if (stripeIntent?.id && 
+            lastIntentRef.current.total === finalTotal && 
+            lastIntentRef.current.type === deliveryType &&
+            lastIntentRef.current.tip === tipData.amount
+        ) {
+          return;
+        }
+        
+        // ✅ Get cart items from cartUtils
+        const cartItems = cartUtils.getCartItems();
+        
+        // 🔍 DEBUG: Log raw cart items to see if COG is present
+        console.log('🔍 [DEBUG] Raw cart items from utility:', cartItems);
+        
+        // ✅ NEW: Prepare cart items with COG
+        const cartItemsWithCOG = cartItems.map(item => {
+          console.log(`🔍 [DEBUG] Item: ${item.name}, Price: ${item.price}, COG: ${item.costOfGoods}, hasCOG: ${item.hasCOG}`);
+          return {
+            id: item.id,
+            name: item.name,
+            price: item.price || 0,
+            costOfGoods: item.costOfGoods || 0,
+            hasCOG: item.hasCOG || false,
+            quantity: item.quantity || 1
+          };
+        });
+        
+        // ✅ NEW: Get shop configuration
+        const shopConfig = shopData ? {
+          'payment-options': shopData['payment-options'] || {
+            model: '2-way',
+            'platform-fee': 0,
+            'vendor-fee': 1.0,
+            'delivery-destination': 'platform',
+            'tip-destination': 'platform',
+            'vendor-id': shopData.stripeConnectedAccountId || vendorAccountId || null,
+            'hotel-id': null
+          }
+        } : null;
         
         console.log(`\n${'='.repeat(60)}`);
-        console.log(`📤 [CLIENT → SERVER] Sending Payment Intent Request`);
+        console.log(`📤 [CLIENT → SERVER] Sending Payment Intent Request (NEW FORMAT)`);
         console.log(`${'='.repeat(60)}`);
         console.log(`💰 Amount: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
-        console.log(`💳 Vendor Account Sending: ${vendorIdToSend}`);
+        console.log(`🛒 Cart Items: ${cartItemsWithCOG.length}`);
+        console.log(`🏪 Shop Config Model: ${shopConfig?.['payment-options']?.model || 'N/A'}`);
         console.log(`🚚 Delivery Fee: ${deliveryFee}`);
         console.log(`💵 Tip Amount: ${tipData.amount || 0}`);
         console.log(`${'='.repeat(60)}\n`);
@@ -618,7 +643,10 @@ const OrderConfirmScreen = () => {
           body: JSON.stringify({ 
             amount: paymentAmount,
             currency: paymentCurrency,
-            stripeConnectedAccountId: vendorIdToSend,
+            // ✅ NEW: Send shop configuration
+            shopConfig: shopConfig,
+            // ✅ NEW: Send cart items with COG
+            cartItems: cartItemsWithCOG,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0
@@ -630,7 +658,22 @@ const OrderConfirmScreen = () => {
           console.warn('OrderConfirm Pre-create Stripe intent failed:', text);
           return;
         }
+        
+        // ✅ NEW: Log payment breakdown if available
+        if (data?.paymentBreakdown) {
+          console.log('\n' + '='.repeat(40));
+          console.log('💸 [SERVER PAYMENT BREAKDOWN]');
+          console.log('='.repeat(40));
+          console.log(`Model:    ${shopConfig?.['payment-options']?.model?.toUpperCase() || 'UNKNOWN'}`);
+          console.log(`Platform: $${data.paymentBreakdown.platform?.toFixed(2) || '0.00'}`);
+          console.log(`Hotel:    $${data.paymentBreakdown.hotel?.toFixed(2) || '0.00'}`);
+          console.log(`Vendor:   $${data.paymentBreakdown.vendor?.toFixed(2) || '0.00'}`);
+          console.log(`Stripe Fee: $${data.paymentBreakdown.stripeFee?.toFixed(2) || '0.00'}`);
+          console.log('='.repeat(40) + '\n');
+        }
+        
         if (!cancelled) {
+          lastIntentRef.current = { total: finalTotal, type: deliveryType, tip: tipData.amount };
           setStripeIntent({ id: data?.intentId, clientSecret: data?.clientSecret, mode: data?.mode });
         }
       } catch (e) {
@@ -642,7 +685,7 @@ const OrderConfirmScreen = () => {
     return () => { cancelled = true; };
     // Recreate if total changes significantly (e.g., tip change)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalTotal, deliveryFee, tipData.amount]);
+  }, [finalTotal, deliveryFee, tipData.amount, shopData]);
 
   const handleInputChange = (field, value) => {
     console.log('[INPUT CHANGE]', { field, value, currentFormData: formData });

@@ -19,6 +19,10 @@ class Food {
     // Pricing and currency
     price = 0,
     currency = 'ILS',
+    
+    // ✅ NEW: Cost of Goods
+    costOfGoods = 0,
+    hasCOG = false,
 
     // Classification
     category = '', // categoryId string
@@ -65,6 +69,10 @@ class Food {
     // Pricing
     this.price = price;
     this.currency = currency;
+    
+    // ✅ NEW: Cost of Goods
+    this.costOfGoods = parseFloat(costOfGoods) || 0;
+    this.hasCOG = hasCOG || false;
 
     // Classification
     this.category = category;
@@ -123,6 +131,9 @@ class Food {
       // pricing
       price: data.price ?? 0,
       currency: data.currency || 'USD',
+      // COG
+      costOfGoods: data.costOfGoods ?? 0,
+      hasCOG: data.hasCOG || false,
       // classification
       category: data.category || '',
       images: data.images || [],
@@ -166,6 +177,9 @@ class Food {
       // pricing
       price: data.price ?? 0,
       currency: data.currency || 'USD',
+      // COG
+      costOfGoods: data.costOfGoods ?? 0,
+      hasCOG: data.hasCOG || false,
       // classification
       category: data.category || '',
       images: data.images || [],
@@ -209,6 +223,9 @@ class Food {
       // pricing
       price: this.price,
       currency: this.currency,
+      // COG
+      costOfGoods: this.costOfGoods,
+      hasCOG: this.hasCOG,
       // classification
       category: this.category,
       images: this.images,
@@ -243,6 +260,8 @@ class Food {
       description: this.description,
       descriptionMap: this.descriptionMap,
       price: this.price,
+      costOfGoods: this.costOfGoods,
+      hasCOG: this.hasCOG,
       category: this.category,
       images: this.images,
       isAvailable: this.isAvailable,
@@ -400,6 +419,33 @@ class Food {
     const curr = (this.currency || 'USD').toUpperCase();
     const symbol = curr === 'ILS' ? '₪' : curr === 'EUR' ? '€' : '$';
     return `${symbol}${this.getTotalPrice().toFixed(2)}`;
+  }
+
+  /**
+   * Get gross profit (price - COG)
+   * @returns {number}
+   */
+  getGrossProfit() {
+    return this.price - this.costOfGoods;
+  }
+
+  /**
+   * Get gross margin percentage
+   * @returns {number}
+   */
+  getGrossMarginPercent() {
+    if (this.price === 0) return 0;
+    return ((this.price - this.costOfGoods) / this.price) * 100;
+  }
+
+  /**
+   * Get formatted gross profit
+   * @returns {string}
+   */
+  getFormattedGrossProfit() {
+    const curr = (this.currency || 'USD').toUpperCase();
+    const symbol = curr === 'ILS' ? '₪' : curr === 'EUR' ? '€' : '$';
+    return `${symbol}${this.getGrossProfit().toFixed(2)}`;
   }
 
   // Helpers

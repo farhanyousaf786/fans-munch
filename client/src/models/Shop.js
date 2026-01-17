@@ -22,7 +22,7 @@ class Shop {
     insideDelivery = {},
     outsideDelivery = {},
     shopAvailability = true,
-    stripeConnectedAccountId = null,
+    paymentOptions = null,
     createdAt = null,
     updatedAt = null
   }) {
@@ -67,8 +67,31 @@ class Shop {
     // Shop availability flag (open/closed)
     this.shopAvailability = typeof shopAvailability === 'boolean' ? shopAvailability : true;
     
-    // Stripe connected account ID for payments
-    this.stripeConnectedAccountId = stripeConnectedAccountId;
+    // ✅ Payment Options Configuration (NEW FLEXIBLE SYSTEM)
+    this.paymentOptions = paymentOptions ? {
+      model: paymentOptions.model || paymentOptions['model'] || '2-way',
+      platformFee: parseFloat(paymentOptions.platformFee || paymentOptions['platform-fee'] || 0),
+      vendorFee: parseFloat(paymentOptions.vendorFee || paymentOptions['vendor-fee'] || 1.0),
+      hotelFee: parseFloat(paymentOptions.hotelFee || paymentOptions['hotel-fee'] || 0),
+      deliveryDestination: paymentOptions.deliveryDestination || paymentOptions['delivery-destination'] || 'platform',
+      tipDestination: paymentOptions.tipDestination || paymentOptions['tip-destination'] || 'platform',
+      deliverySplit: paymentOptions.deliverySplit || paymentOptions['delivery-split'] || null,
+      tipSplit: paymentOptions.tipSplit || paymentOptions['tip-split'] || null,
+      vendorId: paymentOptions.vendorId || paymentOptions['vendor-id'] || null,
+      hotelId: paymentOptions.hotelId || paymentOptions['hotel-id'] || null
+    } : {
+      // Default to current behavior (delivery-only model)
+      model: '2-way',
+      platformFee: 0,
+      vendorFee: 1.0,
+      hotelFee: 0,
+      deliveryDestination: 'platform',
+      tipDestination: 'platform',
+      deliverySplit: null,
+      tipSplit: null,
+      vendorId: null,
+      hotelId: null
+    };
     
     // Timestamps
     this.createdAt = createdAt instanceof Date ? createdAt : (createdAt?.toDate?.() || new Date());
@@ -109,7 +132,19 @@ class Shop {
       insideDelivery: this.insideDelivery,
       outsideDelivery: this.outsideDelivery,
       shopAvailability: this.shopAvailability,
-      stripeConnectedAccountId: this.stripeConnectedAccountId,
+      // ✅ Payment options (new flexible system)
+      'payment-options': {
+        model: this.paymentOptions.model,
+        'platform-fee': this.paymentOptions.platformFee,
+        'vendor-fee': this.paymentOptions.vendorFee,
+        'hotel-fee': this.paymentOptions.hotelFee,
+        'delivery-destination': this.paymentOptions.deliveryDestination,
+        'tip-destination': this.paymentOptions.tipDestination,
+        'delivery-split': this.paymentOptions.deliverySplit,
+        'tip-split': this.paymentOptions.tipSplit,
+        'vendor-id': this.paymentOptions.vendorId,
+        'hotel-id': this.paymentOptions.hotelId
+      },
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

@@ -290,6 +290,8 @@ export const cartUtils = {
           allergens: food.allergens || [],
           category: food.category || '', // category ID
           currency: food.currency || 'ILS',
+          costOfGoods: food.costOfGoods || 0, // ✅ NEW: Support COG-based splits
+          hasCOG: food.hasCOG || false,      // ✅ NEW: Support COG-based splits
           selectedSauces: sauces,
           addedAt: new Date().toISOString()
         };

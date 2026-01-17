@@ -11,12 +11,18 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const currencyRoutes = require('./routes/currencyRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 const { initializeCurrencyScheduler } = require('./services/currencyService');
 
 const app = express();
 
 // Middlewares
 app.use(cors());
+
+// Webhooks must be BEFORE express.json() for raw body access
+app.use('/api/webhooks', webhookRoutes);
+
+
 app.use(express.json());
 
 // Routes -> Controllers
