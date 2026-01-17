@@ -62,7 +62,7 @@ exports.createPaymentIntent = async (req, res) => {
     if (!shopConfig || !shopConfig['payment-options']) {
       return res.status(400).json({
         success: false,
-        error: 'Shop configuration with payment-options is required'
+        error: 'Select location so we know where to deliver'
       });
     }
 

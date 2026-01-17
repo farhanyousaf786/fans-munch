@@ -582,11 +582,19 @@ const OrderConfirmScreen = () => {
         // 2. We HAVE shop data loaded
         // 3. The shop explicitly enables specialized delivery types (Inside OR Outside)
         const hasSpecialDelivery = shopData && (shopData.insideDelivery?.enabled === true || shopData.outsideDelivery?.enabled === true);
-        const shouldWait = deliveryMode === 'delivery' && hasSpecialDelivery && deliveryType === null;
         
-        if (shouldWait) {
+        // STAGE 1: Wait for Type Selection (Inside vs Outside)
+        if (deliveryMode === 'delivery' && hasSpecialDelivery && deliveryType === null) {
           console.log('[OrderConfirm] Skipping intent creation - waiting for delivery type selection');
           return;
+        }
+
+        // STAGE 2: Wait for Location Selection (if Type is Inside or Outside)
+        if (deliveryMode === 'delivery' && (deliveryType === 'inside' || deliveryType === 'outside')) {
+           if (!deliveryLocation || String(deliveryLocation).trim() === '') {
+             console.log('[OrderConfirm] Skipping intent creation - waiting for delivery location');
+             return;
+           }
         }
 
         const paymentCurrency = getPaymentCurrency();
@@ -596,10 +604,13 @@ const OrderConfirmScreen = () => {
         if (stripeIntent?.id && 
             lastIntentRef.current.total === finalTotal && 
             lastIntentRef.current.type === deliveryType &&
-            lastIntentRef.current.tip === tipData.amount
+            lastIntentRef.current.tip === tipData.amount &&
+            // Check location too, to avoid recreating if location didn't change (though location change usually doesn't affect price, it affects validity)
+            lastIntentRef.current.location === deliveryLocation
         ) {
           return;
         }
+
         
         // ✅ Get cart items from cartUtils
         const cartItems = cartUtils.getCartItems();
@@ -679,7 +690,7 @@ const OrderConfirmScreen = () => {
         }
         
         if (!cancelled) {
-          lastIntentRef.current = { total: finalTotal, type: deliveryType, tip: tipData.amount };
+          lastIntentRef.current = { total: finalTotal, type: deliveryType, tip: tipData.amount, location: deliveryLocation };
           setStripeIntent({ id: data?.intentId, clientSecret: data?.clientSecret, mode: data?.mode });
         }
       } catch (e) {
@@ -691,7 +702,7 @@ const OrderConfirmScreen = () => {
     return () => { cancelled = true; };
     // Recreate if total changes significantly (e.g., tip change)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalTotal, deliveryFee, tipData.amount, shopData, deliveryType, deliveryMode]);
+  }, [finalTotal, deliveryFee, tipData.amount, shopData, deliveryType, deliveryMode, deliveryLocation]);
 
   const handleInputChange = (field, value) => {
     console.log('[INPUT CHANGE]', { field, value, currentFormData: formData });
@@ -1115,6 +1126,28 @@ const OrderConfirmScreen = () => {
         showToast('Cart is empty', 'error', 3000);
         navigate('/home');
         return;
+      }
+
+      // Validations for Special Delivery Types (Inside/Outside)
+      if (deliveryMode === 'delivery' && (deliveryType === 'outside' || deliveryType === 'inside')) {
+        if (!deliveryLocation || String(deliveryLocation).trim() === '') {
+          showToast('Please select a location so we can know where to deliver', 'error', 3000);
+          
+          // Scroll to the error
+          const locationEl = document.getElementById('delivery-location-select');
+          if (locationEl) {
+            locationEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            locationEl.focus();
+            locationEl.style.borderColor = 'red';
+            setTimeout(() => locationEl.style.borderColor = '', 2000);
+          }
+          
+          // ⚠️ FORCE RESET STRIPE INTENT
+          // Since the user failed validation, we want to ensure the specific intent isn't "stuck"
+          setStripeIntent(null);
+          
+          return;
+        }
       }
 
       // Build effective form exactly like wallet flow (merge savedSeat + current form, prefer non-empty)
