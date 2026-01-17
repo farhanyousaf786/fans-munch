@@ -577,8 +577,14 @@ const OrderConfirmScreen = () => {
         
 
         // Determine if we should wait for delivery selection
-        const shouldShowSelector = deliveryMode === 'delivery' && shopData && (shopData.insideDelivery?.enabled || shopData.outsideDelivery?.enabled);
-        if (shouldShowSelector && deliveryType === null) {
+        // Wait ONLY if:
+        // 1. We are in delivery mode
+        // 2. We HAVE shop data loaded
+        // 3. The shop explicitly enables specialized delivery types (Inside OR Outside)
+        const hasSpecialDelivery = shopData && (shopData.insideDelivery?.enabled === true || shopData.outsideDelivery?.enabled === true);
+        const shouldWait = deliveryMode === 'delivery' && hasSpecialDelivery && deliveryType === null;
+        
+        if (shouldWait) {
           console.log('[OrderConfirm] Skipping intent creation - waiting for delivery type selection');
           return;
         }
@@ -685,7 +691,7 @@ const OrderConfirmScreen = () => {
     return () => { cancelled = true; };
     // Recreate if total changes significantly (e.g., tip change)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalTotal, deliveryFee, tipData.amount, shopData]);
+  }, [finalTotal, deliveryFee, tipData.amount, shopData, deliveryType, deliveryMode]);
 
   const handleInputChange = (field, value) => {
     console.log('[INPUT CHANGE]', { field, value, currentFormData: formData });

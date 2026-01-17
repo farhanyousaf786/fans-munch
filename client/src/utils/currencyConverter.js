@@ -29,19 +29,19 @@ export function convertPrice(price, firebaseCurrency = 'USD') {
     // Normalize currency code
     const normalizedFirebaseCurrency = normalizeCurrency(firebaseCurrency);
     
+    // Get user's preferred currency
+    const userCurrency = getPreferredCurrency();
+
     if (!price || price <= 0) {
-      const currencyInfo = getCurrencyInfo(normalizedFirebaseCurrency);
+      const currencyInfo = getCurrencyInfo(userCurrency);
       return {
         convertedPrice: 0,
         symbol: currencyInfo?.symbol || '$',
-        currencyCode: normalizedFirebaseCurrency,
+        currencyCode: userCurrency,
         originalPrice: price,
         firebaseCurrency: normalizedFirebaseCurrency
       };
     }
-
-    // Get user's preferred currency
-    const userCurrency = getPreferredCurrency();
     
     console.log(`💱 [CONVERTER] DB: ${price} ${firebaseCurrency}(${normalizedFirebaseCurrency}) → User wants: ${userCurrency}`);
     

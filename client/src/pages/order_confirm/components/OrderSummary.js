@@ -24,8 +24,8 @@ const OrderSummary = ({ orderTotal = 0, deliveryFee = 0, tipData = { amount: 0, 
     return 'ILS';
   };
 
-  // Only show delivery fee if a delivery type is selected
-  const showDeliveryFee = deliveryType === 'inside' || deliveryType === 'outside';
+  // Only show delivery fee if a delivery type is selected OR if there is a fee (traditional delivery)
+  const showDeliveryFee = deliveryType === 'inside' || deliveryType === 'outside' || deliveryFee > 0;
 
   return (
     <div className="order-summary-section">
