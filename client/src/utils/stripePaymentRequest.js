@@ -20,9 +20,12 @@ export async function buildPaymentRequest(stripe, {
       return null;
     }
 
+    const normalizedCurrency = (currency || 'ils').toLowerCase();
+    const finalCountry = (normalizedCurrency === 'ils' && country === 'US') ? 'IL' : country;
+
     const paymentRequest = stripe.paymentRequest({
-      country,
-      currency,
+      country: finalCountry,
+      currency: normalizedCurrency,
       // IMPORTANT: Stripe PaymentRequest expects amount in the smallest currency unit (e.g., cents/agorot)
       // Our UI passes amount in major units (e.g., 41.00 ILS), so convert to minor units here.
       total: { label, amount: Math.round(Number(amount) * 100) || 0 },
