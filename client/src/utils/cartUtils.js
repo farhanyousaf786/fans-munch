@@ -272,11 +272,26 @@ export const cartUtils = {
 
         const actualPrice = basePrice + extraSauceTotal;
         
+        // Add prices for combo sub-item selections
+        let comboExtrasTotal = 0;
+        if (food.isCombo && food.comboSelections) {
+          Object.values(food.comboSelections).forEach(selections => {
+            if (Array.isArray(selections)) {
+              selections.forEach(option => {
+                const optPrice = typeof option.price === 'number' ? option.price : Number(option.price) || 0;
+                comboExtrasTotal += optPrice;
+              });
+            }
+          });
+        }
+
+        const finalPrice = actualPrice + comboExtrasTotal;
+        
         const cartItem = {
           id: food.id,
           name: food.name,
           nameMap: food.nameMap || {},
-          price: actualPrice, // Use discounted price if available
+          price: finalPrice, // Use discounted price + extras
           originalPrice: food.price, // Keep original price for reference
           discountPercentage: food.discountPercentage || 0, // Store discount info
           images: food.images || [],
@@ -293,6 +308,10 @@ export const cartUtils = {
           costOfGoods: food.costOfGoods || 0, // ✅ NEW: Support COG-based splits
           hasCOG: food.hasCOG || false,      // ✅ NEW: Support COG-based splits
           selectedSauces: sauces,
+          comboSelections: food.comboSelections || {},
+          comboItemInfo: food.comboItemInfo || {},
+          isCombo: food.isCombo || false,
+          comboItemIds: food.comboItemIds || [],
           addedAt: new Date().toISOString()
         };
         

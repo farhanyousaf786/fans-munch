@@ -51,7 +51,7 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
           {/* Extras / Selected Options */}
           {item.selectedSauces && item.selectedSauces.length > 0 && (
             <div className="item-extras-section" style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
-              <div style={{ fontWeight: '600', marginBottom: '4px' }}>Extras:</div>
+              <div style={{ fontWeight: '600', marginBottom: '4px' }}>{t('food.extras')}:</div>
               {item.selectedSauces.map((extra, idx) => {
                 const priceVal = Number(extra.price);
                 const priceDisplay = (!isNaN(priceVal) && priceVal > 0) 
@@ -61,6 +61,46 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                     <span>- {extra.name}</span>
                     <span style={{ color: priceDisplay === '(Free)' ? '#10b981' : '#666' }}>{priceDisplay}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Combo Breakdown - Always show if it's a combo */}
+          {(item.isCombo || (item.comboItemInfo && Object.keys(item.comboItemInfo).length > 0)) && (
+            <div className="item-extras-section" style={{ marginTop: '12px', padding: '10px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: '700', fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '14px' }}>🍱</span> {t('food.combo_includes')}
+              </div>
+              
+              {Object.entries(item.comboItemInfo).map(([instanceKey, itemName], groupIdx) => {
+                const selections = item.comboSelections?.[instanceKey] || [];
+                
+                return (
+                  <div key={groupIdx} className="combo-selection-group" style={{ marginBottom: '8px', borderLeft: '2px solid #3b82f6', paddingLeft: '8px' }}>
+                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px', marginBottom: '2px' }}>
+                      {itemName}
+                    </div>
+                    {selections.length > 0 ? (
+                      selections.map((option, optIdx) => {
+                        const priceVal = Number(option.price);
+                        const priceDisplay = (!isNaN(priceVal) && priceVal > 0) 
+                          ? `+ ${formatPriceWithCurrency(priceVal, item.currency || 'ILS')}`
+                          : `(${t('common.free') || 'Free'})`;
+                        
+                        return (
+                          <div key={optIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontSize: '11px' }}>
+                            <span style={{ color: '#64748b' }}>• {option.name}</span>
+                            <span style={{ fontWeight: '500', color: priceDisplay.includes('+') ? '#2563eb' : '#10b981' }}>{priceDisplay}</span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>
+                        {t('food.standard_prep') || 'Standard Preparation'}
+                      </div>
+                    )}
                   </div>
                 );
               })}

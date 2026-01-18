@@ -31,7 +31,8 @@
     "edit": "Edit",
     "not_now": "Not now",
     "change_language": "Change Language",
-    "select_language": "Select Language"
+    "select_language": "Select Language",
+    "free": "Free"
   },
   "cart": {
     "add_to_cart": "Add to Cart",
@@ -58,7 +59,11 @@
     "combo_includes": "This combo includes:",
     "individual_items_total": "Individual items total:",
     "combo_price": "Combo price:",
-    "you_save": "You save:"
+    "you_save": "You save:",
+    "options_for": "Options for",
+    "extras": "Extras",
+    "combo_customization": "Combo Customization",
+    "standard_prep": "Standard Preparation"
   },
   "tip": {
     "title": "Add Tip",

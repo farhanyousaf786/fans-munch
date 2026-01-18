@@ -197,7 +197,13 @@ export class Order {
           originalPrice: item.originalPrice || item.price || 0,
           discountedPrice: item.discountedPrice || null,
           // Store selected options/customizations from cart
-          selectedOptions: item.selectedSauces || []
+          selectedOptions: item.selectedSauces || [],
+          // ✅ Combo breakdown for vendor/shop display
+          comboSelectedOption: item.isCombo && item.comboItemInfo ? 
+            Object.entries(item.comboItemInfo).map(([instanceKey, itemName]) => ({
+              itemName: itemName,
+              options: item.comboSelections?.[instanceKey] || []
+            })) : []
         };
         try { console.log('[Order.toMap] Cart item mapped:', { id: item.id, shopId: foodData.shopId, shopIds: foodData.shopIds, price: foodData.price }); } catch (_) {}
         return foodData;

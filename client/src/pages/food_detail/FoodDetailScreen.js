@@ -36,6 +36,7 @@ const FoodDetailScreen = () => {
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState([]);
+  const [comboSelections, setComboSelections] = useState({}); // { itemId: [selectedOptions] }
   
   const { t } = useTranslation();
 
@@ -245,16 +246,48 @@ const FoodDetailScreen = () => {
       return [...prev, sauce];
     });
   };
+  
+  const toggleComboOption = (instanceKey, option) => {
+    setComboSelections(prev => {
+      const currentSelections = prev[instanceKey] || [];
+      const exists = currentSelections.find((s) => s.name === option.name && s.price === option.price);
+      
+      let newSelections;
+      if (exists) {
+        newSelections = currentSelections.filter((s) => !(s.name === option.name && s.price === option.price));
+      } else {
+        newSelections = [...currentSelections, option];
+      }
+      
+      return {
+        ...prev,
+        [instanceKey]: newSelections
+      };
+    });
+  };
 
   // Add to cart (enhanced with popup notifications)
   const handleAddToCart = async (quantity = 1) => {
     try {
       console.log('🛒 Adding to cart:', food.name);
       
-      // Use enhanced cart utility, including selected sauces
+      // Build info for combo items (names for breakdown)
+      const comboItemInfo = {};
+      if (food.isCombo && comboItems) {
+        food.comboItemIds.forEach((id, index) => {
+          const item = comboItems.find(ci => ci.id === id);
+          if (item) {
+            comboItemInfo[`${id}_${index}`] = item.name;
+          }
+        });
+      }
+
+      // Use enhanced cart utility, including selected sauces and combo selections
       const foodWithSelections = {
         ...food,
         selectedSauces: Array.isArray(selectedSauces) ? selectedSauces : [],
+        comboSelections: comboSelections || {},
+        comboItemInfo: comboItemInfo,
       };
 
       const result = await cartUtils.addToCart(foodWithSelections, quantity);
@@ -365,6 +398,8 @@ const FoodDetailScreen = () => {
             isCombo={food.isCombo} 
             comboPrice={food.price} 
             foodCurrency={food.currency || 'ILS'} 
+            comboSelections={comboSelections}
+            onOptionToggle={toggleComboOption}
           />
         )} {/* Allergens Component */}
         <AllergensList allergens={food.allergens} />

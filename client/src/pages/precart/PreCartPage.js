@@ -20,6 +20,12 @@ const PreCartPage = ({ isFromHome = false }) => {
 
   // Load cart data from cartUtils
   useEffect(() => {
+    // Scroll to top when page appears
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    } catch (_) {
+      window.scrollTo(0, 0);
+    }
     loadCartData();
     
     // Listen for cart updates

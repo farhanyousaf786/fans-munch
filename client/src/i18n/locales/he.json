@@ -31,7 +31,8 @@
     "edit": "עריכה",
     "not_now": "לא עכשיו",
     "change_language": "שנה שפה",
-    "select_language": "בחר שפה"
+    "select_language": "בחר שפה",
+    "free": "חינם"
   },
   "cart": {
     "add_to_cart": "הוסף לעגלה",
@@ -59,7 +60,11 @@
     "combo_includes": "הקומבו כולל:",
     "individual_items_total": "סה\"כ פריטים בודדים:",
     "combo_price": "מחיר קומבו:",
-    "you_save": "חיסכון שלך:"
+    "you_save": "חיסכון שלך:",
+    "options_for": "אפשרויות עבור",
+    "extras": "תוספות",
+    "combo_customization": "התאמת קומבו",
+    "standard_prep": "הכנה רגילה"
   },
   "tip": {
     "title": "הוסף טיפ",
