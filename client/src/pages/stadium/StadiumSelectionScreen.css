@@ -103,46 +103,97 @@
 
 .stadium-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
   width: 100%;
-  max-width: 980px;
-  margin: 0 auto 28px auto;
+  max-width: 1000px;
+  margin: 0 auto 32px auto;
   justify-items: center;
 }
 
 .stadium-card {
   background: #ffffff;
-  border-radius: 18px;
-  padding: 32px 24px;
+  border-radius: 20px;
+  padding: 28px 24px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1.5px solid #f1f5f9;
+  border: 2px solid #f1f5f9;
   position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: visible;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   width: 100%;
-  max-width: 320px;
-  min-height: 150px;
+  max-width: 340px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  gap: 16px;
 }
 
 .stadium-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   border-color: #3b82f6;
 }
 
 .stadium-card.selected {
   border-color: #3b82f6;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #ffffff;
-  transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.3);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(59, 130, 246, 0.35);
+}
+
+/* Stadium Avatar Styles */
+.stadium-avatar-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.stadium-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.stadium-card.selected .stadium-avatar {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.stadium-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.stadium-card.selected .stadium-avatar-fallback {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.stadium-initial {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3b82f6;
+  font-family: 'Poppins', sans-serif;
+}
+
+.stadium-card.selected .stadium-initial {
+  color: #ffffff;
 }
 
 .stadium-image {
@@ -159,18 +210,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
 }
 
 .stadium-name {
   font-family: 'Poppins', sans-serif;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 6px 0;
-  line-height: 1.3;
+  margin: 0;
+  line-height: 1.4;
   text-align: center;
-  width: 100%;
-  display: block;
+  width: 100% !important;
+  display: block !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: 100% !important;
+  padding: 0 4px;
 }
 
 .stadium-card.selected .stadium-name {
@@ -179,13 +238,18 @@
 
 .stadium-location {
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #6b7280;
-  margin: 0 0 15px 0;
+  margin: 0;
   font-weight: 400;
   text-align: center;
   width: 100%;
   display: block;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  overflow: visible;
+  padding: 0 4px;
 }
 
 .stadium-card.selected .stadium-location {
@@ -248,18 +312,34 @@
   }
 
   .stadium-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
     max-width: 100%;
   }
 
   .stadium-card {
-    padding: 20px;
-    width: 220px;
-    height: 150px;
+    padding: 24px 20px;
+    max-width: 100%;
+    min-height: 180px;
+  }
+
+  .stadium-avatar-container {
+    width: 70px;
+    height: 70px;
+  }
+
+  .stadium-initial {
+    font-size: 1.75rem;
   }
 
   .stadium-name {
+    font-size: 1.1rem;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .stadium-location {
     font-size: 0.9rem;
   }
 
@@ -296,21 +376,37 @@
 
   .stadium-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
     max-width: 100%;
   }
 
   .stadium-card {
-    padding: 20px;
-    border-radius: 12px;
+    padding: 24px 20px;
+    border-radius: 16px;
     width: 100%;
-    max-width: 320px;
-    height: 140px;
+    max-width: 100%;
+    min-height: 170px;
+  }
+
+  .stadium-avatar-container {
+    width: 65px;
+    height: 65px;
+  }
+
+  .stadium-initial {
+    font-size: 1.6rem;
   }
 
   .stadium-name {
-    font-size: 0.9rem;
-    margin: 8px 0 4px 0;
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .stadium-location {
+    font-size: 0.85rem;
   }
 
   .stadium-details {
@@ -527,60 +623,7 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .stadium-container {
-    padding: 30px 20px;
-    margin: 10px;
-  }
-
-  .stadium-title {
-    font-size: 2rem;
-  }
-
-  .stadium-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .stadium-card {
-    padding: 15px;
-  }
-
-  .stadium-emoji {
-    font-size: 2.5rem;
-  }
-
-  .stadium-name {
-    font-size: 1.2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .stadium-selection-screen {
-    padding: 10px;
-  }
-
-  .stadium-container {
-    padding: 20px 15px;
-  }
-
-  .stadium-title {
-    font-size: 1.8rem;
-  }
-
-  .stadium-subtitle {
-    font-size: 1rem;
-  }
-
-  .continue-button {
-    width: 100%;
-    max-width: 100%;
-    padding: 12px 20px;
-    font-size: 1rem;
-    min-width: 0;
-  }
-}
+/* Consolidated Responsive Design handled above in lines 300-416 */
 
 /* Language Button - Bottom Center */
 .language-button-stadium {

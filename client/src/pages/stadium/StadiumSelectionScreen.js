@@ -115,17 +115,45 @@ const StadiumSelectionScreen = () => {
                 onClick={() => handleStadiumSelect(stadium)}
                 style={{ '--stadium-color': stadium.color }}
               >
-
-              <div className="stadium-info">
-                <h3 className="stadium-name">{stadium.name}</h3>
-              </div>
-              {selectedStadium?.id === stadium.id && (
-                <div className="selected-indicator">
-                  <span>✓</span>
+                {/* Stadium Avatar */}
+                <div className="stadium-avatar-container">
+                  {stadium.imageUrl ? (
+                    <img 
+                      src={stadium.imageUrl} 
+                      alt={stadium.name}
+                      className="stadium-avatar"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextElementSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className="stadium-avatar-fallback" 
+                    style={{ display: stadium.imageUrl ? 'none' : 'flex' }}
+                  >
+                    <span className="stadium-initial">
+                      {stadium.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Stadium Info */}
+                <div className="stadium-info">
+                  <h3 className="stadium-name">{stadium.name}</h3>
+                  {stadium.location && (
+                    <p className="stadium-location">{stadium.location}</p>
+                  )}
+                </div>
+
+                {/* Selected Indicator */}
+                {selectedStadium?.id === stadium.id && (
+                  <div className="selected-indicator">
+                    <span>✓</span>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 
