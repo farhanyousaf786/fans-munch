@@ -1589,8 +1589,8 @@ const OrderConfirmScreen = () => {
           clientSecret={stripeIntent?.clientSecret}
           mode={stripeIntent?.mode}
           showConfirmButton={false}
-          totalAmount={finalTotal}
-          currency={'ils'}
+          totalAmount={getPaymentAmount()}
+          currency={getPreferredCurrency().toLowerCase()}
           isFormValid={isFormValid}
           onWalletPaymentSuccess={handleWalletPaymentSuccess}
           validateBeforeWalletPay={validateAndToast}
@@ -1600,7 +1600,7 @@ const OrderConfirmScreen = () => {
         {/* Place Order CTA - moved right after card input */}
         <PlaceOrderBar 
           loading={loading} 
-          finalTotal={finalTotal} 
+          finalTotal={getPaymentAmount()} 
           onPlaceOrder={handlePayment}
           disabled={!isFormValid}
         />

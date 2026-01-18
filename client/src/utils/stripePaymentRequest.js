@@ -14,17 +14,16 @@ export async function buildPaymentRequest(stripe, {
   requestPayerPhone = true,
 } = {}) {
   try {
-    console.log('[DEBUG] buildPaymentRequest called with:', { amount, currency, country, label });
     if (!stripe || !amount || amount <= 0) {
-      console.log('[DEBUG] buildPaymentRequest failed - stripe:', !!stripe, 'amount:', amount);
+      console.log('[DEBUG] buildPaymentRequest validation failed - stripe:', !!stripe, 'amount:', amount);
       return null;
     }
 
     const normalizedCurrency = (currency || 'ils').toLowerCase();
-    const finalCountry = (normalizedCurrency === 'ils' && country === 'US') ? 'IL' : country;
+    console.log('[DEBUG] paymentRequest config:', { country, currency: normalizedCurrency, amount });
 
     const paymentRequest = stripe.paymentRequest({
-      country: finalCountry,
+      country,
       currency: normalizedCurrency,
       // IMPORTANT: Stripe PaymentRequest expects amount in the smallest currency unit (e.g., cents/agorot)
       // Our UI passes amount in major units (e.g., 41.00 ILS), so convert to minor units here.
