@@ -32,10 +32,40 @@ const CartItem = ({ item, onUpdateQuantity, onAddToCart, onRemoveFromCart }) => 
             </div>
           </div>
           
+
+          
           <div className="item-price-section">
             <span style={{ color: '#444', fontWeight: '500' }}>{t('cart.price')}</span>
-            <span className="item-price">{formatPriceWithCurrency(item.price, item.currency)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span className="item-price" style={{ fontWeight: '700' }}>
+                {formatPriceWithCurrency(item.price * item.quantity, item.currency)}
+              </span>
+              {item.quantity > 1 && (
+                <span style={{ fontSize: '11px', color: '#666' }}>
+                  ({formatPriceWithCurrency(item.price, item.currency)} x {item.quantity})
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Extras / Selected Options */}
+          {item.selectedSauces && item.selectedSauces.length > 0 && (
+            <div className="item-extras-section" style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+              <div style={{ fontWeight: '600', marginBottom: '4px' }}>Extras:</div>
+              {item.selectedSauces.map((extra, idx) => {
+                const priceVal = Number(extra.price);
+                const priceDisplay = (!isNaN(priceVal) && priceVal > 0) 
+                  ? `+ ${formatPriceWithCurrency(priceVal, item.currency || 'ILS')}`
+                  : '(Free)';
+                return (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span>- {extra.name}</span>
+                    <span style={{ color: priceDisplay === '(Free)' ? '#10b981' : '#666' }}>{priceDisplay}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Item Image */}

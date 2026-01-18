@@ -343,9 +343,13 @@ const FoodDetailScreen = () => {
                     />
                     <span className="food-sauce-label">
                       {option.name}
-                      {typeof option.price === 'number' && option.price > 0 && (
-                        <span className="food-sauce-price">{` + ${formatPriceWithCurrency(option.price, food.currency)}`}</span>
-                      )}
+                      {(() => {
+                        const priceVal = Number(option.price);
+                        if (!isNaN(priceVal) && priceVal > 0) {
+                          return <span className="food-sauce-price">{` + ${formatPriceWithCurrency(priceVal, food.currency)}`}</span>;
+                        }
+                        return <span className="food-sauce-price" style={{ color: '#10b981', fontWeight: '500' }}> (Free)</span>;
+                      })()}
                     </span>
                   </label>
                 );
