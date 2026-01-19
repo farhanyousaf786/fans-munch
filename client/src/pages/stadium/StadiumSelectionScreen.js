@@ -152,6 +152,19 @@ const StadiumSelectionScreen = () => {
                     <span>✓</span>
                   </div>
                 )}
+
+                {/* Small Continue Button on Card */}
+                {selectedStadium?.id === stadium.id && (
+                  <button
+                    className="card-continue-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleContinue();
+                    }}
+                  >
+                    Continue
+                  </button>
+                )}
               </div>
             ))}
           </div>

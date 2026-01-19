@@ -6,6 +6,7 @@ import OffersList from './components/offers_list/OffersList';
 import CategoryList from './components/category_list/CategoryList';
 import MenuList from './components/menu_list/MenuList';
 import ShopList from './components/shop_list/ShopList';
+import StadiumSelectionModal from './components/StadiumSelectionModal';
 import foodRepository from '../../repositories/foodRepository';
 import offerRepository from '../../repositories/offerRepository';
 import { stadiumStorage, userStorage } from '../../utils/storage';
@@ -27,6 +28,7 @@ function Home() {
   const [offersLoading, setOffersLoading] = useState(true);
   const [error, setError] = useState(null);
   const [offersError, setOffersError] = useState(null);
+  const [showStadiumModal, setShowStadiumModal] = useState(false);
 
   // Load data on component mount - no stadium requirement for browsing
   useEffect(() => {
@@ -68,6 +70,19 @@ function Home() {
     loadMenuItems();
     loadOffers();
     loadAvailableShops();
+
+    // Check if stadium is selected, show modal if not (after a brief delay)
+    const checkStadiumSelection = () => {
+      const selectedStadium = stadiumStorage.getSelectedStadium();
+      if (!selectedStadium || !selectedStadium.id) {
+        // Show modal after 800ms to allow page to load smoothly
+        setTimeout(() => {
+          setShowStadiumModal(true);
+        }, 800);
+      }
+    };
+
+    checkStadiumSelection();
   }, []);
 
   // Filter menu items and offers when search term or selections change
@@ -249,26 +264,46 @@ function Home() {
     setSelectedShopId(shop?.id || null);
   };
 
+  // Check if stadium is selected
+  const selectedStadium = stadiumStorage.getSelectedStadium();
+  const hasStadium = selectedStadium && selectedStadium.id;
+
   return (
     <div className="home-page">
       <TopSection />
       
       <div className="home-content">
-                <CategoryList 
-                  selectedCategory={selectedCategoryId}
-                  onSelect={(id) => setSelectedCategoryId(id)}
-                />
+        {/* Only show content if stadium is selected */}
+        {hasStadium ? (
+          <>
+            <CategoryList 
+              selectedCategory={selectedCategoryId}
+              onSelect={(id) => setSelectedCategoryId(id)}
+            />
 
-        <ShopList onShopSelect={handleShopSelect} />
-         
-        <MenuList 
-          menuItems={filteredMenuItems}
-          loading={loading}
-          error={error}
-          searchTerm={searchTerm}
-        />
-        
+            <ShopList onShopSelect={handleShopSelect} />
+             
+            <MenuList 
+              menuItems={filteredMenuItems}
+              loading={loading}
+              error={error}
+              searchTerm={searchTerm}
+            />
+          </>
+        ) : (
+          <div className="no-stadium-placeholder">
+            <div className="placeholder-icon">📍</div>
+            <h3>Please Select a Venue</h3>
+            <p>Choose your venue to browse available food options</p>
+          </div>
+        )}
       </div>
+
+      {/* Stadium Selection Modal */}
+      <StadiumSelectionModal 
+        isOpen={showStadiumModal}
+        onClose={() => setShowStadiumModal(false)}
+      />
     </div>
   );
 };

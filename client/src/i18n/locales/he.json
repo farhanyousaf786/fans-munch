@@ -1,6 +1,6 @@
 {
   "home": {
-    "select_stadium": "בחירת אצטדיון",
+    "select_stadium": "בחירת מקום",
     "greeting": "בוקר טוב,",
     "greeting_morning": "בוקר טוב,",
     "greeting_afternoon": "צהריים טובים,",
@@ -25,7 +25,11 @@
     "error_fetch_shops": "אירע שגיאה בטעינת מסעדות",
     "retry": "נסה שוב",
     "no_shops": "אין חנויות זמינות",
-    "more_suffix": "עוד"
+    "more_suffix": "עוד",
+    "modal_select_venue_title": "בחר את המקום שלך",
+    "modal_select_venue_desc": "בחר את המקום שלך כדי לראות אפשרויות אוכל זמינות וליהנות ממשלוח מהיר למושב שלך!",
+    "modal_select_venue_btn": "בחר מקום",
+    "modal_browse_anyway": "עיין בכל זאת"
   },
   "common": {
     "edit": "עריכה",
@@ -213,12 +217,12 @@
     }
   },
   "stadium": {
-    "title": "בחר את האצטדיון שלך",
+    "title": "בחר את המקום שלך",
     "subtitle": "בחר מאיפה אתה רוצה להזמין אוכל",
-    "loading": "טוען אצטדיונים...",
+    "loading": "טוען מקומות...",
     "retry": "נסה שוב",
     "capacity": "קיבולת",
-    "select_button": "בחר אצטדיון",
+    "select_button": "בחר מקום",
     "continue_to": "המשך אל"
   },
   "orders": {

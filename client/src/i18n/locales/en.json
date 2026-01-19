@@ -1,6 +1,6 @@
 {
   "home": {
-    "select_stadium": "Stadium Selection",
+    "select_stadium": "Venue Selection",
     "greeting": "Good Morning,",
     "greeting_morning": "Good Morning,",
     "greeting_afternoon": "Good Afternoon,",
@@ -25,7 +25,11 @@
     "error_fetch_shops": "Failed to fetch restaurants",
     "retry": "Try Again",
     "no_shops": "No shops available",
-    "more_suffix": "more"
+    "more_suffix": "more",
+    "modal_select_venue_title": "Select Your Venue",
+    "modal_select_venue_desc": "Choose your venue to see available food options and enjoy faster delivery to your seat!",
+    "modal_select_venue_btn": "Select Venue",
+    "modal_browse_anyway": "Browse Anyway"
   },
   "common": {
     "edit": "Edit",
@@ -219,12 +223,12 @@
     }
   },
   "stadium": {
-    "title": "Select Your Stadium",
+    "title": "Select Your Venue",
     "subtitle": "Choose where you want to order food from",
-    "loading": "Loading stadiums...",
+    "loading": "Loading venues...",
     "retry": "Retry",
     "capacity": "Capacity",
-    "select_button": "Select a Stadium",
+    "select_button": "Select a Venue",
     "continue_to": "Continue to"
   },
   "orders": {

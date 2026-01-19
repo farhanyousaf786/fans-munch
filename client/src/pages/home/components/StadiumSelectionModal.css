@@ -1,0 +1,239 @@
+.stadium-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.stadium-modal-content {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px 24px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: center;
+    animation: slideUp 0.4s ease-out;
+    position: relative;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.stadium-modal-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+    }
+}
+
+.stadium-modal-icon img {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) invert(1);
+}
+
+.stadium-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+}
+
+.stadium-modal-description {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stadium-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stadium-modal-btn {
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.stadium-modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.stadium-modal-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.stadium-modal-btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.stadium-modal-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+}
+
+.stadium-modal-btn.primary:active {
+    transform: translateY(0);
+}
+
+.stadium-modal-btn.secondary {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #e2e8f0;
+}
+
+.stadium-modal-btn.secondary:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.stadium-modal-btn.secondary:active {
+    transform: translateY(0);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .stadium-modal-content {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+
+    .stadium-modal-title {
+        color: #f7fafc;
+    }
+
+    .stadium-modal-description {
+        color: #cbd5e0;
+    }
+
+    .stadium-modal-btn.secondary {
+        color: #a0aec0;
+        border-color: #4a5568;
+    }
+
+    .stadium-modal-btn.secondary:hover {
+        background: #2d3748;
+        border-color: #718096;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+    .stadium-modal-overlay {
+        padding: 16px;
+        align-items: center;
+    }
+
+    .stadium-modal-content {
+        padding: 24px 20px;
+        border-radius: 16px;
+        max-width: 100%;
+    }
+
+    .stadium-modal-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 16px;
+    }
+
+    .stadium-modal-icon img {
+        width: 28px;
+        height: 28px;
+    }
+
+    .stadium-modal-title {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .stadium-modal-description {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .stadium-modal-btn {
+        padding: 11px 20px;
+        font-size: 14px;
+    }
+}
+
+/* RTL Support */
+[dir="rtl"] .stadium-modal-content {
+    text-align: center;
+}

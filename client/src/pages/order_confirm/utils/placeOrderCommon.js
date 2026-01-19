@@ -219,7 +219,8 @@ export async function placeOrderAfterPayment({
     sectionId: formData.sectionId,
     floor: formData.floor || '',
     room: formData.room || '',
-    seatDetails: formData.seatDetails,
+    // Map deliveryNotes to seatDetails if specific seatDetails are missing
+    seatDetails: formData.seatDetails || deliveryNotes || '',
     area: formData.area,
     entrance: formData.entrance,
     stand: formData.stand,
@@ -362,10 +363,22 @@ export async function placeOrderAfterPayment({
         
         // Build the delivery configuration
         const deliveryKey = deliveryType === 'inside' ? 'insideDelivery' : 'outsideDelivery';
+        
+        // Handle Manual Entry specifically to save exact details into location string
+        let finalLocation = selectedLocationObj || deliveryLocation;
+        if (deliveryLocation === 'manual_delivery_entry') {
+           const parts = [];
+           if (formData.room) parts.push(`Room: ${formData.room}`);
+           if (formData.floor) parts.push(`Floor: ${formData.floor}`);
+           if (formData.section) parts.push(`Section: ${formData.section}`);
+           // Fallback if empty but user selected manual
+           finalLocation = parts.length > 0 ? parts.join(', ') : 'Manual Entry';
+        }
+
         deliveryConfig[deliveryKey] = {
           fee: deliveryData.fee,
           currency: deliveryData.currency,
-          location: selectedLocationObj || deliveryLocation, // Use object if found, otherwise just the name
+          location: finalLocation, 
           notes: deliveryNotes || '',
         };
         
