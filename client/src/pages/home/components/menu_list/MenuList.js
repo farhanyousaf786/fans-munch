@@ -8,6 +8,7 @@ import './MenuList.css';
 import { useTranslation } from '../../../../i18n/i18n';
 import { useCombo } from '../../../../contexts/ComboContext';
 import { formatPriceWithCurrency } from '../../../../utils/currencyConverter';
+import AlertModal from '../../../../components/common/AlertModal';
 
 // Local asset images to use as random placeholders for food items
 const assetPlaceholders = [
@@ -34,6 +35,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   
   const [shops, setShops] = useState([]);
   const [shopsLoading, setShopsLoading] = useState(true);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   // Preload combo items for all combos in the menu
   useEffect(() => {
@@ -104,7 +106,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     }
 
     if (!available) {
-      alert(t('home.shop_closed_msg') || 'The shop for this item is currently closed.');
+      setIsAlertOpen(true);
       return;
     }
 
@@ -272,6 +274,14 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
           })}
         </div>
       </div>
+
+      <AlertModal 
+        isOpen={isAlertOpen}
+        title={t('home.closed')}
+        message={t('home.shop_closed_msg')}
+        type="warning"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </div>
   );
 };

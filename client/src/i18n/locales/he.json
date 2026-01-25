@@ -29,7 +29,9 @@
     "modal_select_venue_title": "בחר את המקום שלך",
     "modal_select_venue_desc": "בחר את המקום שלך כדי לראות אפשרויות אוכל זמינות וליהנות ממשלוח מהיר למושב שלך!",
     "modal_select_venue_btn": "בחר מקום",
-    "modal_browse_anyway": "עיין בכל זאת"
+    "modal_browse_anyway": "עיין בכל זאת",
+    "closed": "סגור",
+    "shop_closed_msg": "חנות זו סגורה כעת. ניתן לעיין בתפריט, אך ההזמנה מושבתת."
   },
   "common": {
     "edit": "עריכה",

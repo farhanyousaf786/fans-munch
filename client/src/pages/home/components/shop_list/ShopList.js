@@ -7,6 +7,7 @@ import { db } from '../../../../config/firebase';
 import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
 import { useTranslation } from '../../../../i18n/i18n';
+import AlertModal from '../../../../components/common/AlertModal';
 
 // Single uniform image for all shops to ensure consistency
 const uniformShopImage = process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png';
@@ -54,6 +55,7 @@ const ShopList = ({ onShopSelect }) => {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -134,7 +136,7 @@ const ShopList = ({ onShopSelect }) => {
 
   const handleShopClick = (shop) => {
     if (shop.shopAvailability === false) {
-      alert(t('home.shop_closed_msg') || 'This shop is currently closed.');
+      setIsAlertOpen(true);
       return;
     }
     // Navigate to dedicated Shop Menu page
@@ -257,6 +259,14 @@ const ShopList = ({ onShopSelect }) => {
           </div>
         ))}
       </div>
+
+      <AlertModal 
+        isOpen={isAlertOpen}
+        title={t('home.closed')}
+        message={t('home.shop_closed_msg')}
+        type="warning"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </div>
   );
 };

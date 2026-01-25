@@ -4,16 +4,20 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import foodRepository from '../../repositories/foodRepository';
 import { formatPriceWithCurrency } from '../../utils/currencyConverter';
+import { useTranslation } from '../../i18n/i18n';
+import AlertModal from '../../components/common/AlertModal';
 import './ShopMenuScreen.css';
 
 function ShopMenuScreen() {
   const { shopId } = useParams();
   const navigate = useNavigate();
-
+  const { t } = useTranslation();
+ 
   const [menuItems, setMenuItems] = useState([]);
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   // Always start page at the top when opening/changing shops
   useEffect(() => {
@@ -64,7 +68,7 @@ function ShopMenuScreen() {
           <div className="shop-title-container">
             <h2 className="shop-title">{shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6)}`}</h2>
             {shop && shop.shopAvailability === false && (
-              <span className="shop-closed-tag">CLOSED</span>
+              <span className="shop-closed-tag">{t('home.closed')}</span>
             )}
           </div>
         </div>
@@ -92,7 +96,7 @@ function ShopMenuScreen() {
               className={`grid-card ${shop && shop.shopAvailability === false ? 'is-closed' : ''}`} 
               onClick={() => {
                 if (shop && shop.shopAvailability === false) {
-                  alert('This shop is currently closed.');
+                  setIsAlertOpen(true);
                   return;
                 }
                 handleFoodClick(food);
@@ -101,7 +105,7 @@ function ShopMenuScreen() {
               <div className="grid-image">
                 {shop && shop.shopAvailability === false && (
                   <div className="closed-overlay">
-                    <span>CLOSED</span>
+                    <span>{t('home.closed')}</span>
                   </div>
                 )}
                 <img src={food.getPrimaryImage()} alt={food.name} onError={(e) => { e.target.src = '/api/placeholder/200/150'; }} />
@@ -117,6 +121,14 @@ function ShopMenuScreen() {
           ))
         )}
       </div>
+
+      <AlertModal 
+        isOpen={isAlertOpen}
+        title={t('home.closed')}
+        message={t('home.shop_closed_msg')}
+        type="warning"
+        onClose={() => setIsAlertOpen(false)}
+      />
     </div>
   );
 }
