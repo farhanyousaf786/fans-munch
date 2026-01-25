@@ -43,7 +43,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     });
   }, [menuItems, fetchComboItems]);
 
-  // Fetch available shops for current stadium
+  // Fetch all shops for current stadium
   useEffect(() => {
     const loadShops = async () => {
       try {
@@ -54,16 +54,17 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
           const shopsRef = collection(db, 'shops');
           const q = query(
             shopsRef,
-            where('stadiumId', '==', selectedStadium.id),
-            where('shopAvailability', '==', true)
+            where('stadiumId', '==', selectedStadium.id)
           );
           
           const querySnapshot = await getDocs(q);
           const shopsData = [];
           querySnapshot.forEach((doc) => {
+            const data = doc.data();
             shopsData.push({
               id: doc.id,
-              name: doc.data().name || 'Unknown Shop'
+              name: data.name || 'Unknown Shop',
+              availability: data.shopAvailability !== undefined ? data.shopAvailability : true
             });
           });
           
@@ -86,7 +87,27 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     return shop ? shop.name : 'Shop';
   };
 
+  // Check if shop is available
+  const isShopAvailable = (shopId) => {
+    if (!shopId) return true;
+    const shop = shops.find(s => s.id === shopId);
+    return shop ? shop.availability !== false : true;
+  };
+
   const handleFoodClick = (food) => {
+    // Check shop availability (if multiple shopIds, check if at least one is available)
+    let available = true;
+    if (food.shopId) {
+      available = isShopAvailable(food.shopId);
+    } else if (Array.isArray(food.shopIds) && food.shopIds.length > 0) {
+      available = food.shopIds.some(id => isShopAvailable(id));
+    }
+
+    if (!available) {
+      alert(t('home.shop_closed_msg') || 'The shop for this item is currently closed.');
+      return;
+    }
+
     // Navigate to food detail page (matching Flutter app behavior)
     console.log('🍽️ Navigating to food detail:', food.name);
     navigate(`/food/${food.id}`);
@@ -161,15 +182,27 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
       {/* Vertical grid container - 2 items per row */}
       <div className="menu-grid-container">
         <div className="menu-grid">
-          {menuItems.map((food) => (
-            <div 
-              key={food.id} 
-              className={`menu-card-grid ${food.isCombo ? 'combo-card' : ''}`}
-              onClick={() => handleFoodClick(food)}
-            >
-              {/* Food Image - 120px height like Flutter app */}
-              <div className="menu-image-grid">
-                {food.isCombo ? (
+          {menuItems.map((food) => {
+            const available = food.shopId 
+              ? isShopAvailable(food.shopId) 
+              : (Array.isArray(food.shopIds) && food.shopIds.length > 0 
+                  ? food.shopIds.some(id => isShopAvailable(id)) 
+                  : true);
+            
+            return (
+              <div 
+                key={food.id} 
+                className={`menu-card-grid ${food.isCombo ? 'combo-card' : ''} ${!available ? 'is-closed' : ''}`}
+                onClick={() => handleFoodClick(food)}
+              >
+                {/* Food Image - 120px height like Flutter app */}
+                <div className="menu-image-grid">
+                  {!available && (
+                    <div className="closed-overlay">
+                      <span className="closed-tag">{t('home.closed')}</span>
+                    </div>
+                  )}
+                  {food.isCombo ? (
                   // Combo: Show 2 images side by side using actual combo items
                   <div className="combo-images">
                     {(() => {
@@ -233,9 +266,10 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                 <div className="menu-shop-name">
                   {getShopName(food.shopId)}
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

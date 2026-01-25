@@ -154,7 +154,7 @@ function Home() {
 
   const loadAvailableShops = async () => {
     try {
-      console.log('🏪 Loading available shops for menu filtering');
+      console.log('🏪 Loading all shops for menu filtering');
       
       const selectedStadium = stadiumStorage.getSelectedStadium();
       if (!selectedStadium || !selectedStadium.id) {
@@ -163,24 +163,27 @@ function Home() {
         return;
       }
       
-      // Fetch available shops (same logic as ShopList)
+      // Fetch all shops for this stadium (regardless of availability)
       const shopsRef = collection(db, 'shops');
       const q = query(
         shopsRef,
-        where('stadiumId', '==', selectedStadium.id),
-        where('shopAvailability', '==', true)
+        where('stadiumId', '==', selectedStadium.id)
       );
       
       const querySnapshot = await getDocs(q);
       const shops = [];
       querySnapshot.forEach((doc) => {
-        shops.push(doc.id);
+        const data = doc.data();
+        shops.push({
+          id: doc.id,
+          availability: data.shopAvailability !== undefined ? data.shopAvailability : true
+        });
       });
       
       setAvailableShops(shops);
-      console.log(`✅ Loaded ${shops.length} available shops for filtering`);
+      console.log(`✅ Loaded ${shops.length} shops for filtering`);
     } catch (err) {
-      console.error('❌ Error loading available shops:', err);
+      console.error('❌ Error loading shops:', err);
       setAvailableShops([]);
     }
   };
@@ -188,23 +191,19 @@ function Home() {
   const filterMenuItems = () => {
     let items = allMenuItems;
 
-    // Filter by available shops (always apply if we have stadium selected)
+    // Filter by shops belonging to the stadium
     const selectedStadium = stadiumStorage.getSelectedStadium();
     if (selectedStadium && selectedStadium.id) {
+      const allStadiumShopIds = availableShops.map(s => s.id);
       items = items.filter(item => {
-        // If item has shopIds, check if any of them are in available shops
         if (Array.isArray(item.shopIds) && item.shopIds.length > 0) {
-          return item.shopIds.some(shopId => availableShops.includes(shopId));
+          return item.shopIds.some(shopId => allStadiumShopIds.includes(shopId));
         }
-        // If item has a single shopId, check if it's available
         if (item.shopId) {
-          return availableShops.includes(item.shopId);
+          return allStadiumShopIds.includes(item.shopId);
         }
-        // If no shop info, include the item (fallback)
         return true;
       });
-      console.log(`🏪 Filtered by available shops: ${allMenuItems.length} → ${items.length} items`);
-      console.log(`   Available shops: ${availableShops.length > 0 ? availableShops.join(', ') : 'None'}`);
     }
 
     // If a shop is selected, filter by shopIds containing the shop

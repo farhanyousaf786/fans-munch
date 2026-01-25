@@ -9,13 +9,25 @@
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 16px;
-  scrollbar-width: none; /* Hide scrollbar for Firefox */
-  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+  scrollbar-width: none;
+  /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none;
+  /* Hide scrollbar for IE and Edge */
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .restaurant-list::-webkit-scrollbar {
   display: none;
+}
+
+.restaurant-card:active {
+  transform: scale(0.99);
+}
+
+.restaurant-card.is-closed {
+  opacity: 0.8;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
 }
 
 .restaurant-card {
@@ -31,17 +43,49 @@
   flex-direction: column;
 }
 
-.restaurant-card:active {
-  transform: scale(0.99);
-}
-
 .restaurant-image {
   width: 100%;
   height: 120px;
   background: #f8f8f8;
   flex-shrink: 0;
   overflow: hidden;
+  position: relative;
   border-radius: 12px 12px 0 0;
+}
+
+.closed-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.closed-tag {
+  background: #ff4d4f;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.closed-label {
+  background: #fff1f0;
+  color: #ff4d4f;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid #ffccc7;
 }
 
 .restaurant-image img {
@@ -162,7 +206,7 @@
 }
 
 /* Section header with title and See All button (matching Flutter) */
-.section-header{
+.section-header {
   margin-bottom: 4px;
   display: flex;
 }
@@ -205,20 +249,28 @@
 .shops-horizontal-row {
   padding: 0 16px 6px 16px;
   display: flex;
-  flex-wrap: nowrap; /* single row */
+  flex-wrap: nowrap;
+  /* single row */
   gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
 }
 
-.shops-horizontal-row::-webkit-scrollbar { display: none; } /* WebKit */
+.shops-horizontal-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* WebKit */
 
 .shop-tile {
-  flex: 0 0 165px; /* wider for readability */
+  flex: 0 0 165px;
+  /* wider for readability */
   height: 140px;
   background: #fff;
   border: 1px solid #E8E8E8;
@@ -228,7 +280,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   scroll-snap-align: start;
@@ -237,7 +289,7 @@
 
 .shop-tile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
   border-color: #3D70FF;
 }
 
@@ -247,7 +299,8 @@
   color: #333;
   line-height: 1.2;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* keep to 2 lines max */
+  -webkit-line-clamp: 2;
+  /* keep to 2 lines max */
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -292,7 +345,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
@@ -301,7 +354,7 @@
 
 .shop-chip:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border-color: #3D70FF;
 }
 
@@ -512,6 +565,7 @@
   0% {
     opacity: 0.6;
   }
+
   100% {
     opacity: 1;
   }
@@ -730,8 +784,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -777,42 +836,44 @@
     gap: 10px;
     overflow-x: hidden;
   }
+
   .shop-tile {
     flex: 0 0 150px;
     height: 130px;
     padding: 12px;
   }
+
   .shops-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .shop-image {
     height: 180px;
   }
-  
+
   .shop-content {
     padding: 16px;
   }
-  
+
   .shop-name {
     font-size: 18px;
   }
-  
+
   .shop-meta {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .delivery-info {
     gap: 12px;
   }
-  
+
   .section-title {
     font-size: 20px;
   }
-  
+
   .section-subtitle {
     font-size: 14px;
   }
@@ -824,11 +885,11 @@
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .shop-name {
     margin-right: 0;
   }
-  
+
   .delivery-info {
     flex-direction: column;
     gap: 6px;

@@ -29,7 +29,9 @@
     "modal_select_venue_title": "Select Your Venue",
     "modal_select_venue_desc": "Choose your venue to see available food options and enjoy faster delivery to your seat!",
     "modal_select_venue_btn": "Select Venue",
-    "modal_browse_anyway": "Browse Anyway"
+    "modal_browse_anyway": "Browse Anyway",
+    "closed": "Closed",
+    "shop_closed_msg": "This shop is currently closed. You can browse the menu, but ordering is disabled."
   },
   "common": {
     "edit": "Edit",

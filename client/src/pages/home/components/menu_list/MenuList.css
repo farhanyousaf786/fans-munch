@@ -53,6 +53,12 @@
 }
 
 /* Menu card - grid layout */
+.menu-card-grid.is-closed {
+  opacity: 0.8;
+  filter: grayscale(0.5);
+  cursor: not-allowed;
+}
+
 .menu-card-grid {
   background: white;
   border-radius: 16px;
@@ -63,6 +69,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 /* Combo card with blue gradient background */
@@ -82,6 +89,31 @@
   position: relative;
   overflow: hidden;
   border-radius: 16px 16px 0 0;
+}
+
+.closed-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.closed-tag {
+  background: #ff4d4f;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .menu-image-grid img {
@@ -288,6 +320,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -309,23 +342,23 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .menu-image {
     height: 160px;
   }
-  
+
   .menu-content {
     padding: 16px;
   }
-  
+
   .menu-name {
     font-size: 16px;
   }
-  
+
   .section-title {
     font-size: 20px;
   }
-  
+
   .section-subtitle {
     font-size: 14px;
   }
@@ -337,7 +370,7 @@
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .menu-name {
     margin-right: 0;
   }

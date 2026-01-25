@@ -61,7 +61,12 @@ function ShopMenuScreen() {
       <div className="shop-menu-header">
         <div className="shop-title-row">
           <button onClick={() => navigate(-1)} className="back-icon" aria-label="Go back" title="Back">←</button>
-          <h2 className="shop-title">{shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6)}`}</h2>
+          <div className="shop-title-container">
+            <h2 className="shop-title">{shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6)}`}</h2>
+            {shop && shop.shopAvailability === false && (
+              <span className="shop-closed-tag">CLOSED</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -82,8 +87,23 @@ function ShopMenuScreen() {
           ))
         ) : (
           menuItems.map(food => (
-            <div key={food.id} className="grid-card" onClick={() => handleFoodClick(food)}>
+            <div 
+              key={food.id} 
+              className={`grid-card ${shop && shop.shopAvailability === false ? 'is-closed' : ''}`} 
+              onClick={() => {
+                if (shop && shop.shopAvailability === false) {
+                  alert('This shop is currently closed.');
+                  return;
+                }
+                handleFoodClick(food);
+              }}
+            >
               <div className="grid-image">
+                {shop && shop.shopAvailability === false && (
+                  <div className="closed-overlay">
+                    <span>CLOSED</span>
+                  </div>
+                )}
                 <img src={food.getPrimaryImage()} alt={food.name} onError={(e) => { e.target.src = '/api/placeholder/200/150'; }} />
               </div>
               <div className="grid-content">

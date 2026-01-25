@@ -74,12 +74,12 @@ const ShopList = ({ onShopSelect }) => {
       if (selectedStadium && selectedStadium.id) {
         console.log('🔍 Fetching shops for stadium ID:', selectedStadium.id);
         
-        // Match Flutter ShopRepository.fetchShopsByStadium exactly, but only include available shops
+        // Match Flutter ShopRepository.fetchShopsByStadium exactly
         const shopsRef = collection(db, 'shops');
         const q = query(
           shopsRef,
-          where('stadiumId', '==', selectedStadium.id),
-          where('shopAvailability', '==', true)
+          where('stadiumId', '==', selectedStadium.id)
+          // Removed shopAvailability == true to show closed shops as well
         );
         
         const querySnapshot = await getDocs(q);
@@ -104,7 +104,8 @@ const ShopList = ({ onShopSelect }) => {
               stadiumName: data.stadiumName || '',
               shopUserFcmToken: data.shopUserFcmToken || '',
               admins: data.admins || [],
-              image: data.imageUrl || data.image || null, // Use imageUrl or image from Firebase
+              image: data.imageUrl || data.image || null,
+              shopAvailability: data.shopAvailability !== undefined ? data.shopAvailability : true, // Added availability status
               createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
               updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date()
             };
@@ -131,9 +132,11 @@ const ShopList = ({ onShopSelect }) => {
     }
   };
 
-
-
   const handleShopClick = (shop) => {
+    if (shop.shopAvailability === false) {
+      alert(t('home.shop_closed_msg') || 'This shop is currently closed.');
+      return;
+    }
     // Navigate to dedicated Shop Menu page
     navigate(`/shop-menu/${shop.id}`);
   };
@@ -215,7 +218,7 @@ const ShopList = ({ onShopSelect }) => {
         {safeShops.map((shop) => (
           <div 
             key={shop.id} 
-            className="restaurant-card"
+            className={`restaurant-card ${shop.shopAvailability === false ? 'is-closed' : ''}`}
             onClick={() => handleShopClick(shop)}
           >
             <div className="restaurant-image">
@@ -226,10 +229,18 @@ const ShopList = ({ onShopSelect }) => {
                   e.currentTarget.src = getUniformShopImage();
                 }}
               />
+              {shop.shopAvailability === false && (
+                <div className="closed-overlay">
+                  <span className="closed-tag">{t('home.closed')}</span>
+                </div>
+              )}
             </div>
             <div className="restaurant-details">
               <div className="restaurant-header">
                 <h3 className="restaurant-name">{shop.name}</h3>
+                {shop.shopAvailability === false && (
+                  <span className="closed-label">{t('home.closed')}</span>
+                )}
               </div>
               <p className="restaurant-description">{shop.description}</p>
               <div className="restaurant-footer">
