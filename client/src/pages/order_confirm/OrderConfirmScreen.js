@@ -606,9 +606,9 @@ const OrderConfirmScreen = () => {
     let cancelled = false;
     const createIntentIfNeeded = async () => {
       try {
-        const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
-          ? process.env.REACT_APP_API_BASE.trim()
-          : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+        const API_BASE = (process.env.NODE_ENV !== 'production' && window.location.port === '3000')
+          ? 'http://localhost:5001'
+          : '';
         
 
         // Determine if we should wait for delivery selection
@@ -1087,9 +1087,9 @@ const OrderConfirmScreen = () => {
     
     try {
       // Ensure we have an intent (pre-created in useEffect; if missing, create now)
-      const API_BASE = (process.env.REACT_APP_API_BASE && process.env.REACT_APP_API_BASE.trim())
-        ? process.env.REACT_APP_API_BASE.trim()
-        : (window.location.port === '3000' ? 'http://localhost:5001' : '');
+      const API_BASE = (process.env.NODE_ENV !== 'production' && window.location.port === '3000')
+        ? 'http://localhost:5001'
+        : '';
       // const CURRENCY = (process.env.REACT_APP_CURRENCY && process.env.REACT_APP_CURRENCY.trim()) || 'USD';
 
       // Stripe payment flow only
