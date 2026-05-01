@@ -1,0 +1,14 @@
+{
+  "name": "fans-munch-monorepo",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build:client": "npm --prefix client install && npm --prefix client run build",
+    "copy:build": "node scripts/copy-client-build-to-server.js",
+    "build": "npm run build:client && npm run copy:build",
+    "start": "npm --prefix server install && npm --prefix server run start",
+    "heroku-postbuild": "npm run build"
+  }
+}
