@@ -296,7 +296,7 @@ export const cartUtils = {
           discountPercentage: food.discountPercentage || 0, // Store discount info
           images: food.images || [],
           quantity: quantity,
-          shopId: food.shopId || (Array.isArray(food.shopIds) && food.shopIds.length > 0 ? food.shopIds[0] : ''),
+          shopId: newItemPrimaryShop,
           shopIds: Array.isArray(food.shopIds) ? [...food.shopIds] : (food.shopId ? [food.shopId] : []),
           stadiumId: food.stadiumId,
           preparationTime: food.preparationTime || 15,

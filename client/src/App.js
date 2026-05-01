@@ -78,7 +78,7 @@ const RootRedirect = () => {
 
 // Initialize LogRocket
 try {
-  LogRocket.init('cvlyge/fanmunch');
+  // LogRocket.init('cvlyge/fanmunch');
   console.log('📊 [LogRocket] Successfully initialized');
   console.log('📊 [LogRocket] Environment:', process.env.NODE_ENV);
   console.log('📊 [LogRocket] Hostname:', window.location.hostname);

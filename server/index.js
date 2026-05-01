@@ -1,12 +1,9 @@
 // server/index.js
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-// Load env variables from root .env unconditionally (useful if NODE_ENV is set to 'production' locally)
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-// Debug (do not print secrets)
-console.log('[ENV] STRIPE key present:', process.env.STRIPE_SECRET_KEY ? 'yes' : 'no');
-const airwallexRoutes = require('./routes/airwallexRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -26,7 +23,6 @@ app.use('/api/webhooks', webhookRoutes);
 app.use(express.json());
 
 // Routes -> Controllers
-app.use('/api/airwallex', airwallexRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/notifications', notificationRoutes);

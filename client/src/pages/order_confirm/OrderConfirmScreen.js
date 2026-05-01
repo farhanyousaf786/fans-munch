@@ -138,6 +138,14 @@ const OrderConfirmScreen = () => {
     const initializeOrder = async () => {
       const cartItems = cartUtils.getCartItems();
       const cartTotal = cartUtils.getTotalPrice();
+
+      console.log('🧾 [DELIVERY FEE DEBUG] initializeOrder cart snapshot', {
+        cartItemsCount: cartItems.length,
+        firstItem: cartItems[0] || null,
+        cartTotal,
+        deliveryMode,
+        deliveryType,
+      });
       
       // Reset floor and room when visiting order confirmation screen
       setFormData(prev => ({
@@ -159,6 +167,12 @@ const OrderConfirmScreen = () => {
         if (cartItems.length > 0) {
           const firstItem = cartItems[0];
           shopId = firstItem.shopId || firstItem.shopIds?.[0];
+
+          console.log('🧾 [DELIVERY FEE DEBUG] derived shopId', {
+            shopId,
+            firstItemShopId: firstItem.shopId,
+            firstItemShopIds: firstItem.shopIds,
+          });
           
           
           if (shopId) {
@@ -168,11 +182,27 @@ const OrderConfirmScreen = () => {
             if (shopSnap.exists()) {
               const fetchedShopData = shopSnap.data();
               setShopData(fetchedShopData); // Store shop data for delivery type selector
+
+              console.log('🧾 [DELIVERY FEE DEBUG] fetched shop delivery settings', {
+                shopId,
+                deliveryFee: fetchedShopData.deliveryFee,
+                deliveryFeeCurrency: fetchedShopData.deliveryFeeCurrency,
+                insideDeliveryFee: fetchedShopData.insideDelivery?.fee,
+                insideDeliveryCurrency: fetchedShopData.insideDelivery?.currency,
+                outsideDeliveryFee: fetchedShopData.outsideDelivery?.fee,
+                outsideDeliveryCurrency: fetchedShopData.outsideDelivery?.currency,
+              });
               
               // Default to legacy delivery fee - will be updated when user selects inside/outside
               // Calculate per item as requested
               const itemQuantity = cartUtils.getTotalItems();
               const baseFee = fetchedShopData.deliveryFee || 0;
+
+              console.log('🧾 [DELIVERY FEE DEBUG] fee calculation (legacy)', {
+                baseFee,
+                itemQuantity,
+                deliveryFeeAmount: baseFee * itemQuantity,
+              });
               deliveryFeeAmount = baseFee * itemQuantity;
               deliveryFeeCurrency = fetchedShopData.deliveryFeeCurrency || 'ILS';
               
@@ -180,6 +210,12 @@ const OrderConfirmScreen = () => {
               
               
             }
+            else {
+              console.warn('⚠️ [DELIVERY FEE DEBUG] shop doc not found for shopId', shopId);
+            }
+          }
+          else {
+            console.warn('⚠️ [DELIVERY FEE DEBUG] No shopId found on first cart item', firstItem);
           }
         }
       } catch (error) {
@@ -189,9 +225,8 @@ const OrderConfirmScreen = () => {
         shopVendorAccountId = null;
       }
       
-      // Set vendor account ID
-      const finalVendorId = shopVendorAccountId || process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID;
-      setVendorAccountId(finalVendorId);
+      // Set vendor account ID from shop data
+      setVendorAccountId(shopVendorAccountId);
       
     
 
@@ -632,6 +667,9 @@ const OrderConfirmScreen = () => {
         });
         
         // ✅ NEW: Get shop configuration
+        const debugConnectedAccountId = (process.env.NODE_ENV !== 'production' && process.env.REACT_APP_DEBUG_STRIPE_CONNECTED_ACCOUNT_ID)
+          ? String(process.env.REACT_APP_DEBUG_STRIPE_CONNECTED_ACCOUNT_ID).trim()
+          : null;
         const shopConfig = shopData ? {
           'payment-options': shopData['payment-options'] || {
             model: '2-way',
@@ -639,10 +677,19 @@ const OrderConfirmScreen = () => {
             'vendor-fee': 1.0,
             'delivery-destination': 'platform',
             'tip-destination': 'platform',
-            'vendor-id': shopData.stripeConnectedAccountId || vendorAccountId || null,
+            'vendor-id': shopData.stripeConnectedAccountId || vendorAccountId || debugConnectedAccountId || null,
             'hotel-id': null
           }
         } : null;
+
+        console.log('🧾 [STRIPE SPLIT DEBUG] useEffect intent creation', {
+          nodeEnv: process.env.NODE_ENV,
+          debugConnectedAccountId,
+          shopStripeConnectedAccountId: shopData?.stripeConnectedAccountId || null,
+          vendorAccountIdState: vendorAccountId || null,
+          finalVendorId: shopConfig?.['payment-options']?.['vendor-id'] || null,
+          model: shopConfig?.['payment-options']?.model || null,
+        });
         
         console.log(`\n${'='.repeat(60)}`);
         console.log(`📤 [CLIENT → SERVER] Sending Payment Intent Request (NEW FORMAT)`);
@@ -1047,6 +1094,9 @@ const OrderConfirmScreen = () => {
 
       // Stripe payment flow only
       if (!stripeIntent?.id || !stripeIntent?.clientSecret) {
+        const debugConnectedAccountId = (process.env.NODE_ENV !== 'production' && process.env.REACT_APP_DEBUG_STRIPE_CONNECTED_ACCOUNT_ID)
+          ? String(process.env.REACT_APP_DEBUG_STRIPE_CONNECTED_ACCOUNT_ID).trim()
+          : null;
         const userPreferredCurrency = getPreferredCurrency();
         const paymentCurrency = getPaymentCurrency();
         const paymentAmount = getPaymentAmount();
@@ -1054,13 +1104,46 @@ const OrderConfirmScreen = () => {
         console.log(`💳 [PAYMENT INTENT] User selected default currency: ${userPreferredCurrency.toUpperCase()}`);
         console.log(`💳 [PAYMENT INTENT] Creating payment intent: ${paymentAmount} ${paymentCurrency.toUpperCase()}`);
         
+        // Build shop config for payment splitting
+        // Note: we must always send `shopConfig.payment-options` or the server will reject the request.
+        const paymentShopConfig = {
+          'payment-options': (shopData && shopData['payment-options']) ? shopData['payment-options'] : {
+            model: '2-way',
+            'platform-fee': 0,
+            'vendor-fee': 1.0,
+            'delivery-destination': 'platform',
+            'tip-destination': 'platform',
+            'vendor-id': (shopData && shopData.stripeConnectedAccountId) ? shopData.stripeConnectedAccountId : (debugConnectedAccountId || null),
+            'hotel-id': null
+          }
+        };
+
+        console.log('🧾 [STRIPE SPLIT DEBUG] handlePayment intent creation', {
+          nodeEnv: process.env.NODE_ENV,
+          debugConnectedAccountId,
+          shopStripeConnectedAccountId: shopData?.stripeConnectedAccountId || null,
+          finalVendorId: paymentShopConfig?.['payment-options']?.['vendor-id'] || null,
+          model: paymentShopConfig?.['payment-options']?.model || null,
+        });
+
+        const cartItemsForPayment = cartUtils.getCartItems();
+        const cartItemsWithCOG = cartItemsForPayment.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price || 0,
+          quantity: item.quantity || 1,
+          costOfGoods: item.costOfGoods || 0,
+          currency: item.currency || 'ILS'
+        }));
+
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             amount: paymentAmount, 
             currency: paymentCurrency,
-            vendorConnectedAccountId: process.env.REACT_APP_STRIPE_VENDOR_ACCOUNT_ID,
+            shopConfig: paymentShopConfig,
+            cartItems: cartItemsWithCOG,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
             tipAmount: tipData.amount || 0

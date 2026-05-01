@@ -45,7 +45,7 @@ const Footer = () => {
         </nav>
 
         {/* Copyright */}
-        <p className="copyright">Fans Munch. All rights reserved {new Date().getFullYear()} ©</p>
+        <p className="copyright">FansMunch 2.0. All rights reserved {new Date().getFullYear()} ©</p>
         
         {/* Bottom Links */}
         <div className="footer-bottom-links">
