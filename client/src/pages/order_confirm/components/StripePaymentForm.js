@@ -21,16 +21,30 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
   const [paymentRequest, setPaymentRequest] = useState(null);
   const { t } = useTranslation();
 
+  // Keep latest mutable values in refs so the wallet effect doesn't restart on every parent re-render
+  const clientSecretRef = useRef(clientSecret);
+  const validateRef = useRef(validateBeforeWalletPay);
+  const onWalletSuccessRef = useRef(onWalletPaymentSuccess);
+  const onConfirmedRef = useRef(onConfirmed);
+  const tRef = useRef(t);
+
+  useEffect(() => { clientSecretRef.current = clientSecret; }, [clientSecret]);
+  useEffect(() => { validateRef.current = validateBeforeWalletPay; }, [validateBeforeWalletPay]);
+  useEffect(() => { onWalletSuccessRef.current = onWalletPaymentSuccess; }, [onWalletPaymentSuccess]);
+  useEffect(() => { onConfirmedRef.current = onConfirmed; }, [onConfirmed]);
+  useEffect(() => { tRef.current = t; }, [t]);
+
   // Debug logging
   console.log('[DEBUG] CardForm - stripe:', !!stripe, 'elements:', !!elements);
 
-  // Try to build a payment request (Apple Pay / Google Pay)
+  // Build payment request as soon as stripe + amount are ready.
+  // clientSecret is NOT needed for canMakePayment(); it is only needed when confirming the payment.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'clientSecret:', !!clientSecret, 'totalAmount:', totalAmount);
-        if (!stripe || !clientSecret || !totalAmount) {
+        console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'totalAmount:', totalAmount);
+        if (!stripe || !totalAmount) {
           console.log('[DEBUG] Payment Request - missing requirements, skipping');
           return;
         }
@@ -44,20 +58,33 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
         if (!active || !pr) return;
         pr.on('paymentmethod', async (ev) => {
           try {
+            const currentClientSecret = clientSecretRef.current;
+            const currentValidate = validateRef.current;
+            const currentOnWalletSuccess = onWalletSuccessRef.current;
+            const currentOnConfirmed = onConfirmedRef.current;
+            const currentT = tRef.current;
+
             // Optional pre-validation hook from parent (e.g., seat info required)
-            if (typeof validateBeforeWalletPay === 'function') {
-              const ok = await validateBeforeWalletPay();
+            if (typeof currentValidate === 'function') {
+              const ok = await currentValidate();
               if (!ok) {
                 ev.complete('fail');
                 return;
               }
             }
+
+            if (!currentClientSecret) {
+              ev.complete('fail');
+              showToast('Payment not ready yet. Please wait a moment and try again.', 'error', 3000);
+              return;
+            }
+
             console.log('[STRIPE WALLET] Payment method selected:', {
               type: ev.paymentMethod.type,
               id: ev.paymentMethod.id,
               card: ev.paymentMethod.card
             });
-            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            const { error, paymentIntent } = await stripe.confirmCardPayment(currentClientSecret, {
               payment_method: ev.paymentMethod.id,
             });
             console.log('[STRIPE WALLET] Payment confirmation response:', {
@@ -76,42 +103,42 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
             });
             if (error) {
               ev.complete('fail');
-              showToast(`${t('order.payment_failed_generic')} ${error.message || ''}`.trim(), 'error', 4000);
+              showToast(`${currentT('order.payment_failed_generic')} ${error.message || ''}`.trim(), 'error', 4000);
             } else if (paymentIntent?.status === 'succeeded') {
               ev.complete('success');
-              showToast(t('order.processing_full'), 'success', 2500);
-              if (onWalletPaymentSuccess) {
+              showToast(currentT('order.processing_full'), 'success', 2500);
+              if (currentOnWalletSuccess) {
                 try {
-                  await onWalletPaymentSuccess();
+                  await currentOnWalletSuccess();
                 } catch (orderError) {
-                  const errorMsg = orderError?.message || t('order.unknown_error');
+                  const errorMsg = orderError?.message || currentT('order.unknown_error');
                   // If it's a validation error from the screen, show only that message without the wallet prefix
                   if (orderError && orderError.code === 'VALIDATION') {
                     showToast(errorMsg, 'error', 8000);
                   } else {
-                    showToast(`${t('order.wallet_payment_succeeded_order_failed_prefix')} ${errorMsg}. ${t('order.contact_support')}`, 'error', 8000);
+                    showToast(`${currentT('order.wallet_payment_succeeded_order_failed_prefix')} ${errorMsg}. ${currentT('order.contact_support')}`, 'error', 8000);
                   }
                 }
               }
-              onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
+              currentOnConfirmed && currentOnConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
             } else if (paymentIntent?.status === 'requires_action') {
               ev.complete('success');
-              showToast(t('order.additional_auth_required'), 'info', 3500);
+              showToast(currentT('order.additional_auth_required'), 'info', 3500);
             } else {
               ev.complete('fail');
-              showToast(`${t('order.payment_status')}: ${paymentIntent?.status || t('order.unknown')}`, 'warning', 3000);
+              showToast(`${currentT('order.payment_status')}: ${paymentIntent?.status || currentT('order.unknown')}`, 'warning', 3000);
             }
           } catch (err) {
             console.error('[STRIPE WALLET] Payment error:', err);
             ev.complete('fail');
-            showToast(`${t('order.payment_error')}: ${err.message}`, 'error', 4000);
+            showToast(`${tRef.current('order.payment_error')}: ${err.message}`, 'error', 4000);
           }
         });
         setPaymentRequest(pr);
       } catch (_) {}
     })();
     return () => { active = false; };
-  }, [stripe, clientSecret, totalAmount, currency, onWalletPaymentSuccess, onConfirmed, validateBeforeWalletPay, t]);
+  }, [stripe, totalAmount, currency]);
 
   const handleConfirm = async () => {
     if (!stripe || !elements || !clientSecret) {

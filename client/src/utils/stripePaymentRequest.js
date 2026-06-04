@@ -7,7 +7,7 @@
 export async function buildPaymentRequest(stripe, {
   amount,
   currency = 'ils',
-  country = 'US',
+  country = 'IL',
   label = 'Order',
   requestPayerName = true,
   requestPayerEmail = true,
