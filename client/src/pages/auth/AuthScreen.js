@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import userRepository from '../../repositories/userRepository';
 import { requestNotificationPermission } from '../../config/firebase';
@@ -25,6 +25,15 @@ const AuthScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const mode = (params.get('mode') || '').toLowerCase();
+      if (mode === 'register') setIsLogin(false);
+      if (mode === 'login') setIsLogin(true);
+    } catch (_) {}
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({

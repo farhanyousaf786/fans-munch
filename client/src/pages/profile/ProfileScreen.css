@@ -462,11 +462,11 @@
 /* --- New Profile Hero + Stats (mock-aligned) --- */
 .profile-hero {
   position: relative;
-  height: 200px; /* more space for avatar/name */
+  height: 260px; /* more space for avatar/name + auth buttons */
   background: #111; /* fallback solid color (no image to avoid build error) */
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .hero-overlay {
@@ -492,6 +492,41 @@
   gap: 12px;
 }
 
+.hero-user {
+  min-width: 0;
+}
+
+.auth-hero {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6px 0 2px;
+}
+
+.auth-avatar {
+  margin-bottom: 12px;
+}
+
+.auth-name {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+}
+
+.auth-email {
+  font-size: 14px;
+  opacity: 0.92;
+  max-width: 520px;
+  line-height: 1.4;
+  margin-bottom: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .profile-avatar.small {
   width: 56px;
   height: 56px;
@@ -502,27 +537,127 @@
   font-weight: 700;
   font-size: 16px;
   line-height: 1.1;
+  letter-spacing: 0.2px;
 }
 
 .hero-user .hero-email {
   font-size: 12px;
   opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 48vw;
+}
+
+.guest-hero {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 6px 0 2px;
+}
+
+.guest-avatar {
+  margin-bottom: 12px;
+}
+
+.guest-name {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+}
+
+.guest-subtitle {
+  font-size: 14px;
+  opacity: 0.92;
+  max-width: 520px;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.guest-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.guest-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.guest-btn.primary {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.28);
+}
+
+.guest-btn.primary:hover {
+  filter: brightness(0.97);
+}
+
+.guest-btn.secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.guest-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .logout-chip {
-  background: #e11d48; /* red */
+  background: linear-gradient(135deg, #ef4444 0%, #e11d48 100%);
   color: #fff;
   border: 0;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 999px;
+  padding: 10px 14px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 12px 24px rgba(225, 29, 72, 0.25);
+}
+
+.logout-chip:hover {
+  filter: brightness(0.97);
 }
 
 .logout-chip svg { font-size: 16px; }
+
+.register-chip {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 20px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 10px 20px rgba(34, 197, 94, 0.25);
+}
+
+.register-chip:hover {
+  filter: brightness(0.97);
+}
 
 .stats-card {
   margin-top: -8px; /* reduce overlap so it doesn't cover hero content */

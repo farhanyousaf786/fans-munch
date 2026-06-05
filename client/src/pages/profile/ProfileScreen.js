@@ -13,6 +13,7 @@ import {
   IoSwapHorizontalOutline
 } from 'react-icons/io5';
 import { storageManager, userStorage } from '../../utils/storage';
+import { isCurrentUserAnonymous } from '../../utils/anonymousUserService';
 import orderRepository from '../../repositories/orderRepository';
 import { OrderStatus } from '../../models/Order';
 import './ProfileScreen.css';
@@ -27,10 +28,12 @@ const ProfileScreen = () => {
     cancelled: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   // no local favorites UI on this version
 
   useEffect(() => {
     loadUserData();
+    setIsAnonymous(isCurrentUserAnonymous());
   }, []);
 
   // Redirect unauthenticated users to auth
@@ -84,6 +87,29 @@ const ProfileScreen = () => {
     console.log('✅ Sign out completed');
   };
 
+  const handleRegisterFromGuest = () => {
+    console.log('📝 Guest user wants to register...');
+    
+    // Clear the guest session so they are treated as a fresh user
+    storageManager.clearAllStorage();
+    
+    // Navigate to auth screen in register mode
+    navigate('/auth?mode=register', { replace: true });
+    
+    console.log('✅ Redirected to registration');
+  };
+
+  const handleLoginFromGuest = () => {
+    console.log('🔑 Guest user wants to login...');
+
+    // Clear the guest session so they are treated as a fresh user
+    storageManager.clearAllStorage();
+
+    navigate('/auth?mode=login', { replace: true });
+
+    console.log('✅ Redirected to login');
+  };
+
   // helper removed; using compact stats card UI
 
   const isAuthenticated = userData && userData.id;
@@ -111,22 +137,34 @@ const ProfileScreen = () => {
       <div className="profile-hero">
         <div className="hero-overlay" />
         <div className="hero-content">
-          {isAuthenticated ? (
+          {isAuthenticated && !isAnonymous ? (
             <>
-              <div className="hero-left">
-                <div className="profile-avatar small">
+              <div className="auth-hero">
+                <div className="profile-avatar small auth-avatar">
                   {userData?.photoUrl ? (
                     <img src={userData.photoUrl} alt="Profile" className="avatar-image" />
                   ) : (
                     <IoPersonOutline className="avatar-icon" />
                   )}
                 </div>
-                <div className="hero-user">
-                  <div className="hero-name">{userData ? `${userData.firstName} ${userData.lastName}` : ''}</div>
-                  <div className="hero-email">{userData?.email || ''}</div>
+                <div className="auth-name">{userData ? `${userData.firstName} ${userData.lastName}` : ''}</div>
+                <div className="auth-email">{userData?.email || ''}</div>
+                <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
+              </div>
+            </>
+          ) : isAuthenticated && isAnonymous ? (
+            <>
+              <div className="guest-hero">
+                <div className="profile-avatar small guest-avatar">
+                  <IoPersonOutline className="avatar-icon" />
+                </div>
+                <div className="guest-name">{userData?.displayName || 'Guest'}</div>
+                <div className="guest-subtitle">Sign up or log in to save your orders and checkout faster.</div>
+                <div className="guest-buttons">
+                  <button className="guest-btn primary" onClick={handleRegisterFromGuest}>Sign up</button>
+                  <button className="guest-btn secondary" onClick={handleLoginFromGuest}>Log in</button>
                 </div>
               </div>
-              <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
             </>
           ) : (
             <div className="hero-left">
@@ -143,7 +181,7 @@ const ProfileScreen = () => {
       </div>
 
       <div className="profile-container">
-        {isAuthenticated && (
+        {isAuthenticated && !isAnonymous && (
           <div className="stats-card">
             <div className="stats-col">
               <div className="stats-number">{loading ? '…' : orderStats.active}</div>
