@@ -238,6 +238,8 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       },
     },
     hidePostalCode: false,
+    // Explicitly enable browser autofill so Chrome/Safari suggest saved cards
+    autocomplete: 'cc-number',
   };
 
   if (!stripe || !elements) {
