@@ -36,45 +36,22 @@
 
 /* Header */
 .order-confirm-header {
-  position: relative; /* allow absolute back button */
   display: flex;
   align-items: center;
-  justify-content: center; /* center the title */
-  gap: 16px;
-  min-height: 44px; /* ensure room for back button */
-  padding-top: 16px; /* little padding from top */
-  margin-bottom: 16px;
-
-}
-
-.back-button {
-  position: absolute;
-  left: 0;
-  top: 8px; /* align with header padding */
-  width: 44px;
-  height: 44px;
-  background: #3D70FF;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.08s;
+  gap: 12px;
+  min-height: 44px;
+  padding-top: 8px;
   margin-bottom: 16px;
 }
-
-.back-button:hover { box-shadow: none; }
-.back-button:active { transform: translateY(1px); }
 
 .order-confirm-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
+  flex: 1;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
-  padding-top: 2px; /* optical alignment with the icon */
-  text-align: center;
+  line-height: 1.25;
+  text-align: start;
 }
 
 /* Section Styles */

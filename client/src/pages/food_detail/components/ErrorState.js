@@ -1,15 +1,17 @@
 import React from 'react';
-import { MdArrowBack } from 'react-icons/md';
+import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import './ErrorState.css';
 import { useTranslation } from '../../../i18n/i18n';
 
 const ErrorState = ({ error, onBack, onRetry }) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isRTL = lang === 'he';
+
   return (
     <div className="food-detail-screen">
       <div className="food-detail-header">
-        <button className="back-button" onClick={onBack}>
-          <MdArrowBack />
+        <button className="back-button" onClick={onBack} aria-label="Back" type="button">
+          {isRTL ? <MdArrowForward /> : <MdArrowBack />}
         </button>
       </div>
       <div className="error-container">

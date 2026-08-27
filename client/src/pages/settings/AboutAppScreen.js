@@ -2,6 +2,7 @@ import React from 'react';
 import './AboutAppScreen.css';
 import { MdRestaurantMenu, MdShoppingCart, MdPayment, MdLocalShipping, MdCheckCircle } from 'react-icons/md';
 import { FaApple, FaGooglePlay } from 'react-icons/fa';
+import BackButton from '../../components/page_header/BackButton';
 
 const AboutAppScreen = () => {
   const workflowSteps = [
@@ -35,7 +36,8 @@ const AboutAppScreen = () => {
   return (
     <div className="about-screen">
       {/* Hero Section */}
-      <div className="about-hero">
+      <div className="about-hero" style={{ position: 'relative' }}>
+        <BackButton variant="hero" fallbackTo="/profile" />
         <div className="app-icon">
           <span className="icon-emoji">🍔</span>
         </div>

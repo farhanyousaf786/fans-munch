@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import { useTranslation } from '../../i18n/i18n';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 import './ForgotPasswordScreen.css';
 
 const ForgotPasswordScreen = () => {
@@ -36,7 +37,11 @@ const ForgotPasswordScreen = () => {
   return (
     <div className="forgot-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <div className="forgot-container">
-        <h1 className="forgot-title">{t('auth.forgot_password')}</h1>
+        <PageBackHeader
+          title={t('auth.forgot_password')}
+          fallbackTo="/auth"
+          onBack={() => navigate('/auth')}
+        />
         <p className="forgot-subtitle">{t('auth.reset_instructions')}</p>
 
         <form onSubmit={handleSubmit} className="forgot-form">
@@ -60,10 +65,6 @@ const ForgotPasswordScreen = () => {
             {loading ? t('auth.please_wait') : t('auth.send_reset_link')}
           </button>
         </form>
-
-        <button className="back-link" type="button" onClick={() => navigate('/auth')}>
-          {t('auth.back_to_login')}
-        </button>
       </div>
     </div>
   );

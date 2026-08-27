@@ -231,7 +231,16 @@
     "retry": "Retry",
     "capacity": "Capacity",
     "select_button": "Select a Venue",
-    "continue_to": "Continue to"
+    "continue_to": "Continue to",
+    "finding_nearest": "Finding nearest venue from your location...",
+    "nearest_found": "Nearest venue selected",
+    "use_my_location": "Use my location",
+    "location_denied": "Location permission denied. Please select a venue manually.",
+    "location_unavailable": "Could not get your location. Please select a venue manually.",
+    "no_coords": "Venue coordinates missing. Please select a venue manually.",
+    "none_nearby": "No venue nearby (within {km} km). Please select a venue manually.",
+    "away": "away",
+    "nearest_badge": "Nearest"
   },
   "orders": {
     "my_orders": "My Orders",

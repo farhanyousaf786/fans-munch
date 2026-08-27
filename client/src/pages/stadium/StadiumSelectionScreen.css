@@ -67,6 +67,70 @@
   font-weight: 400;
 }
 
+.stadium-location-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -12px 0 24px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.stadium-location-bar--info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.stadium-location-bar--success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.stadium-location-bar--error {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.stadium-location-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #334155;
+  text-align: start;
+}
+
+.stadium-location-btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: #3D70FF;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stadium-location-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stadium-distance {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3D70FF;
+}
+
+.stadium-card.nearest {
+  box-shadow: 0 0 0 2px rgba(61, 112, 255, 0.25);
+}
+
 /* entrance animations for header */
 .animate-down {
   animation: fadeDown 700ms ease both;

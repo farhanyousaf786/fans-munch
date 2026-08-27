@@ -6,6 +6,7 @@ import foodRepository from '../../repositories/foodRepository';
 import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 import { useTranslation } from '../../i18n/i18n';
 import AlertModal from '../../components/common/AlertModal';
+import BackButton from '../../components/page_header/BackButton';
 import './ShopMenuScreen.css';
 
 function ShopMenuScreen() {
@@ -64,7 +65,7 @@ function ShopMenuScreen() {
     <div className="shop-menu-page">
       <div className="shop-menu-header">
         <div className="shop-title-row">
-          <button onClick={() => navigate(-1)} className="back-icon" aria-label="Go back" title="Back">←</button>
+          <BackButton fallbackTo="/home" className="shop-menu-back" />
           <div className="shop-title-container">
             <h2 className="shop-title">{shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6)}`}</h2>
             {shop && shop.shopAvailability === false && (

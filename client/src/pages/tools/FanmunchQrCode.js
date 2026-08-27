@@ -4,6 +4,7 @@ import { showToast } from '../../components/toast/ToastContainer';
 import { db } from '../../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { stadiumStorage } from '../../utils/storage';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 
 // We intentionally avoid adding new deps. We render QR using a public QR image API.
 // If you prefer a local generator later, we can swap to `qrcode.react`.
@@ -316,7 +317,7 @@ export default function FanmunchQrCode() {
 
   return (
     <div style={{ maxWidth: 1100, margin: '20px auto', padding: '0 16px', direction: 'ltr' }}>
-      <h1 style={{ marginBottom: 6, textAlign: 'left' }}>Fanmunch QR Code Generator</h1>
+      <PageBackHeader title="Fanmunch QR Code Generator" fallbackTo="/home" />
       <p style={{ color: '#6b7280', marginBottom: 18, textAlign: 'left' }}>
         Generate deep-link URLs and QR codes for multiple rows and seat ranges. Each QR code will prefill the Order Confirmation form with seat information.
       </p>

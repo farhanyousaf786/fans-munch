@@ -7,6 +7,7 @@ import './AuthScreen.css';
 import { useTranslation } from '../../i18n/i18n';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FcGoogle } from 'react-icons/fc';
+import BackButton from '../../components/page_header/BackButton';
 // import { SiApple } from 'react-icons/si';
 
 const AuthScreen = () => {
@@ -286,6 +287,7 @@ const AuthScreen = () => {
     <div className="auth-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       {/* Upper Section */}
       <div className="auth-upper-section">
+        <BackButton variant="hero" fallbackTo="/home" />
         {/* Language Toggle */}
         <button
           type="button"

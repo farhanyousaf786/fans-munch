@@ -6,6 +6,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { userStorage } from '../../utils/storage';
 import { showToast } from '../../components/toast/ToastContainer';
+import BackButton from '../../components/page_header/BackButton';
 
 const FeedbackScreen = () => {
   const [formData, setFormData] = useState({
@@ -91,7 +92,8 @@ const FeedbackScreen = () => {
   return (
     <div className="contact-screen">
       {/* Hero Section */}
-      <div className="contact-hero">
+      <div className="contact-hero" style={{ position: 'relative' }}>
+        <BackButton variant="hero" fallbackTo="/profile" />
         <div className="hero-content">
           <h1 className="hero-title">Get In Touch</h1>
           <p className="hero-subtitle">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>

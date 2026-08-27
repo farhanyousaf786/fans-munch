@@ -22,6 +22,8 @@ export class Stadium {
     availableStands = false,
     availablePickupPoints = false,
     availableTickets = false,
+    latitude = null,
+    longitude = null,
     createdAt = new Date().toISOString(),
     updatedAt = new Date().toISOString()
   }) {
@@ -42,6 +44,8 @@ export class Stadium {
     this.availableStands = !!availableStands;
     this.availablePickupPoints = !!availablePickupPoints;
     this.availableTickets = !!availableTickets;
+    this.latitude = latitude == null || latitude === '' ? null : Number(latitude);
+    this.longitude = longitude == null || longitude === '' ? null : Number(longitude);
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -70,6 +74,8 @@ export class Stadium {
       availableStands: data.availableStands,
       availablePickupPoints: data.availablePickupPoints,
       availableTickets: data.availableTickets,
+      latitude: data.latitude ?? data.lat ?? null,
+      longitude: data.longitude ?? data.lng ?? data.lon ?? null,
       createdAt: data.createdAt || new Date().toISOString(),
       updatedAt: data.updatedAt || new Date().toISOString()
     });
@@ -98,6 +104,8 @@ export class Stadium {
       availableStands: this.availableStands,
       availablePickupPoints: this.availablePickupPoints,
       availableTickets: this.availableTickets,
+      latitude: this.latitude,
+      longitude: this.longitude,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

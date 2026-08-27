@@ -28,6 +28,7 @@ import BottomNavigation from './components/bottom_nav_bar/BottomNavigation';
 import Footer from './components/footer/Footer';
 import MenuListPage from './pages/menu/MenuListPage';
 import ToastContainer from './components/toast/ToastContainer';
+import ScrollToTop from './components/ScrollToTop';
 // Settings screens
 import AboutAppScreen from './pages/settings/AboutAppScreen';
 import TermsScreen from './pages/settings/TermsScreen';
@@ -76,9 +77,9 @@ const RootRedirect = () => {
   return <Navigate to={`/home${search}`} replace />;
 };
 
-// Initialize LogRocket
+// Initialize LogRocket (production session replay)
 try {
-  // LogRocket.init('cvlyge/fanmunch');
+  LogRocket.init('cvlyge/fanmunch');
   console.log('📊 [LogRocket] Successfully initialized');
   console.log('📊 [LogRocket] Environment:', process.env.NODE_ENV);
   console.log('📊 [LogRocket] Hostname:', window.location.hostname);
@@ -148,6 +149,7 @@ function App() {
       <ThemeProvider>
         <ComboProvider>
           <Router>
+            <ScrollToTop />
             <div className="app">
               <Routes>
                 {/* Landing page goes to Home regardless of auth - preserve query params */}

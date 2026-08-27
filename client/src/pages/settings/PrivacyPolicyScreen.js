@@ -1,9 +1,10 @@
 import React from 'react';
 import './settings.css';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 
 const PrivacyPolicyScreen = () => (
   <div className="screen static-screen">
-    <h1>Privacy Policy</h1>
+    <PageBackHeader title="Privacy Policy" />
     <div className="section-card">
       <h2>Data We Collect</h2>
       <ul>
@@ -26,7 +27,7 @@ const PrivacyPolicyScreen = () => (
     </div>
     <div className="section-card">
       <h2>Contact</h2>
-      <p>Email: support@fansmunch.example</p>
+      <p>Email: support@fanmunch.com</p>
     </div>
   </div>
 );

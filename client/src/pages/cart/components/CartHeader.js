@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdArrowBack } from 'react-icons/md';
+import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import './CartHeader.css';
 import { useTranslation } from '../../../i18n/i18n';
 
 const CartHeader = ({ isFromHome = false }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isRTL = lang === 'he';
 
   // Use a public asset to avoid import issues and ensure deployment works
   const bgUrl = process.env.PUBLIC_URL + '/assets/images/on-boarding-1.png';
@@ -14,8 +15,8 @@ const CartHeader = ({ isFromHome = false }) => {
   return (
     <div className="cart-hero" style={{ backgroundImage: `url(${bgUrl})` }}>
       {!isFromHome && (
-        <button className="cart-back-button" onClick={() => navigate(-1)} aria-label="Back">
-          <MdArrowBack />
+        <button className="cart-back-button" onClick={() => navigate(-1)} aria-label="Back" type="button">
+          {isRTL ? <MdArrowForward /> : <MdArrowBack />}
         </button>
       )}
       <div className="cart-hero-overlay" />

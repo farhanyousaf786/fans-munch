@@ -258,7 +258,18 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
       <div style={{ fontWeight: 600, marginBottom: 12 }}>{t('order.card_payment_title')}</div>
       {paymentRequest && (
         <div style={{ marginBottom: 12 }}>
-          <PaymentRequestButtonElement options={{ paymentRequest }} />
+          <PaymentRequestButtonElement
+            options={{
+              paymentRequest,
+              style: {
+                paymentRequestButton: {
+                  type: 'default',
+                  theme: 'dark',
+                  height: '48px',
+                },
+              },
+            }}
+          />
           <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>Or pay with card</div>
         </div>
       )}

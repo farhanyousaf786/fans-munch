@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './settings.css';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 
 const ReportProblemScreen = () => {
   const [message, setMessage] = useState('');
@@ -13,7 +14,7 @@ const ReportProblemScreen = () => {
 
   return (
     <div className="screen form-screen">
-      <h1>Report a Problem</h1>
+      <PageBackHeader title="Report a Problem" />
       {sent ? (
         <div className="section-card">
           <p>Thanks, we received your report. Our team will investigate.</p>

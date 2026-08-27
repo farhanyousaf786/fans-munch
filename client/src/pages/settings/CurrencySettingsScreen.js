@@ -8,6 +8,7 @@ import {
 } from '../../services/currencyPreferenceService';
 import { getCachedRates } from '../../services/currencyInitService';
 import './settings.css';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 
 const CurrencySettingsScreen = () => {
   const [selectedCurrency, setSelectedCurrency] = useState(null);
@@ -36,7 +37,7 @@ const CurrencySettingsScreen = () => {
 
   return (
     <div className="screen static-screen">
-      <h1>{t('settings.select_currency') || 'Select Currency'}</h1>
+      <PageBackHeader title={t('settings.select_currency') || 'Select Currency'} />
       
       <div className="section-card">
         <h2>{t('settings.app_currency') || 'App Currency'}</h2>

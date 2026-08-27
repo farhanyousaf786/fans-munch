@@ -22,6 +22,7 @@ import { getPreferredCurrency } from '../../services/currencyPreferenceService';
 import { convertPrice } from '../../utils/currencyConverter';
 import DeliveryTypeSelector from './components/DeliveryTypeSelector';
 import DeliveryNotesField from './components/DeliveryNotesField';
+import ConfirmHeader from './components/ConfirmHeader';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
@@ -1430,6 +1431,7 @@ const OrderConfirmScreen = () => {
   return (
     <div className="order-confirm-screen">
       <div className="order-confirm-container">
+        <ConfirmHeader />
         {/* Full-screen loader overlay */}
         {loading && (
           <div style={{

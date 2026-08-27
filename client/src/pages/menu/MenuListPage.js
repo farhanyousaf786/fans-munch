@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdChevronLeft } from 'react-icons/md';
 import foodRepository from '../../repositories/foodRepository';
 import { stadiumStorage } from '../../utils/storage';
 import PromotionBanner from '../../components/promotion/PromotionBanner';
@@ -8,6 +7,7 @@ import { collection, getDocs, query, limit } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useCombo } from '../../contexts/ComboContext';
 import { formatPriceWithCurrency } from '../../utils/currencyConverter';
+import BackButton from '../../components/page_header/BackButton';
 import './MenuListPage.css';
 
 const assetPlaceholders = [
@@ -140,9 +140,7 @@ export default function MenuListPage() {
     <div className="menu-page fade-in">
       <PromotionBanner />
       <div className="menu-page-header">
-        <button className="back-btn" onClick={() => navigate(-1)} aria-label="Back">
-          <MdChevronLeft size={22} />
-        </button>
+        <BackButton fallbackTo="/home" className="menu-page-back" />
         <h1 className="menu-page-title">{pageTitle}</h1>
         <div className="header-spacer" />
       </div>

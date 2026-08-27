@@ -1,12 +1,15 @@
 import React from 'react';
+import { MdArrowBack, MdArrowForward } from 'react-icons/md';
+import { useTranslation } from '../../../i18n/i18n';
 
 const TipHeader = ({ onBack }) => {
+  const { lang } = useTranslation();
+  const isRTL = lang === 'he';
+
   return (
     <div className="tip-header">
-      <button className="back-button" onClick={onBack} aria-label="Back">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-        </svg>
+      <button className="back-button" onClick={onBack} aria-label="Back" type="button">
+        {isRTL ? <MdArrowForward size={22} /> : <MdArrowBack size={22} />}
       </button>
     </div>
   );

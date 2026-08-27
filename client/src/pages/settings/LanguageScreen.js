@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { settingsStorage } from '../../utils/storage';
 import './settings.css';
 import { useTranslation } from '../../i18n/i18n';
 import { setPreferredCurrency } from '../../services/currencyPreferenceService';
+import PageBackHeader from '../../components/page_header/PageBackHeader';
 
 const LanguageScreen = () => {
-  const { t, lang, setLang } = useTranslation();
+  const { lang, setLang } = useTranslation();
   const [selectedLang, setSelectedLang] = useState(lang);
 
   const handleLanguageChange = (newLang) => {
@@ -24,7 +25,7 @@ const LanguageScreen = () => {
 
   return (
     <div className="screen static-screen">
-      <h1>Settings</h1>
+      <PageBackHeader title="Settings" />
       <div className="section-card">
         <h2>App Language</h2>
         <div className="lang-options">

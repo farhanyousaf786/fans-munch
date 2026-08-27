@@ -91,7 +91,7 @@
 }
 
 .back-button:active { transform: translateY(0); }
-.back-button svg { width: 20px; height: 20px; transition: all 0.2s; }
+.back-button svg { width: 22px; height: 22px; font-size: 22px; transition: all 0.2s; }
 
 /* Title */
 .tip-title {

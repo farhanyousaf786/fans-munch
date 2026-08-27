@@ -5,6 +5,7 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { userStorage } from '../../utils/storage';
 import { showToast } from '../../components/toast/ToastContainer';
+import BackButton from '../../components/page_header/BackButton';
 
 const HelpScreen = () => {
   const [formData, setFormData] = useState({
@@ -108,7 +109,8 @@ const HelpScreen = () => {
   return (
     <div className="help-screen">
       {/* Hero Section */}
-      <div className="help-hero">
+      <div className="help-hero" style={{ position: 'relative' }}>
+        <BackButton variant="hero" fallbackTo="/profile" />
         <div className="hero-icon">
           <MdHelp />
         </div>

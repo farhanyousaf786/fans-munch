@@ -1,17 +1,25 @@
 // Utility to create a Stripe Payment Request (Apple Pay / Google Pay)
-// Usage:
-//   import { buildPaymentRequest } from '../utils/stripePaymentRequest';
-//   const pr = await buildPaymentRequest(stripe, { amount: 500, currency: 'ils', country: 'IL', label: 'Fan Munch Order' });
-//   if (pr) { /* render PaymentRequestButtonElement with { options: { paymentRequest: pr } } */ }
+// Works on:
+// - Safari (macOS/iOS): Apple Pay
+// - Chrome (desktop/Android): Google Pay
+// - Chrome iOS: Apple Pay when available via Payment Request
+//
+// Requirements for live wallets:
+// - HTTPS production domain
+// - Live Stripe keys (pk_live / sk_live)
+// - Apple Pay domain verified in Stripe Dashboard for the live domain
+// - Stripe account country must match `country` below (Fan Munch uses IL)
 
 export async function buildPaymentRequest(stripe, {
   amount,
   currency = 'ils',
+  // Must match Stripe account country (IL) for wallets to work
   country = 'IL',
-  label = 'Order',
+  label = 'Fan Munch Order',
   requestPayerName = true,
   requestPayerEmail = true,
-  requestPayerPhone = true,
+  // Phone can break wallet availability on some Android Chrome builds
+  requestPayerPhone = false,
 } = {}) {
   try {
     if (!stripe || !amount || amount <= 0) {
@@ -20,27 +28,45 @@ export async function buildPaymentRequest(stripe, {
     }
 
     const normalizedCurrency = (currency || 'ils').toLowerCase();
-    console.log('[DEBUG] paymentRequest config:', { country, currency: normalizedCurrency, amount });
+    const minorAmount = Math.round(Number(amount) * 100) || 0;
+    if (minorAmount < 1) {
+      console.log('[DEBUG] buildPaymentRequest amount too small:', minorAmount);
+      return null;
+    }
+
+    console.log('[DEBUG] paymentRequest config:', {
+      country,
+      currency: normalizedCurrency,
+      amount: minorAmount,
+      ua: typeof navigator !== 'undefined' ? navigator.userAgent : 'n/a',
+    });
 
     const paymentRequest = stripe.paymentRequest({
       country,
       currency: normalizedCurrency,
-      // IMPORTANT: Stripe PaymentRequest expects amount in the smallest currency unit (e.g., cents/agorot)
-      // Our UI passes amount in major units (e.g., 41.00 ILS), so convert to minor units here.
-      total: { label, amount: Math.round(Number(amount) * 100) || 0 },
+      // Stripe PaymentRequest expects amount in the smallest currency unit
+      total: { label, amount: minorAmount },
       requestPayerName,
       requestPayerEmail,
       requestPayerPhone,
+      // Explicitly allow both wallets when the browser supports them
+      disableWallets: [],
     });
 
     const result = await paymentRequest.canMakePayment();
     console.log('[DEBUG] canMakePayment result:', result);
     if (!result) {
-      console.log('[DEBUG] Payment Request not available - no Apple Pay/Google Pay support');
+      console.log('[DEBUG] Payment Request not available - no Apple Pay/Google Pay support in this browser/device');
       return null;
     }
 
-    console.log('[DEBUG] Payment Request created successfully');
+    // Prefer logging which wallet is available for debugging Safari vs Chrome/Android
+    console.log('[DEBUG] Wallets available:', {
+      applePay: !!result.applePay,
+      googlePay: !!result.googlePay,
+      link: !!result.link,
+    });
+
     return paymentRequest;
   } catch (e) {
     // eslint-disable-next-line no-console
