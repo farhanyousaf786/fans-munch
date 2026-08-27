@@ -96,14 +96,25 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
     return shop ? shop.availability !== false : true;
   };
 
+  // Item is available if its shop (or any of its shops) is open
+  const isItemAvailable = (food) => {
+    if (food.shopId) return isShopAvailable(food.shopId);
+    if (Array.isArray(food.shopIds) && food.shopIds.length > 0) {
+      return food.shopIds.some((id) => isShopAvailable(id));
+    }
+    return true;
+  };
+
+  // If at least one shop is open, hide items from closed shops.
+  // If ALL shops are closed, keep showing items (with closed badge).
+  const hasAnyOpenShop = !shopsLoading && shops.length > 0 && shops.some((s) => s.availability !== false);
+  const visibleMenuItems = hasAnyOpenShop
+    ? menuItems.filter((food) => isItemAvailable(food))
+    : menuItems;
+
   const handleFoodClick = (food) => {
     // Check shop availability (if multiple shopIds, check if at least one is available)
-    let available = true;
-    if (food.shopId) {
-      available = isShopAvailable(food.shopId);
-    } else if (Array.isArray(food.shopIds) && food.shopIds.length > 0) {
-      available = food.shopIds.some(id => isShopAvailable(id));
-    }
+    const available = isItemAvailable(food);
 
     if (!available) {
       setIsAlertOpen(true);
@@ -120,13 +131,13 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   // Get section title based on search state
   const getSectionTitle = () => {
     if (searchTerm.trim()) {
-      return `${t('home.search_results')} (${menuItems.length})`;
+      return `${t('home.search_results')} (${visibleMenuItems.length})`;
     }
     return t('home.popular_menu');
   };
 
   // Loading state
-  if (loading) {
+  if (loading || shopsLoading) {
     return (
       <div className="menu-list">
         <div className="section-header">
@@ -150,7 +161,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   }
 
   // Empty state
-  if (!loading && menuItems.length === 0) {
+  if (!loading && !shopsLoading && visibleMenuItems.length === 0) {
     const emptyMessage = searchTerm.trim() 
       ? `${t('home.no_results_for')} "${searchTerm}"`
       : t('home.no_menu');
@@ -184,12 +195,8 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
       {/* Vertical grid container - 2 items per row */}
       <div className="menu-grid-container">
         <div className="menu-grid">
-          {menuItems.map((food) => {
-            const available = food.shopId 
-              ? isShopAvailable(food.shopId) 
-              : (Array.isArray(food.shopIds) && food.shopIds.length > 0 
-                  ? food.shopIds.some(id => isShopAvailable(id)) 
-                  : true);
+          {visibleMenuItems.map((food) => {
+            const available = isItemAvailable(food);
             
             return (
               <div 

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import foodRepository from '../../repositories/foodRepository';
 import { stadiumStorage } from '../../utils/storage';
 import PromotionBanner from '../../components/promotion/PromotionBanner';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { collection, getDocs, query, limit, where } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useCombo } from '../../contexts/ComboContext';
 import { formatPriceWithCurrency } from '../../utils/currencyConverter';
@@ -29,6 +29,7 @@ function getPlaceholderByKey(key) {
 
 export default function MenuListPage() {
   const [items, setItems] = useState([]);
+  const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -75,8 +76,27 @@ export default function MenuListPage() {
         let result;
         if (selectedStadium && selectedStadium.id) {
           result = await foodRepository.getStadiumMenu(selectedStadium.id, 200);
+
+          try {
+            const shopsRef = collection(db, 'shops');
+            const shopsQuery = query(shopsRef, where('stadiumId', '==', selectedStadium.id));
+            const shopsSnap = await getDocs(shopsQuery);
+            const shopsData = [];
+            shopsSnap.forEach((docSnap) => {
+              const data = docSnap.data();
+              shopsData.push({
+                id: docSnap.id,
+                availability: data.shopAvailability !== undefined ? data.shopAvailability : true,
+              });
+            });
+            setShops(shopsData);
+          } catch (shopErr) {
+            console.warn('Failed to load shops for availability filter:', shopErr);
+            setShops([]);
+          }
         } else {
           result = await foodRepository.getAllMenuItems();
+          setShops([]);
         }
         if (result.success) {
           let foods = result.foods || [];
@@ -107,16 +127,37 @@ export default function MenuListPage() {
     });
   }, [items, fetchComboItems]);
 
+  const isShopAvailable = (id) => {
+    if (!id) return true;
+    const shop = shops.find((s) => s.id === id);
+    return shop ? shop.availability !== false : true;
+  };
+
+  const isItemAvailable = (food) => {
+    if (food.shopId) return isShopAvailable(food.shopId);
+    if (Array.isArray(food.shopIds) && food.shopIds.length > 0) {
+      return food.shopIds.some((id) => isShopAvailable(id));
+    }
+    return true;
+  };
+
   const handleFoodClick = (food) => {
     navigate(`/food/${food.id}`);
   };
 
   const filtered = useMemo(() => {
     let filteredItems = items;
+
+    // If at least one shop is open, hide items from closed shops.
+    // If all shops are closed, keep showing items.
+    const hasAnyOpenShop = shops.length > 0 && shops.some((s) => s.availability !== false);
+    if (hasAnyOpenShop) {
+      filteredItems = filteredItems.filter((food) => isItemAvailable(food));
+    }
     
     if (search.trim()) {
       const q = search.toLowerCase();
-      filteredItems = items.filter((item) =>
+      filteredItems = filteredItems.filter((item) =>
         item.name?.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q) ||
         item.category?.toLowerCase().includes(q)
@@ -129,7 +170,8 @@ export default function MenuListPage() {
       if (!a.isCombo && b.isCombo) return 1;  // b (combo) comes first
       return 0; // maintain original order for same type
     });
-  }, [items, search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, search, shops]);
 
   const pageTitle = useMemo(() => {
     if (!search.trim()) return title;

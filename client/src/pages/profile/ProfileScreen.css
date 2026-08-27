@@ -713,6 +713,17 @@
   margin-bottom: 10px;
   gap: 12px;
   min-height: 72px; /* uniform height */
+  cursor: pointer;
+}
+
+.settings-list .settings-item--highlight {
+  border-color: rgba(61, 112, 255, 0.35);
+  background: linear-gradient(135deg, #eff4ff 0%, #ffffff 100%);
+}
+
+.settings-list .settings-item--highlight .settings-title {
+  color: #3D70FF;
+  font-weight: 800;
 }
 
 .settings-list .settings-icon {
