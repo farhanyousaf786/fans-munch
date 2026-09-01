@@ -1,22 +1,32 @@
 const stripe = require('stripe');
 const paymentSplitService = require('../services/paymentSplitService');
+const appConfigService = require('../services/appConfigService');
 
-// Initialize Stripe with secret key
-let stripeInstance;
-const initStripe = () => {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+const stripeInstances = {};
+
+const initStripe = async () => {
+  const { useTestApis } = await appConfigService.getAppConfig();
+  const { secretKey } = appConfigService.getStripeKeys(useTestApis);
+  const mode = useTestApis ? 'test' : 'live';
+
   if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is required');
+    throw new Error(
+      useTestApis
+        ? 'Test Stripe secret key (sk_test_...) is not configured on the server'
+        : 'Live Stripe secret key (sk_live_...) is not configured on the server'
+    );
   }
-  if (!stripeInstance) {
-    stripeInstance = stripe(secretKey);
+
+  if (!stripeInstances[mode]) {
+    stripeInstances[mode] = stripe(secretKey);
   }
-  return stripeInstance;
+
+  return stripeInstances[mode];
 };
 
 exports.createPaymentIntent = async (req, res) => {
   try {
-    const stripeClient = initStripe();
+    const stripeClient = await initStripe();
     
     console.log('\n' + '='.repeat(60));
     console.log('📥 [SERVER] Received Payment Intent Request');
@@ -212,7 +222,7 @@ exports.createPaymentIntent = async (req, res) => {
 
 exports.confirmPayment = async (req, res) => {
   try {
-    const stripeClient = initStripe();
+    const stripeClient = await initStripe();
     const { paymentIntentId } = req.body;
 
     if (!paymentIntentId) {

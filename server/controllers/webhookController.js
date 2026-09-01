@@ -1,12 +1,22 @@
 const stripe = require('stripe');
+const appConfigService = require('../services/appConfigService');
 
-// Initialize Stripe helper
-let stripeInstance;
-const getStripe = () => {
-  if (!stripeInstance) {
-    stripeInstance = stripe(process.env.STRIPE_SECRET_KEY);
+const stripeInstances = {};
+
+const getStripe = async () => {
+  const { useTestApis } = await appConfigService.getAppConfig();
+  const { secretKey } = appConfigService.getStripeKeys(useTestApis);
+  const mode = useTestApis ? 'test' : 'live';
+
+  if (!secretKey) {
+    throw new Error(`Stripe secret key is required for ${mode} mode`);
   }
-  return stripeInstance;
+
+  if (!stripeInstances[mode]) {
+    stripeInstances[mode] = stripe(secretKey);
+  }
+
+  return stripeInstances[mode];
 };
 
 exports.handleStripeWebhook = async (req, res) => {
@@ -16,8 +26,9 @@ exports.handleStripeWebhook = async (req, res) => {
   console.log('📦 Body length:', req.body ? req.body.length : 0);
   
   const sig = req.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const stripeClient = getStripe();
+  const { useTestApis } = await appConfigService.getAppConfig();
+  const { webhookSecret: endpointSecret } = appConfigService.getStripeKeys(useTestApis);
+  const stripeClient = await getStripe();
 
   console.log('🔑 Webhook secret present:', !!endpointSecret);
   console.log('✍️ Signature present:', !!sig);

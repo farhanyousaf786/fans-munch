@@ -1,13 +1,16 @@
 // server/index.js
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const path = require('path');
+// Load server/.env first, then optional root .env overrides (Heroku/production)
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const currencyRoutes = require('./routes/currencyRoutes');
+const configRoutes = require('./routes/configRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const { initializeCurrencyScheduler } = require('./services/currencyService');
 
@@ -27,6 +30,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/currency', currencyRoutes);
+app.use('/api/config', configRoutes);
 
 // Initialize currency rate scheduler
 initializeCurrencyScheduler();

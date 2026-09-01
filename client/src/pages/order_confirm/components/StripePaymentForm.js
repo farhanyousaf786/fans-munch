@@ -1,17 +1,86 @@
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { showToast } from '../../../components/toast/ToastContainer';
 import { useTranslation } from '../../../i18n/i18n';
 import { buildPaymentRequest } from '../../../utils/stripePaymentRequest';
+import { useAppConfig } from '../../../contexts/AppConfigContext';
+import { STRIPE_TEST_PAYMENT_METHOD } from '../utils/testModeDefaults';
 
-// Debug logging for environment variable (remove after testing)
-console.log('[DEBUG] REACT_APP_STRIPE_PUBLISHABLE_KEY:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+// Test mode: auto-charge using Stripe's test Visa payment method (no manual card entry)
+const TestModeCardForm = forwardRef(({ clientSecret, onConfirmed }, ref) => {
+  const stripe = useStripe();
+  const [processing, setProcessing] = useState(false);
+  const { t } = useTranslation();
 
-// Initialize Stripe - only if publishable key is available
-const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
-  : null;
+  const handleConfirm = async () => {
+    if (!stripe || !clientSecret) {
+      showToast('Stripe not ready or missing payment intent', 'error', 3000);
+      return { ok: false, error: 'Stripe not ready' };
+    }
+
+    setProcessing(true);
+    try {
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: STRIPE_TEST_PAYMENT_METHOD,
+      });
+
+      if (error) {
+        showToast(`Payment failed: ${error.message}`, 'error', 4000);
+        return { ok: false, error: error.message, status: 'FAILED' };
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        showToast(t('order.test_payment_success'), 'success', 2500);
+        onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
+        return { ok: true, status: 'SUCCEEDED', intentId: paymentIntent.id };
+      }
+
+      showToast(`Payment status: ${paymentIntent.status}`, 'warning', 3000);
+      return { ok: false, status: paymentIntent.status, intentId: paymentIntent.id };
+    } catch (err) {
+      showToast(`Payment error: ${err.message}`, 'error', 4000);
+      return { ok: false, error: err.message, status: 'ERROR' };
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    async confirm() {
+      return handleConfirm();
+    },
+    isReady() {
+      return Boolean(stripe && clientSecret);
+    },
+  }));
+
+  return (
+    <div style={{ padding: 16, margin: '16px 0', border: '1px solid #fcd34d', borderRadius: 8, background: '#fffbeb' }}>
+      <div style={{ fontWeight: 600, marginBottom: 8, color: '#92400e' }}>
+        {t('order.test_mode_payment_title')}
+      </div>
+      <div style={{ fontSize: 14, color: '#78350f', marginBottom: 8 }}>
+        {t('order.test_mode_payment_desc')}
+      </div>
+      <div style={{
+        padding: '12px 14px',
+        border: '2px solid #fde68a',
+        borderRadius: 8,
+        background: '#ffffff',
+        fontFamily: 'monospace',
+        fontSize: 14,
+        color: '#374151',
+      }}>
+        {t('order.test_mode_card_preview')}
+      </div>
+      {processing && (
+        <div style={{ fontSize: 14, color: '#92400e', textAlign: 'center', marginTop: 12 }}>
+          {t('order.test_mode_processing')}
+        </div>
+      )}
+    </div>
+  );
+});
 
 // Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
 const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
@@ -306,6 +375,8 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
 // Main component wrapper with Stripe Elements provider
 const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
   const cardFormRef = useRef();
+  const { t } = useTranslation();
+  const { loading, stripePromise, paymentMode, useTestApis, keysConfigured, configMessage } = useAppConfig();
 
   // Forward ref methods to the inner CardForm
   useImperativeHandle(ref, () => ({
@@ -317,36 +388,50 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
     }
   }));
 
-  if (!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || !stripePromise) {
+  if (loading) {
+    return (
+      <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+          Loading payment configuration...
+        </div>
+      </div>
+    );
+  }
+
+  if (!stripePromise || !keysConfigured) {
     return (
       <div style={{ padding: 16, margin: '16px 0', border: '1px solid #fecaca', borderRadius: 8, background: '#fef2f2' }}>
         <div style={{ color: '#dc2626', fontWeight: 600 }}>
           Stripe Configuration Missing
         </div>
         <div style={{ color: '#7f1d1d', fontSize: 14, marginTop: 4 }}>
-          Please add your Stripe publishable key to the .env file:
-          <br />
-          <code style={{ background: '#f3f4f6', padding: '2px 4px', borderRadius: 3 }}>
-            REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
-          </code>
+          {configMessage || t('order.live_keys_missing')}
         </div>
       </div>
     );
   }
 
   return (
-    <Elements stripe={stripePromise}>
-      <CardForm 
-        ref={cardFormRef}
-        intentId={intentId}
-        clientSecret={clientSecret}
-        totalAmount={totalAmount}
-        currency={currency}
-        onConfirmed={onConfirmed}
-        isFormValid={isFormValid}
-        onWalletPaymentSuccess={onWalletPaymentSuccess}
-        validateBeforeWalletPay={validateBeforeWalletPay}
-      />
+    <Elements stripe={stripePromise} key={paymentMode}>
+      {useTestApis ? (
+        <TestModeCardForm
+          ref={cardFormRef}
+          clientSecret={clientSecret}
+          onConfirmed={onConfirmed}
+        />
+      ) : (
+        <CardForm 
+          ref={cardFormRef}
+          intentId={intentId}
+          clientSecret={clientSecret}
+          totalAmount={totalAmount}
+          currency={currency}
+          onConfirmed={onConfirmed}
+          isFormValid={isFormValid}
+          onWalletPaymentSuccess={onWalletPaymentSuccess}
+          validateBeforeWalletPay={validateBeforeWalletPay}
+        />
+      )}
     </Elements>
   );
 });

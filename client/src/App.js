@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { seatStorage, userStorage } from './utils/storage';
 import { ComboProvider } from './contexts/ComboContext';
+import { AppConfigProvider } from './contexts/AppConfigContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { I18nProvider } from './i18n/i18n';
 import LogRocket from 'logrocket';
@@ -146,6 +147,7 @@ function App() {
 
   return (
     <I18nProvider>
+      <AppConfigProvider>
       <ThemeProvider>
         <ComboProvider>
           <Router>
@@ -213,6 +215,7 @@ function App() {
         </Router>
       </ComboProvider>
       </ThemeProvider>
+      </AppConfigProvider>
     </I18nProvider>
   );
 }

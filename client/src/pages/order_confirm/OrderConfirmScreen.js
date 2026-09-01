@@ -23,10 +23,14 @@ import { convertPrice } from '../../utils/currencyConverter';
 import DeliveryTypeSelector from './components/DeliveryTypeSelector';
 import DeliveryNotesField from './components/DeliveryNotesField';
 import ConfirmHeader from './components/ConfirmHeader';
+import { useAppConfig } from '../../contexts/AppConfigContext';
+import { TEST_MODE_DEFAULTS, TEST_MODE_MANUAL_LOCATION_KEY } from './utils/testModeDefaults';
 
 const OrderConfirmScreen = () => {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
+  const { useTestApis, loading: configLoading } = useAppConfig();
+  const testDefaultsAppliedRef = useRef(false);
   
   const stadiumData = stadiumStorage.getSelectedStadium() || {};
   
@@ -368,6 +372,7 @@ const OrderConfirmScreen = () => {
       const u = userStorage.getUserData();
       if (u?.id) {
         fetchCustomerPhone(u.id).then(({ phone, exists }) => {
+          if (testDefaultsAppliedRef.current) return;
           setCustomerPhone(normalizePhone(phone));
           setHasPhoneInCustomer(!!exists && !!normalizePhone(phone));
           setEditingPhone(!exists || !normalizePhone(phone));
@@ -1030,6 +1035,67 @@ const OrderConfirmScreen = () => {
     // Re-validate to surface or clear phone errors live
     setTimeout(() => validateForm(), 0);
   };
+
+  // Auto-fill checkout fields when dashboard test mode is ON
+  useEffect(() => {
+    if (configLoading || !useTestApis || testDefaultsAppliedRef.current) return;
+
+    testDefaultsAppliedRef.current = true;
+
+    setCustomerPhone(TEST_MODE_DEFAULTS.phone);
+    setEditingPhone(true);
+    setHasPhoneInCustomer(false);
+
+    setFormData((prev) => ({
+      ...prev,
+      seatNo: prev.seatNo || TEST_MODE_DEFAULTS.seatNo,
+      row: prev.row || TEST_MODE_DEFAULTS.row,
+      stand: prev.stand || TEST_MODE_DEFAULTS.stand,
+      floor: prev.floor || TEST_MODE_DEFAULTS.floor,
+      room: prev.room || TEST_MODE_DEFAULTS.room,
+      entrance: prev.entrance || TEST_MODE_DEFAULTS.entrance,
+      seatDetails: prev.seatDetails || TEST_MODE_DEFAULTS.seatDetails,
+    }));
+
+    setDeliveryNotes((prev) => prev || TEST_MODE_DEFAULTS.deliveryNotes);
+    setTimeout(() => validateForm(), 100);
+  }, [configLoading, useTestApis]);
+
+  useEffect(() => {
+    if (!useTestApis || !shopData) return;
+
+    if (shopData.insideDelivery?.enabled) {
+      setDeliveryType('inside');
+      const locations = shopData.insideDelivery?.locations || [];
+      if (locations.length > 0) {
+        const first = typeof locations[0] === 'string' ? locations[0] : locations[0].name;
+        setDeliveryLocation(first);
+      } else {
+        setDeliveryLocation(TEST_MODE_MANUAL_LOCATION_KEY);
+      }
+    } else if (shopData.outsideDelivery?.enabled) {
+      setDeliveryType('outside');
+      const locations = shopData.outsideDelivery?.locations || [];
+      if (locations.length > 0) {
+        const first = typeof locations[0] === 'string' ? locations[0] : locations[0].name;
+        setDeliveryLocation(first);
+      }
+    }
+
+    setTimeout(() => validateForm(), 100);
+  }, [useTestApis, shopData]);
+
+  useEffect(() => {
+    if (!useTestApis || sectionsOptions.length === 0) return;
+
+    setFormData((prev) => {
+      if (prev.sectionId) return prev;
+      const first = sectionsOptions[0];
+      return { ...prev, sectionId: first.id, section: first.name };
+    });
+
+    setTimeout(() => validateForm(), 100);
+  }, [useTestApis, sectionsOptions]);
 
   const handleQrScanSuccess = (seatData) => {
     try {
