@@ -142,7 +142,12 @@ export const onboardingStorage = {
 
 // Stadium Selection
 export const stadiumStorage = {
-  setSelectedStadium: (stadium) => storage.setItem(STORAGE_KEYS.SELECTED_STADIUM, stadium),
+  setSelectedStadium: (stadium) => {
+    storage.setItem(STORAGE_KEYS.SELECTED_STADIUM, stadium);
+    try {
+      window.dispatchEvent(new CustomEvent('stadium-changed', { detail: stadium }));
+    } catch (_) {}
+  },
   getSelectedStadium: () => storage.getItem(STORAGE_KEYS.SELECTED_STADIUM),
   removeSelectedStadium: () => storage.removeItem(STORAGE_KEYS.SELECTED_STADIUM),
   hasSelectedStadium: () => storage.hasItem(STORAGE_KEYS.SELECTED_STADIUM),

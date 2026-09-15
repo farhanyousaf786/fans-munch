@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Colors, Gradients } from '../constants/colors';
+import { stadiumStorage } from '../utils/storage';
+import { applyThemeFromStadium, getDefaultTheme } from '../utils/stadiumTheme';
+import { refreshSelectedStadiumFromFirestore } from '../utils/stadiumSync';
 
 const ThemeContext = createContext();
 
@@ -12,28 +15,45 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState({
-    primary: Colors.primaryColor,
-    secondary: Colors.primaryDarkColor,
-    light: Colors.primaryLightColor,
-    background: Colors.bgColor,
-    appName: 'Food Munch'
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    const stadium = stadiumStorage.getSelectedStadium();
+    return stadium ? applyThemeFromStadium(stadium) : getDefaultTheme();
   });
 
-  // Initialize CSS custom properties on mount
+  const applyStadiumTheme = useCallback((stadium) => {
+    const theme = applyThemeFromStadium(stadium);
+    setCurrentTheme(theme);
+    return theme;
+  }, []);
+
   useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty('--theme-primary', currentTheme.primary);
-    root.style.setProperty('--theme-secondary', currentTheme.secondary);
-    root.style.setProperty('--theme-light', currentTheme.light);
-    root.style.setProperty('--theme-background', currentTheme.background);
-    root.style.setProperty('--theme-gradient', Gradients.primary);
-  }, [currentTheme]);
+    let cancelled = false;
+    (async () => {
+      const merged = await refreshSelectedStadiumFromFirestore();
+      if (cancelled) return;
+      if (merged) {
+        applyStadiumTheme(merged);
+      } else {
+        const stadium = stadiumStorage.getSelectedStadium();
+        if (stadium) applyStadiumTheme(stadium);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [applyStadiumTheme]);
+
+  useEffect(() => {
+    const onStadiumChanged = (event) => {
+      applyStadiumTheme(event.detail || null);
+    };
+    window.addEventListener('stadium-changed', onStadiumChanged);
+    return () => window.removeEventListener('stadium-changed', onStadiumChanged);
+  }, [applyStadiumTheme]);
 
   const value = {
     currentTheme,
+    applyStadiumTheme,
     Colors,
-    Gradients
+    Gradients,
   };
 
   return (

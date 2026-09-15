@@ -271,9 +271,9 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
                   <span>{food.getPreparationTimeText()}</span>
                 </div>
                 
-                {/* Shop name at bottom right */}
-                <div className="menu-shop-name">
-                  {getShopName(food.shopId)}
+                {/* Shop name footer */}
+                <div className="menu-card-footer">
+                  <span className="menu-shop-name">{getShopName(food.shopId)}</span>
                 </div>
                 </div>
               </div>

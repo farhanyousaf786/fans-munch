@@ -11,10 +11,12 @@ import {
   IoLockClosedOutline,
   IoBugOutline,
   IoSwapHorizontalOutline,
-  IoLogInOutline,
-  IoPersonAddOutline,
+  IoChevronForward,
+  IoLocationOutline,
 } from 'react-icons/io5';
 import { storageManager, userStorage } from '../../utils/storage';
+import useSelectedStadium from '../../hooks/useSelectedStadium';
+import { hasVenueBranding } from '../../utils/stadiumTheme';
 import { isCurrentUserAnonymous } from '../../utils/anonymousUserService';
 import orderRepository from '../../repositories/orderRepository';
 import { OrderStatus } from '../../models/Order';
@@ -23,6 +25,8 @@ import './ProfileScreen.css';
 const ProfileScreen = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { stadium: selectedStadium, displayName: venueName, logoUrl } = useSelectedStadium();
+  const isBranded = hasVenueBranding(selectedStadium);
   const [userData, setUserData] = useState(null);
   const [orderStats, setOrderStats] = useState({
     active: 0,
@@ -41,14 +45,12 @@ const ProfileScreen = () => {
     try {
       const user = userStorage.getUserData();
       setUserData(user);
-      console.log('👤 Loaded user data:', user);
     } catch (error) {
       console.error('❌ Error loading user data:', error);
       setUserData(null);
     }
   };
 
-  // Live order stats via stream
   useEffect(() => {
     const user = userStorage.getUserData();
     if (!user || !user.id) return;
@@ -71,36 +73,35 @@ const ProfileScreen = () => {
   }, []);
 
   const handleSignOut = () => {
-    console.log('🚺 User signing out...');
     storageManager.clearAllStorage();
     navigate('/auth');
-    console.log('✅ Sign out completed');
   };
 
   const handleRegisterFromGuest = () => {
-    console.log('📝 Guest user wants to register...');
     storageManager.clearAllStorage();
     navigate('/auth?mode=register', { replace: true });
   };
 
   const handleLoginFromGuest = () => {
-    console.log('🔑 Guest user wants to login...');
     storageManager.clearAllStorage();
     navigate('/auth?mode=login', { replace: true });
   };
 
-  const handleSignIn = () => {
-    navigate('/auth?mode=login');
-  };
-
-  const handleSignUp = () => {
-    navigate('/auth?mode=register');
-  };
+  const handleSignIn = () => navigate('/auth?mode=login');
+  const handleSignUp = () => navigate('/auth?mode=register');
 
   const isAuthenticated = !!(userData && userData.id);
-  const isVisitor = !isAuthenticated; // not logged in and not guest session
+  const isVisitor = !isAuthenticated;
+  const needsAuth = isVisitor || isAnonymous;
 
-  // Full settings for real logged-in users
+  const displayName = isAuthenticated && !isAnonymous
+    ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
+    : (userData?.displayName || (isVisitor ? t('profile.visitor') : t('profile.guest')));
+
+  const displaySubtitle = isAuthenticated && !isAnonymous
+    ? (userData?.email || '')
+    : t('profile.guest_subtitle');
+
   const authenticatedSettings = [
     { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
     { icon: IoSwapHorizontalOutline, title: t('profile.currency') || 'Currency', subtitle: t('profile.currency_sub') || 'Choose your currency', action: () => navigate('/settings/currency') },
@@ -111,72 +112,78 @@ const ProfileScreen = () => {
     { icon: IoBugOutline, title: t('profile.report'), subtitle: t('profile.report_sub'), action: () => navigate('/settings/report') },
   ];
 
-  // Guest (anonymous checkout) — keep essentials + auth CTAs in hero
   const guestSettings = [
     { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
     { icon: IoSwapHorizontalOutline, title: t('profile.currency') || 'Currency', subtitle: t('profile.currency_sub') || 'Choose your currency', action: () => navigate('/settings/currency') },
     { icon: IoLockClosedOutline, title: t('profile.privacy'), subtitle: t('profile.privacy_sub'), action: () => navigate('/settings/privacy') },
   ];
 
-  // Visitor (no login, no guest) — only essentials + Sign in / Sign up
-  const visitorSettings = [
-    { icon: IoLogInOutline, title: t('profile.sign_in'), subtitle: t('profile.sign_in_sub'), action: handleSignIn, highlight: true },
-    { icon: IoPersonAddOutline, title: t('profile.sign_up'), subtitle: t('profile.sign_up_sub'), action: handleSignUp, highlight: true },
-    { icon: IoLanguageOutline, title: t('profile.language'), subtitle: t('profile.language_sub'), action: () => navigate('/settings/language') },
-    { icon: IoSwapHorizontalOutline, title: t('profile.currency') || 'Currency', subtitle: t('profile.currency_sub') || 'Choose your currency', action: () => navigate('/settings/currency') },
-  ];
-
-  const settingsOptions = isVisitor
-    ? visitorSettings
-    : (isAnonymous ? guestSettings : authenticatedSettings);
+  const settingsOptions = needsAuth ? guestSettings : authenticatedSettings;
 
   return (
-    <div className="profile-screen">
-      <div className="profile-hero">
+    <div className={`profile-screen ${isBranded ? 'profile-screen--branded' : ''}`}>
+      <header className={`profile-hero ${isBranded ? 'profile-hero--branded' : ''}`}>
         <div className="hero-overlay" />
-        <div className="hero-content">
-          {isAuthenticated && !isAnonymous ? (
-            <div className="auth-hero">
-              <div className="profile-avatar small auth-avatar">
-                {userData?.photoUrl ? (
-                  <img src={userData.photoUrl} alt="Profile" className="avatar-image" />
-                ) : (
-                  <IoPersonOutline className="avatar-icon" />
-                )}
-              </div>
-              <div className="auth-name">{userData ? `${userData.firstName} ${userData.lastName}` : ''}</div>
-              <div className="auth-email">{userData?.email || ''}</div>
-              <button className="logout-chip" onClick={handleSignOut}><IoLogOutOutline/> {t('profile.logout')}</button>
-            </div>
-          ) : isAuthenticated && isAnonymous ? (
-            <div className="guest-hero">
-              <div className="profile-avatar small guest-avatar">
-                <IoPersonOutline className="avatar-icon" />
-              </div>
-              <div className="guest-name">{userData?.displayName || t('profile.guest')}</div>
-              <div className="guest-subtitle">{t('profile.guest_subtitle')}</div>
-              <div className="guest-buttons">
-                <button className="guest-btn primary" onClick={handleRegisterFromGuest}>{t('profile.sign_up')}</button>
-                <button className="guest-btn secondary" onClick={handleLoginFromGuest}>{t('profile.sign_in')}</button>
-              </div>
-            </div>
-          ) : (
-            <div className="guest-hero">
-              <div className="profile-avatar small guest-avatar">
-                <IoPersonOutline className="avatar-icon" />
-              </div>
-              <div className="guest-name">{t('profile.visitor')}</div>
-              <div className="guest-subtitle">{t('profile.visitor_subtitle')}</div>
-              <div className="guest-buttons">
-                <button className="guest-btn primary" onClick={handleSignUp}>{t('profile.sign_up')}</button>
-                <button className="guest-btn secondary" onClick={handleSignIn}>{t('profile.sign_in')}</button>
-              </div>
-            </div>
+
+        {selectedStadium && (
+          <button
+            type="button"
+            className="profile-venue-row"
+            onClick={() => navigate('/stadium-selection')}
+          >
+            {logoUrl ? (
+              <img src={logoUrl} alt="" className="profile-venue-row-logo" />
+            ) : (
+              <span className="profile-venue-row-icon"><IoLocationOutline /></span>
+            )}
+            <span className="profile-venue-row-name">{venueName || t('home.select_stadium')}</span>
+            <IoChevronForward className="profile-venue-row-chevron" />
+          </button>
+        )}
+
+        <div className="profile-user-row">
+          <div className="profile-avatar-sm">
+            {userData?.photoUrl && !isAnonymous ? (
+              <img src={userData.photoUrl} alt="" className="avatar-image" />
+            ) : (
+              <IoPersonOutline className="avatar-icon-sm" />
+            )}
+          </div>
+          <div className="profile-user-meta">
+            <h1 className="profile-user-name">{displayName}</h1>
+            {displaySubtitle && <p className="profile-user-sub">{displaySubtitle}</p>}
+          </div>
+          {isAuthenticated && !isAnonymous && (
+            <button type="button" className="profile-logout-icon" onClick={handleSignOut} aria-label={t('profile.logout')}>
+              <IoLogOutOutline />
+            </button>
           )}
         </div>
-      </div>
+      </header>
 
       <div className="profile-container">
+        {needsAuth && (
+          <div className="profile-auth-card">
+            <p className="profile-auth-copy">{t('profile.visitor_subtitle')}</p>
+            <div className="profile-auth-actions">
+              <button
+                type="button"
+                className="profile-auth-btn primary"
+                onClick={isAnonymous ? handleRegisterFromGuest : handleSignUp}
+              >
+                {t('profile.sign_up')}
+              </button>
+              <button
+                type="button"
+                className="profile-auth-btn secondary"
+                onClick={isAnonymous ? handleLoginFromGuest : handleSignIn}
+              >
+                {t('profile.sign_in')}
+              </button>
+            </div>
+          </div>
+        )}
+
         {isAuthenticated && !isAnonymous && (
           <div className="stats-card">
             <div className="stats-col">
@@ -193,24 +200,27 @@ const ProfileScreen = () => {
 
         <div className="settings-section">
           <div className="section-header">{t('profile.settings')}</div>
-          <div className="settings-list">
+          <div className="settings-list settings-list--compact">
             {settingsOptions.map((option, idx) => {
               const Icon = option.icon;
               return (
-                <div
+                <button
+                  type="button"
                   key={idx}
-                  className={`settings-item ${option.highlight ? 'settings-item--highlight' : ''}`}
+                  className="settings-item"
                   onClick={option.action}
                 >
                   <div className="settings-item-left">
-                    <Icon className="settings-icon" />
+                    <span className="settings-icon-wrap">
+                      <Icon className="settings-icon" />
+                    </span>
                     <div className="settings-text">
                       <div className="settings-title">{option.title}</div>
                       <div className="settings-subtitle">{option.subtitle}</div>
                     </div>
                   </div>
-                  <div className="settings-arrow">›</div>
-                </div>
+                  <IoChevronForward className="settings-chevron" />
+                </button>
               );
             })}
           </div>

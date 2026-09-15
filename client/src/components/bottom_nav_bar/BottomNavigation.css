@@ -36,7 +36,7 @@
 }
 
 .nav-item:hover {
-  background: rgba(61, 112, 255, 0.05);
+  background: color-mix(in srgb, var(--theme-primary, #3D70FF) 6%, transparent);
 }
 
 .nav-item.active {
@@ -62,8 +62,9 @@
   transition: color 0.2s ease;
 }
 
-.nav-icon .icon.active {
-  color: #3D70FF;
+.nav-icon .icon.active,
+.nav-item.active .nav-icon .icon {
+  color: var(--theme-primary, #3D70FF);
 }
 
 .nav-label {

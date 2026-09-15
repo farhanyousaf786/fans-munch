@@ -20,7 +20,7 @@
 .see-all-button {
   background: none;
   border: none;
-  color: #3D70FF;
+  color: var(--theme-primary, #3D70FF);
   font-weight: 600;
   padding: 6px 8px;
   border-radius: 8px;
@@ -72,9 +72,14 @@
   position: relative;
 }
 
-/* Combo card with blue gradient background */
+/* Combo card with venue theme gradient at bottom */
 .menu-card-grid.combo-card {
-  background: linear-gradient(to top, rgba(61, 112, 255, 0.15) 0%, rgba(255, 255, 255, 0.9) 30%, #ffffff 100%);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--theme-primary, #3D70FF) 18%, transparent) 0%,
+    rgba(255, 255, 255, 0.95) 28%,
+    #ffffff 100%
+  );
 }
 
 .menu-card-grid:hover {
@@ -138,7 +143,7 @@
 }
 
 .food-type-badge {
-  background-color: rgba(61, 112, 255, 0.9);
+  background-color: color-mix(in srgb, var(--theme-primary, #3D70FF) 90%, transparent);
   color: white;
   padding: 2px 6px;
   border-radius: 8px;
@@ -168,13 +173,13 @@
 }
 
 .combo-image:first-child {
-  border-right: 2px solid #3D70FF;
+  border-right: 2px solid var(--theme-primary, #3D70FF);
 }
 
 /* RTL support - fix divider line position for Hebrew */
 [dir="rtl"] .combo-image:first-child {
   border-right: none;
-  border-left: 2px solid #3D70FF;
+  border-left: 2px solid var(--theme-primary, #3D70FF);
 }
 
 .combo-badge {
@@ -195,11 +200,17 @@
 
 /* Content section - grid layout */
 .menu-content-grid {
-  padding: 12px;
+  padding: 12px 0 0;
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 0;
+}
+
+.menu-content-grid > :not(.menu-card-footer) {
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .menu-name-grid {
@@ -215,8 +226,8 @@
 
 .menu-price-grid {
   font-size: 14px;
-  font-weight: 600;
-  color: #3D70FF;
+  font-weight: 700;
+  color: var(--theme-primary, #3D70FF);
   margin: 0 0 8px 0;
 }
 
@@ -226,17 +237,27 @@
   gap: 4px;
   color: #666;
   font-size: 11px;
+  margin-bottom: 8px;
 }
 
-/* Shop name at bottom right */
+.menu-card-footer {
+  margin-top: auto;
+  background: var(--theme-gradient, linear-gradient(135deg, #3D70FF 0%, #3161EA 100%));
+  padding: 8px 12px;
+  border-radius: 0 0 16px 16px;
+}
+
 .menu-shop-name {
-  color: #999;
+  color: #fff;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 700;
   text-align: right;
-  margin-top: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .time-icon-small {
@@ -248,7 +269,7 @@
   position: absolute;
   bottom: 8px;
   right: 8px;
-  background-color: #3D70FF;
+  background-color: var(--theme-primary, #3D70FF);
   color: white;
   border: none;
   border-radius: 50%;
@@ -259,13 +280,13 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(61, 112, 255, 0.3);
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--theme-primary, #3D70FF) 35%, transparent);
 }
 
 .add-to-cart-btn-horizontal:hover {
-  background-color: #3161EA;
+  background-color: var(--theme-primary-dark, #3161EA);
   transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(61, 112, 255, 0.4);
+  box-shadow: 0 4px 8px color-mix(in srgb, var(--theme-primary, #3D70FF) 45%, transparent);
 }
 
 .add-icon-small {

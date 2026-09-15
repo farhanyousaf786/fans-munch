@@ -1,6 +1,7 @@
 {
   "home": {
     "select_stadium": "Venue Selection",
+    "venue": "Venue",
     "greeting": "Good Morning,",
     "greeting_morning": "Good Morning,",
     "greeting_afternoon": "Good Afternoon,",

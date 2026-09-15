@@ -13,6 +13,10 @@ export class Stadium {
     imageUrl = '',
     teams = [],
     color = '#3D70FF',
+    secondaryColor = '',
+    logoUrl = '',
+    bannerUrl = '',
+    brandName = '',
     floors = 0,
     availableSeats = false,
     availableSections = false,
@@ -34,7 +38,11 @@ export class Stadium {
     this.capacity = capacity;
     this.imageUrl = imageUrl;
     this.teams = teams; // Array of team names
-    this.color = color; // Stadium/team primary color
+    this.color = color;
+    this.secondaryColor = secondaryColor;
+    this.logoUrl = logoUrl;
+    this.bannerUrl = bannerUrl;
+    this.brandName = brandName;
     this.floors = typeof floors === 'number' ? floors : parseInt(floors, 10) || 0;
     this.availableSeats = !!availableSeats;
     this.availableSections = !!availableSections;
@@ -65,6 +73,10 @@ export class Stadium {
       imageUrl: data.imageUrl || '',
       teams: data.teams || [],
       color: data.color || '#3D70FF',
+      secondaryColor: data.secondaryColor || '',
+      logoUrl: data.logoUrl || '',
+      bannerUrl: data.bannerUrl || '',
+      brandName: data.brandName || '',
       floors: data.floors || 0,
       availableSeats: data.availableSeats,
       availableSections: data.availableSections,
@@ -95,6 +107,10 @@ export class Stadium {
       imageUrl: this.imageUrl,
       teams: this.teams,
       color: this.color,
+      secondaryColor: this.secondaryColor,
+      logoUrl: this.logoUrl,
+      bannerUrl: this.bannerUrl,
+      brandName: this.brandName,
       floors: this.floors,
       availableSeats: this.availableSeats,
       availableSections: this.availableSections,

@@ -11,6 +11,7 @@ import {
 } from 'react-icons/md';
 import './CategoryList.css';
 import { useTranslation } from '../../../../i18n/i18n';
+import { useTheme } from '../../../../context/ThemeContext';
 import { db } from '../../../../config/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -19,6 +20,8 @@ const CategoryList = ({ selectedCategory: selectedCategoryProp = 'all', onSelect
   const selectedCategory = selectedCategoryProp ?? selectedCategoryState;
   const [categories, setCategories] = useState([]);
   const { t, lang } = useTranslation();
+  const { currentTheme } = useTheme();
+  const themeColor = currentTheme?.primary || '#3D70FF';
 
   // Load categories from Firestore
   useEffect(() => {
@@ -34,27 +37,25 @@ const CategoryList = ({ selectedCategory: selectedCategoryProp = 'all', onSelect
             id: data?.docId || doc.id,
             name,
             icon, // emoji string
-            color: '#3D70FF', // default color; could be extended via Firestore later
+            color: themeColor,
           };
         });
-        // Prepend the synthetic 'All' category
         const allCat = {
           id: 'all',
           name: t('home.cat_all'),
           icon: MdRestaurant,
-          color: '#3D70FF',
+          color: themeColor,
         };
         if (!cancelled) setCategories([allCat, ...items]);
       } catch (e) {
         console.warn('[CategoryList] Failed to load categories:', e?.message || e);
-        // Fallback to just 'All' if Firestore fails
         setCategories([
-          { id: 'all', name: t('home.cat_all'), icon: MdRestaurant, color: '#3D70FF' },
+          { id: 'all', name: t('home.cat_all'), icon: MdRestaurant, color: themeColor },
         ]);
       }
     })();
     return () => { cancelled = true; };
-  }, [db, lang, t]);
+  }, [lang, t, themeColor]);
 
   const handleCategorySelect = (categoryId) => {
     // Update internal state only if uncontrolled

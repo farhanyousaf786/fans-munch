@@ -61,16 +61,16 @@
 .category-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-color: #3D70FF;
+  border-color: var(--theme-primary, #3D70FF);
 }
 
 .category-card.selected {
-  border-color: #3D70FF;
-  background-color: #F4F7FF;
+  border-color: var(--theme-primary, #3D70FF);
+  background-color: color-mix(in srgb, var(--theme-primary, #3D70FF) 8%, #ffffff);
 }
 
 .category-card:focus-visible {
-  box-shadow: 0 0 0 2px rgba(61, 112, 255, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary, #3D70FF) 25%, transparent);
 }
 
 .category-icon-wrapper {
@@ -113,11 +113,11 @@
 }
 
 .category-card.selected .category-name {
-  color: #3D70FF;
+  color: var(--theme-primary, #3D70FF);
 }
 
 .category-card.selected .category-count {
-  color: #5A84F8;
+  color: var(--theme-light, #5A84F8);
 }
 
 /* Mobile responsiveness */

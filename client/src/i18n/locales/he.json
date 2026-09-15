@@ -1,6 +1,7 @@
 {
   "home": {
     "select_stadium": "בחירת מקום",
+    "venue": "מקום",
     "greeting": "בוקר טוב,",
     "greeting_morning": "בוקר טוב,",
     "greeting_afternoon": "צהריים טובים,",

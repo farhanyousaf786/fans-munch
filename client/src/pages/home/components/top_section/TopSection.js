@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdShoppingCart, MdKeyboardArrowRight, MdKeyboardArrowLeft } from 'react-icons/md';
-import { stadiumStorage, userStorage } from '../../../../utils/storage';
+import { MdShoppingCart, MdKeyboardArrowRight, MdKeyboardArrowLeft, MdLocationOn } from 'react-icons/md';
+import { userStorage } from '../../../../utils/storage';
+import useSelectedStadium from '../../../../hooks/useSelectedStadium';
+import { hasVenueBranding } from '../../../../utils/stadiumTheme';
 import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
 import { useTranslation } from '../../../../i18n/i18n';
 
 const TopSection = (props) => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStadium, setSelectedStadium] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [ready, setReady] = useState(false);
+  const { stadium: selectedStadium, displayName, logoUrl } = useSelectedStadium();
   const { t, lang } = useTranslation();
-  
-  // Compute dynamic greeting based on local time
+  const isBranded = hasVenueBranding(selectedStadium);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return t('home.greeting_morning');
@@ -23,76 +25,87 @@ const TopSection = (props) => {
   };
 
   useEffect(() => {
-    // Load selected stadium using storage utility
-    const stadium = stadiumStorage.getSelectedStadium();
-    if (stadium) {
-      setSelectedStadium(stadium);
-    }
-
-    // Load user data
-    const user = userStorage.getUserData();
-    setUserData(user);
+    setUserData(userStorage.getUserData());
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
-  const handleCartClick = () => {
-    navigate('/cart');
-  };
-
-  const handleStadiumClick = () => {
-    navigate('/stadium-selection');
-  };
+  const handleCartClick = () => navigate('/cart');
+  const handleStadiumClick = () => navigate('/stadium-selection');
 
   const handleSearchChange = (query) => {
-    setSearchQuery(query);
-    // The search is now handled by the parent component
-    if (props.onSearch) {
-      props.onSearch(query);
-    }
+    if (props.onSearch) props.onSearch(query);
   };
 
-  const handleFilterClick = () => {
-    // Handle filter button click if needed
-    console.log('Filter button clicked');
-  };
+  const userName = userData ? `${userData.firstName} ${userData.lastName}!` : 'Guest!';
+  const venueLabel = selectedStadium ? displayName : t('home.select_stadium');
+  const sectionClass = [
+    'home-top-section',
+    lang === 'he' ? 'rtl' : '',
+    isBranded ? 'home-top-section--branded' : '',
+    ready ? 'is-ready' : '',
+  ].filter(Boolean).join(' ');
 
   return (
-    <div className={`home-top-section ${lang === 'he' ? 'rtl' : ''}`} dir={lang === 'he' ? 'rtl' : 'ltr'}>
-      {/* Header with location and cart */}
-      <div className="home-header">
-        <div className="stadium-selector" onClick={handleStadiumClick}>
-          <span className="loc-badge">
-            <img src="/assets/icons/location.png" alt="Location" className="location-icon" />
-          </span>
-          <div className="stadium-info">
-            <div className="stadium-name-container">
-              <span className="stadium-name">
-                {selectedStadium ? selectedStadium.name : t('home.select_stadium')}
-              </span>
-              {lang === 'he' ? (
-                <MdKeyboardArrowLeft size={20} className="dropdown-arrow" />
-              ) : (
-                <MdKeyboardArrowRight size={20} className="dropdown-arrow" />
-              )}
+    <div className={sectionClass} dir={lang === 'he' ? 'rtl' : 'ltr'}>
+      {isBranded && <div className="branded-bg-shapes" aria-hidden="true" />}
+
+      <div className="home-header anim-item anim-1">
+        {!isBranded ? (
+          <div className="stadium-selector" onClick={handleStadiumClick}>
+            <span className="loc-badge">
+              <img src="/assets/icons/location.png" alt="Location" className="location-icon" />
+            </span>
+            <div className="stadium-info">
+              <span className="stadium-label">{t('home.venue')}</span>
+              <div className="stadium-name-container">
+                <span className="stadium-name">{venueLabel}</span>
+                {lang === 'he' ? (
+                  <MdKeyboardArrowLeft size={18} className="dropdown-arrow" />
+                ) : (
+                  <MdKeyboardArrowRight size={18} className="dropdown-arrow" />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <button className="cart-button" onClick={handleCartClick}>
-          <MdShoppingCart size={24} />
+        ) : (
+          <button type="button" className="branded-venue-pill branded-venue-pill--header" onClick={handleStadiumClick}>
+            <MdLocationOn size={16} />
+            <span className="branded-venue-name">{displayName}</span>
+            {lang === 'he' ? <MdKeyboardArrowLeft size={18} /> : <MdKeyboardArrowRight size={18} />}
+          </button>
+        )}
+        <button
+          className={`cart-button ${isBranded ? 'cart-button--branded' : ''}`}
+          onClick={handleCartClick}
+          aria-label="Cart"
+        >
+          <MdShoppingCart size={22} />
         </button>
       </div>
 
-      {/* Welcome Message */}
-      <div className="welcome-message">
-        <h1>{getGreeting()}</h1>
-        <h2>{userData ? `${userData.firstName} ${userData.lastName}!` : 'Guest!'}</h2>
-      </div>
+      {isBranded ? (
+        <div className="branded-hero anim-item anim-2">
+          <div className="branded-logo-shell">
+            <img src={logoUrl} alt="" className="branded-logo" />
+          </div>
+          <div className="branded-greeting">
+            <p className="branded-greeting-line">{getGreeting()}</p>
+            <h2 className="branded-user-name">{userName}</h2>
+          </div>
+        </div>
+      ) : (
+        <div className="welcome-message anim-item anim-2">
+          <div className="welcome-text">
+            <h1>{getGreeting()}</h1>
+            <h2>{userName}</h2>
+            {selectedStadium && <p className="welcome-venue-name">{displayName}</p>}
+          </div>
+        </div>
+      )}
 
-      {/* Search Bar */}
-      <div className="search-container">
-        <SearchFilterWidget 
-          onChanged={handleSearchChange}
-          onFilterTap={handleFilterClick}
-        />
+      <div className="search-container anim-item anim-3">
+        <SearchFilterWidget onChanged={handleSearchChange} onFilterTap={() => {}} />
       </div>
     </div>
   );
