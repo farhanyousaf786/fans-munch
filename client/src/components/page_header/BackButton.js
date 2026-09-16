@@ -9,7 +9,7 @@ import './PageBackHeader.css';
  */
 const BackButton = ({
   onClick,
-  fallbackTo = '/profile',
+  fallbackTo = '/home',
   className = '',
   variant = 'default', // default | light | hero
   ariaLabel = 'Back',
@@ -29,7 +29,7 @@ const BackButton = ({
         return;
       }
     } catch (_) {}
-    navigate(fallbackTo);
+    navigate(fallbackTo || '/home');
   };
 
   const classes = ['fm-back-btn', variant !== 'default' ? `fm-back-btn--${variant}` : '', className]

@@ -1,7 +1,6 @@
 import React from 'react';
 import './AboutAppScreen.css';
 import { MdRestaurantMenu, MdShoppingCart, MdPayment, MdLocalShipping, MdCheckCircle } from 'react-icons/md';
-import { FaApple, FaGooglePlay } from 'react-icons/fa';
 import BackButton from '../../components/page_header/BackButton';
 
 const AboutAppScreen = () => {

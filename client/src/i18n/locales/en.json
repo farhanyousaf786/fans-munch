@@ -52,7 +52,15 @@
     "place_order": "Place Order",
     "mixed_shops_error": "Items in your cart are from different shops. Please order from one shop at a time.",
     "mixed_shops_detected": "Items from different shops detected",
-    "price": "Price"
+    "replace_cart_title": "Replace cart items?",
+    "replace_cart_message": "Your cart has items from another shop. Clear the cart and add this item instead?",
+    "replace_cart_confirm": "Replace cart",
+    "replace_cart_cancel": "Keep current cart",
+    "added_suffix": "added to cart!",
+    "add_failed": "Failed to add item to cart",
+    "price": "Price",
+    "clear_cart": "Clear cart",
+    "clear_cart_confirm": "Remove all items from your cart?"
   },
   "food": {
     "description": "Description",

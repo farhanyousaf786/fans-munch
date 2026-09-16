@@ -12,7 +12,7 @@ import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 
 const TipScreen = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [selectedTipAmount, setSelectedTipAmount] = useState(0);
   const [tipAmount, setTipAmount] = useState(0);
   const [orderTotal, setOrderTotal] = useState(0);
@@ -86,7 +86,7 @@ const TipScreen = () => {
     navigate('/order/confirm');
   };
 
-  const handleBack = () => navigate(-1);
+  const handleBack = () => navigate('/cart', { replace: true });
 
   // Get cart currency for conversion
   const getCartCurrency = () => {
@@ -98,7 +98,7 @@ const TipScreen = () => {
   };
 
   return (
-    <div className="tip-screen">
+    <div className="tip-screen" dir={lang === 'he' ? 'rtl' : 'ltr'}>
       <div className="tip-container">
         {/* Header */}
         <TipHeader onBack={handleBack} />

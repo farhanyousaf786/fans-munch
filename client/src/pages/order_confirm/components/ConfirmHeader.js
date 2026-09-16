@@ -8,7 +8,7 @@ const ConfirmHeader = ({ title }) => {
 
   return (
     <div className="order-confirm-header">
-      <BackButton fallbackTo="/tip" />
+      <BackButton fallbackTo="/tip" variant="default" />
       <h1 className="order-confirm-title">{resolvedTitle}</h1>
     </div>
   );

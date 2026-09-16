@@ -30,6 +30,7 @@ import Footer from './components/footer/Footer';
 import MenuListPage from './pages/menu/MenuListPage';
 import ToastContainer from './components/toast/ToastContainer';
 import ScrollToTop from './components/ScrollToTop';
+import AppBackHandler from './components/AppBackHandler';
 // Settings screens
 import AboutAppScreen from './pages/settings/AboutAppScreen';
 import TermsScreen from './pages/settings/TermsScreen';
@@ -152,6 +153,7 @@ function App() {
         <ComboProvider>
           <Router>
             <ScrollToTop />
+            <AppBackHandler />
             <div className="app">
               <Routes>
                 {/* Landing page goes to Home regardless of auth - preserve query params */}

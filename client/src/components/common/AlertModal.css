@@ -135,6 +135,12 @@
 .alert-modal-footer {
     display: flex;
     justify-content: center;
+    gap: 10px;
+}
+
+.alert-modal-footer--split .alert-modal-button {
+    width: auto;
+    flex: 1;
 }
 
 .alert-modal-button {
@@ -147,6 +153,12 @@
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.alert-modal-button.secondary {
+    background: #f1f5f9;
+    color: #334155;
+    box-shadow: none;
 }
 
 .alert-modal-button.info {

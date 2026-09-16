@@ -39,7 +39,10 @@ exports.createPaymentIntent = async (req, res) => {
       shopConfig,           // ✅ NEW: Shop configuration with payment-options
       cartItems = [],       // ✅ NEW: Cart items with COG
       deliveryFee = 0,
-      tipAmount = 0
+      tipAmount = 0,
+      customerEmail = null,
+      customerName = null,
+      stripeCustomerId = null,
     } = req.body;
     
     console.log(`💰 Total Amount: ${amount} ${currency.toUpperCase()}`);
@@ -168,6 +171,35 @@ exports.createPaymentIntent = async (req, res) => {
         stripeFeeTotal: paymentBreakdown.stripeFees.total.toFixed(2)
       },
     };
+
+    // Attach Stripe Customer so Payment Element can offer Link / saved cards
+    try {
+      let customerId = stripeCustomerId || null;
+      if (!customerId && customerEmail) {
+        const existing = await stripeClient.customers.list({
+          email: String(customerEmail).trim().toLowerCase(),
+          limit: 1,
+        });
+        if (existing.data?.[0]?.id) {
+          customerId = existing.data[0].id;
+        } else {
+          const created = await stripeClient.customers.create({
+            email: String(customerEmail).trim().toLowerCase(),
+            name: customerName || undefined,
+            metadata: { source: 'fans-munch-app' },
+          });
+          customerId = created.id;
+        }
+      }
+      if (customerId) {
+        paymentIntentData.customer = customerId;
+        // Avoid setup_future_usage with Connect destination charges (can fail intent create).
+        // Customer + Payment Element still enables Link / returning-customer UX.
+        console.log('👤 [STRIPE CUSTOMER] Attached customer for Link/wallets:', customerId);
+      }
+    } catch (customerErr) {
+      console.warn('[Stripe] Customer attach skipped:', customerErr?.message || customerErr);
+    }
     
     // ✅ Handle payment routing based on model
     if (model === '3-way' && hotelId) {

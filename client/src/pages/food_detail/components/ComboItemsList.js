@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ComboItemsList.css';
 import { useTranslation } from '../../../i18n/i18n';
 import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
+import { getFoodImageUrl, getLocalizedName, getLocalizedDescription } from '../../../utils/localization';
 
 const ComboItemsList = ({ 
   comboItems, 
@@ -13,12 +14,11 @@ const ComboItemsList = ({
   onOptionToggle
 }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   if (!isCombo || !comboItems || comboItems.length === 0) return null;
 
   const handleItemClick = (item) => {
-    // Navigate to individual item detail page
     navigate(`/food/${item.id}`);
   };
 
@@ -33,7 +33,6 @@ const ComboItemsList = ({
     <div className="section">
       <h2 className="section-title">{t('food.combo_includes')}</h2>
       
-      {/* Price comparison */}
       <div className="combo-price-comparison">
         <div className="price-row">
           <span className="price-label">{t('food.individual_items_total')}</span>
@@ -56,6 +55,9 @@ const ComboItemsList = ({
           const itemOptions = item.customization?.options || [];
           const instanceKey = `${item.id}_${index}`;
           const selectedItemOptions = comboSelections[instanceKey] || [];
+          const displayName = getLocalizedName(item, lang, item.name || '');
+          const displayDescription = getLocalizedDescription(item, lang, item.description || '');
+          const imageUrl = getFoodImageUrl(item);
 
           return (
             <div key={instanceKey} className="combo-item-container">
@@ -64,27 +66,24 @@ const ComboItemsList = ({
                 onClick={() => handleItemClick(item)}
               >
                 <div className="combo-item-image">
-                  {item.images && item.images.length > 0 ? (
-                    <img 
-                      src={item.images[0]} 
-                      alt={item.name}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div className="combo-item-placeholder" style={{ display: item.images?.length > 0 ? 'none' : 'flex' }}>
-                    🍽️
-                  </div>
+                  <img 
+                    src={imageUrl} 
+                    alt={displayName}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/assets/images/on-boarding-1.png`;
+                    }}
+                  />
                 </div>
                 <div className="combo-item-details">
-                  <h3 className="combo-item-name">{item.name}</h3>
-                  <p className="combo-item-description">{item.description}</p>
+                  <h3 className="combo-item-name">{displayName}</h3>
+                  {displayDescription ? (
+                    <p className="combo-item-description">{displayDescription}</p>
+                  ) : null}
                   <div className="combo-item-meta">
                     <span className="combo-item-price">{formatPriceWithCurrency(item.price, item.currency || foodCurrency)}</span>
                     {item.preparationTime && (
-                      <span className="combo-item-time">{item.preparationTime} min</span>
+                      <span className="combo-item-time">{item.preparationTime} {t('food.min')}</span>
                     )}
                   </div>
                 </div>
@@ -93,10 +92,9 @@ const ComboItemsList = ({
                 </div>
               </div>
 
-              {/* Individual Item Options */}
               {itemOptions.length > 0 && (
                 <div className="combo-item-options">
-                  <h4 className="options-title">{t('food.options_for')} {item.name}</h4>
+                  <h4 className="options-title">{t('food.options_for')} {displayName}</h4>
                   <div className="options-grid">
                     {itemOptions.map((option, optIdx) => {
                       const isSelected = selectedItemOptions.some(
@@ -129,9 +127,6 @@ const ComboItemsList = ({
             </div>
           );
         })}
-      </div>
-      <div className="combo-note">
-        <p>Click on any item to view its details. Items are prepared together and served as a combo at the combo price above.</p>
       </div>
     </div>
   );

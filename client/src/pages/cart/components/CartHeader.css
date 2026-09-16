@@ -54,6 +54,30 @@
 
 .cart-back-button svg { font-size: 22px; }
 
+.cart-clear-button {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  inset-inline-end: 16px;
+  z-index: 3;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.cart-clear-button:active {
+  transform: scale(0.97);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .cart-hero {

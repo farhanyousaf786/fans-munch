@@ -3,17 +3,18 @@ import { MdStar, MdAccessTime } from 'react-icons/md';
 import './FoodInfo.css';
 import { useTranslation } from '../../../i18n/i18n';
 import { formatPriceWithCurrency } from '../../../utils/currencyConverter';
+import { getLocalizedName } from '../../../utils/localization';
 
 const FoodInfo = ({ food, rating, testimonials, orderCount }) => {
-  const { t } = useTranslation();
-  // Check if this is an offer item with discount
+  const { t, lang } = useTranslation();
   const hasDiscount = food?.discountPercentage && food.discountPercentage > 0;
   const discountedPrice = hasDiscount ? food.price * (1 - food.discountPercentage / 100) : food?.price;
+  const displayName = getLocalizedName(food, lang, food?.name || '');
   
   return (
     <div className="food-info-section">
       <div className="food-title-row">
-        <h1 className="food-name">{food?.name}</h1>
+        <h1 className="food-name">{displayName}</h1>
         <div className="food-rating">
           <MdStar className="star-icon" />
           <span className="rating-value">{rating.toFixed(1)}</span>

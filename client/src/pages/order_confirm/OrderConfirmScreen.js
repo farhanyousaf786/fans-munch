@@ -707,6 +707,7 @@ const OrderConfirmScreen = () => {
         console.log(`💵 Tip Amount: ${tipData.amount || 0}`);
         console.log(`${'='.repeat(60)}\n`);
 
+        const userForPayment = userStorage.getUserData?.() || null;
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -719,7 +720,9 @@ const OrderConfirmScreen = () => {
             cartItems: cartItemsWithCOG,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
-            tipAmount: tipData.amount || 0
+            tipAmount: tipData.amount || 0,
+            customerEmail: userForPayment?.email || null,
+            customerName: [userForPayment?.firstName, userForPayment?.lastName].filter(Boolean).join(' ') || null,
           })
         });
         const text = await res.text();
@@ -1023,17 +1026,21 @@ const OrderConfirmScreen = () => {
     console.log('📸 Camera capture requested');
   };
 
-  // Phone change handler
+  // Phone change handler — do not revalidate on every keystroke (causes remount/jank)
   const handlePhoneChange = (value) => {
-    // Normalize as the user types so validation matches the visible value
     try {
       const normalized = normalizePhone(value);
       setCustomerPhone(normalized);
     } catch (_) {
       setCustomerPhone(value);
     }
-    // Re-validate to surface or clear phone errors live
-    setTimeout(() => validateForm(), 0);
+    if (errors.customerPhone) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.customerPhone;
+        return next;
+      });
+    }
   };
 
   // Auto-fill checkout fields when dashboard test mode is ON
@@ -1203,6 +1210,7 @@ const OrderConfirmScreen = () => {
           currency: item.currency || 'ILS'
         }));
 
+        const userForPayment = userStorage.getUserData?.() || null;
         const res = await fetch(`${API_BASE}/api/stripe/create-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1213,7 +1221,9 @@ const OrderConfirmScreen = () => {
             cartItems: cartItemsWithCOG,
             // Send fee breakdown for payment splitting
             deliveryFee: deliveryFee,
-            tipAmount: tipData.amount || 0
+            tipAmount: tipData.amount || 0,
+            customerEmail: userForPayment?.email || null,
+            customerName: [userForPayment?.firstName, userForPayment?.lastName].filter(Boolean).join(' ') || null,
           })
         });
         const text = await res.text();
@@ -1707,10 +1717,18 @@ const OrderConfirmScreen = () => {
               <input
                 type="tel"
                 inputMode="tel"
+                autoComplete="tel"
                 placeholder={t('order.phone_input_ph') || '+972501234567'}
                 className={`field-input ${errors.customerPhone ? 'error' : ''}`}
                 value={customerPhone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try { e.currentTarget.blur(); } catch (_) {}
+                  }
+                }}
                 ref={phoneInputRef}
                 style={{ width: '100%' }}
               />

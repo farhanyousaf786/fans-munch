@@ -7,12 +7,13 @@ import { formatPriceWithCurrency } from '../../utils/currencyConverter';
 import { useTranslation } from '../../i18n/i18n';
 import AlertModal from '../../components/common/AlertModal';
 import BackButton from '../../components/page_header/BackButton';
+import { getFoodImageUrl, getLocalizedName } from '../../utils/localization';
 import './ShopMenuScreen.css';
 
 function ShopMenuScreen() {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
  
   const [menuItems, setMenuItems] = useState([]);
   const [shop, setShop] = useState(null);
@@ -20,7 +21,6 @@ function ShopMenuScreen() {
   const [error, setError] = useState(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
-  // Always start page at the top when opening/changing shops
   useEffect(() => {
     try {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -35,14 +35,12 @@ function ShopMenuScreen() {
         setLoading(true);
         setError(null);
 
-        // Fetch shop details for header
         if (shopId) {
           const ref = doc(db, 'shops', shopId);
           const snap = await getDoc(ref);
           if (snap.exists()) setShop({ id: snap.id, ...snap.data() });
         }
 
-        // Fetch menu items for the shop
         const res = await foodRepository.getMenuItemsByShop(shopId, 50);
         if (res.success) {
           setMenuItems(res.foods);
@@ -60,6 +58,7 @@ function ShopMenuScreen() {
   }, [shopId]);
 
   const handleFoodClick = (food) => navigate(`/food/${food.id}`);
+  const shopName = getLocalizedName(shop, lang, shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6) || ''}`);
 
   return (
     <div className="shop-menu-page">
@@ -67,7 +66,7 @@ function ShopMenuScreen() {
         <div className="shop-title-row">
           <BackButton fallbackTo="/home" className="shop-menu-back" />
           <div className="shop-title-container">
-            <h2 className="shop-title">{shop?.name || `Gate ${shop?.gate || shopId?.slice?.(0,6)}`}</h2>
+            <h2 className="shop-title">{shopName}</h2>
             {shop && shop.shopAvailability === false && (
               <span className="shop-closed-tag">{t('home.closed')}</span>
             )}
@@ -91,7 +90,10 @@ function ShopMenuScreen() {
             </div>
           ))
         ) : (
-          menuItems.map(food => (
+          menuItems.map(food => {
+            const foodName = getLocalizedName(food, lang, food.name || '');
+            const imageUrl = getFoodImageUrl(food);
+            return (
             <div 
               key={food.id} 
               className={`grid-card ${shop && shop.shopAvailability === false ? 'is-closed' : ''}`} 
@@ -109,17 +111,25 @@ function ShopMenuScreen() {
                     <span>{t('home.closed')}</span>
                   </div>
                 )}
-                <img src={food.getPrimaryImage()} alt={food.name} onError={(e) => { e.target.src = '/api/placeholder/200/150'; }} />
+                <img
+                  src={imageUrl}
+                  alt={foodName}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/assets/images/on-boarding-1.png`;
+                  }}
+                />
               </div>
               <div className="grid-content">
-                <h3 className="grid-name">{food.name}</h3>
+                <h3 className="grid-name">{foodName}</h3>
                 <div className="grid-bottom">
                   <span className="grid-price">{formatPriceWithCurrency(food.price, food.currency)}</span>
                   <span className="grid-prep">{food.getPreparationTimeText()}</span>
                 </div>
               </div>
             </div>
-          ))
+          );
+          })
         )}
       </div>
 

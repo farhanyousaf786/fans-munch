@@ -2,9 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAccessTime } from 'react-icons/md';
 import './OffersList.css';
+import { useTranslation } from '../../../../i18n/i18n';
+import { getLocalizedName } from '../../../../utils/localization';
 
 function OffersList({ offers = [], loading = false, error = null, searchTerm = '' }) {
   const navigate = useNavigate();
+  const { lang } = useTranslation();
   
   // Get section title based on search state
   const getSectionTitle = () => {
@@ -29,10 +32,12 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
       createdAt: offer.createdAt,
       customization: offer.customization || [],
       description: offer.description || '',
+      descriptionMap: offer.descriptionMap || {},
       extras: offer.extras || [],
       images: offer.images || [],
       isAvailable: offer.isAvailable !== false,
       name: offer.name,
+      nameMap: offer.nameMap || {},
       nutritionalInfo: offer.nutritionalInfo || {},
       preparationTime: offer.preparationTime || 15,
       price: discountedPrice, // Use calculated discounted price
@@ -109,7 +114,9 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
       {/* Horizontal scrolling container - matching Flutter app */}
       <div className="offers-horizontal-container">
         <div className="offers-horizontal-scroll">
-          {offers.map((offer) => (
+          {offers.map((offer) => {
+            const offerName = getLocalizedName(offer, lang, offer.name || '');
+            return (
             <div 
               key={offer.id} 
               className="offer-card-horizontal"
@@ -119,9 +126,10 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
               <div className="offer-image-horizontal">
                 <img 
                   src={offer.getPrimaryImage()} 
-                  alt={offer.name}
+                  alt={offerName}
                   onError={(e) => {
-                    e.target.src = '/api/placeholder/200/150';
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/assets/images/on-boarding-1.png`;
                   }}
                 />
                 
@@ -144,7 +152,7 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
               
               {/* Offer Content */}
               <div className="offer-content-horizontal">
-                <h3 className="offer-name-horizontal">{offer.name}</h3>
+                <h3 className="offer-name-horizontal">{offerName}</h3>
                 
                 {/* Price Section */}
                 <div className="offer-price-section">
@@ -163,7 +171,8 @@ function OffersList({ offers = [], loading = false, error = null, searchTerm = '
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </div>

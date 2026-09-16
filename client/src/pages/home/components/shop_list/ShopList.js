@@ -8,6 +8,7 @@ import { stadiumStorage } from '../../../../utils/storage';
 import './ShopList.css';
 import { useTranslation } from '../../../../i18n/i18n';
 import AlertModal from '../../../../components/common/AlertModal';
+import { getLocalizedName, getLocalizedDescription } from '../../../../utils/localization';
 
 // Single uniform image for all shops to ensure consistency
 const uniformShopImage = process.env.PUBLIC_URL + '/assets/images/on-boarding-2.png';
@@ -57,7 +58,7 @@ const ShopList = ({ onShopSelect }) => {
   const [error, setError] = useState(null);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   useEffect(() => {
     loadStadiumIdAndFetchShops();
@@ -97,8 +98,10 @@ const ShopList = ({ onShopSelect }) => {
             // Create shop object from Firebase data (matching Flutter Shop.fromMap exactly)
             const shop = {
               id: doc.id,
-              name: data.name || '',
-              description: data.description || '',
+              name: data.name || data?.nameMap?.en || '',
+              nameMap: data.nameMap || {},
+              description: data.description || data?.descriptionMap?.en || '',
+              descriptionMap: data.descriptionMap || {},
               location: data.location || '',
               floor: data.floor || '',
               gate: data.gate || '',
@@ -107,7 +110,7 @@ const ShopList = ({ onShopSelect }) => {
               shopUserFcmToken: data.shopUserFcmToken || '',
               admins: data.admins || [],
               image: data.imageUrl || data.image || null,
-              shopAvailability: data.shopAvailability !== undefined ? data.shopAvailability : true, // Added availability status
+              shopAvailability: data.shopAvailability !== undefined ? data.shopAvailability : true,
               createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
               updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date()
             };
@@ -217,7 +220,10 @@ const ShopList = ({ onShopSelect }) => {
       </div>
       
       <div className="restaurant-list">
-        {safeShops.map((shop) => (
+        {safeShops.map((shop) => {
+          const shopName = getLocalizedName(shop, lang, shop.name || '');
+          const shopDescription = getLocalizedDescription(shop, lang, shop.description || '');
+          return (
           <div 
             key={shop.id} 
             className={`restaurant-card ${shop.shopAvailability === false ? 'is-closed' : ''}`}
@@ -226,7 +232,7 @@ const ShopList = ({ onShopSelect }) => {
             <div className="restaurant-image">
               <img 
                 src={shop.image || getUniformShopImage()} 
-                alt={shop.name}
+                alt={shopName}
                 onError={(e) => {
                   e.currentTarget.src = getUniformShopImage();
                 }}
@@ -239,12 +245,12 @@ const ShopList = ({ onShopSelect }) => {
             </div>
             <div className="restaurant-details">
               <div className="restaurant-header">
-                <h3 className="restaurant-name">{shop.name}</h3>
+                <h3 className="restaurant-name">{shopName}</h3>
                 {shop.shopAvailability === false && (
                   <span className="closed-label">{t('home.closed')}</span>
                 )}
               </div>
-              <p className="restaurant-description">{shop.description}</p>
+              <p className="restaurant-description">{shopDescription}</p>
               <div className="restaurant-footer">
                 <div className="food-items">
                   {shop.items.slice(0, 2).map((item, index) => (
@@ -257,7 +263,8 @@ const ShopList = ({ onShopSelect }) => {
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       <AlertModal 

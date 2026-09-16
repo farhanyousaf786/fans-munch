@@ -160,7 +160,16 @@ const PreCartPage = ({ isFromHome = false }) => {
     <div className="precart-screen">
       <div className="precart-container">
         {/* Header Component */}
-        <CartHeader isFromHome={isFromHome} />
+        <CartHeader
+          isFromHome={isFromHome}
+          fallbackTo={cartItems[0]?.shopId ? `/shop-menu/${cartItems[0].shopId}` : '/home'}
+          showClearCart={cartItems.length > 0}
+          onClearCart={() => {
+            if (!window.confirm('Remove all items from your cart?')) return;
+            cartUtils.clearCart();
+            showToast('success', 'Cart cleared');
+          }}
+        />
 
         {/* Empty cart state or Cart Items List */}
         {cartItems.length === 0 ? (

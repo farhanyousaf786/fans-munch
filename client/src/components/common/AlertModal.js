@@ -4,21 +4,16 @@ import { MdClose, MdInfo, MdWarning, MdError, MdCheckCircle } from 'react-icons/
 
 /**
  * A beautiful, modern Alert Modal for mobile-first experience.
- * 
- * @param {boolean} isOpen - Whether the modal is visible
- * @param {string} title - Modal title
- * @param {string} message - Modal message content
- * @param {string} type - 'info', 'warning', 'error', 'success'
- * @param {function} onClose - Callback when modal is closed
- * @param {string} confirmText - Text for the primary button
  */
 const AlertModal = ({ 
   isOpen, 
   title, 
   message, 
   type = 'info', 
-  onClose, 
-  confirmText = 'OK' 
+  onClose,
+  onConfirm,
+  confirmText = 'OK',
+  cancelText = null,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -46,6 +41,14 @@ const AlertModal = ({
     }
   };
 
+  const handlePrimary = () => {
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+      return;
+    }
+    if (typeof onClose === 'function') onClose();
+  };
+
   return (
     <div className={`alert-modal-overlay ${isOpen ? 'open' : 'closing'}`} onClick={onClose}>
       <div className={`alert-modal-container ${isOpen ? 'open' : 'closing'}`} onClick={e => e.stopPropagation()}>
@@ -65,8 +68,13 @@ const AlertModal = ({
             <p className="alert-modal-message">{message}</p>
           </div>
           
-          <div className="alert-modal-footer">
-            <button className={`alert-modal-button ${type}`} onClick={onClose}>
+          <div className={`alert-modal-footer ${cancelText ? 'alert-modal-footer--split' : ''}`}>
+            {cancelText && (
+              <button type="button" className="alert-modal-button secondary" onClick={onClose}>
+                {cancelText}
+              </button>
+            )}
+            <button type="button" className={`alert-modal-button ${type}`} onClick={handlePrimary}>
               {confirmText}
             </button>
           </div>

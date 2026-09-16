@@ -1,11 +1,14 @@
-import React from 'react';
-import { MdArrowBack, MdArrowForward, MdRestaurant, MdFavoriteBorder, MdFavorite } from 'react-icons/md';
+import React, { useMemo } from 'react';
+import { MdArrowBack, MdArrowForward, MdFavoriteBorder, MdFavorite } from 'react-icons/md';
 import { useTranslation } from '../../../i18n/i18n';
+import { getFoodImageUrl, getLocalizedName } from '../../../utils/localization';
 import './FoodHeader.css';
 
-const FoodHeader = ({ food, onBack, isFavorite, onToggleFavorite }) => {
+const FoodHeader = ({ food, comboItems = null, onBack, isFavorite, onToggleFavorite }) => {
   const { lang } = useTranslation();
   const isRTL = lang === 'he';
+  const imageUrl = useMemo(() => getFoodImageUrl(food, comboItems), [food, comboItems]);
+  const displayName = getLocalizedName(food, lang, food?.name || 'Food');
 
   return (
     <div className="food-detail-header">
@@ -16,20 +19,15 @@ const FoodHeader = ({ food, onBack, isFavorite, onToggleFavorite }) => {
         {isFavorite ? <MdFavorite /> : <MdFavoriteBorder />}
       </button>
       <div className="food-image-container">
-        {food?.images && food.images.length > 0 ? (
-          <img 
-            src={food.images[0]} 
-            alt={food.name}
-            className="food-image"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        <div className="food-image-placeholder" style={{ display: food?.images?.length > 0 ? 'none' : 'flex' }}>
-          <MdRestaurant className="placeholder-icon" />
-        </div>
+        <img
+          src={imageUrl}
+          alt={displayName}
+          className="food-image"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = `${process.env.PUBLIC_URL || ''}/assets/images/on-boarding-1.png`;
+          }}
+        />
         <div className="image-fade" />
       </div>
       <div className="header-curve"></div>

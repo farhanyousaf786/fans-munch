@@ -22,7 +22,9 @@ class Offer {
     toppings = [],
     updatedAt,
     foodType = { halal: false, kosher: false, vegan: false },
-    quantity = 1
+    quantity = 1,
+    nameMap = {},
+    descriptionMap = {}
   }) {
     this.id = id;
     this.allergens = allergens;
@@ -30,11 +32,13 @@ class Offer {
     this.createdAt = createdAt;
     this.customization = customization;
     this.description = description;
+    this.descriptionMap = descriptionMap || {};
     this.extras = extras;
     this.images = images;
     this.isAvailable = isAvailable;
     this.active = active;
     this.name = name;
+    this.nameMap = nameMap || {};
     this.nutritionalInfo = nutritionalInfo;
     this.preparationTime = preparationTime;
     this.price = price;
@@ -57,12 +61,14 @@ class Offer {
       category: data.category || '',
       createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
       customization: data.customization || {},
-      description: data.description || '',
       extras: data.extras || [],
       images: data.images || [],
       isAvailable: data.isAvailable !== undefined ? data.isAvailable : true,
       active: data.active !== undefined ? data.active : true,
-      name: data.name || '',
+      name: data.name || data?.nameMap?.en || '',
+      nameMap: data.nameMap || {},
+      description: data.description || data?.descriptionMap?.en || '',
+      descriptionMap: data.descriptionMap || {},
       nutritionalInfo: data.nutritionalInfo || {},
       preparationTime: data.preparationTime || 15,
       price: parseFloat(data.price) || 0,
@@ -124,9 +130,21 @@ class Offer {
 
   // Get primary image
   getPrimaryImage() {
-    return this.images && this.images.length > 0 
-      ? this.images[0] 
-      : '/api/placeholder/200/150';
+    if (this.images && this.images.length > 0 && this.images[0]) {
+      return this.images[0];
+    }
+    const placeholders = [
+      (process.env.PUBLIC_URL || '') + '/assets/images/on-boarding-1.png',
+      (process.env.PUBLIC_URL || '') + '/assets/images/on-boarding-2.png',
+      (process.env.PUBLIC_URL || '') + '/assets/images/on-boarding-3.png',
+    ];
+    const key = String(this.id || this.name || 'offer');
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash = ((hash << 5) - hash) + key.charCodeAt(i);
+      hash |= 0;
+    }
+    return placeholders[Math.abs(hash) % placeholders.length];
   }
 
   // Check if offer has valid discount (matching Flutter app logic)

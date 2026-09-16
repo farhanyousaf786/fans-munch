@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { showToast } from '../../../components/toast/ToastContainer';
 import { useTranslation } from '../../../i18n/i18n';
 import { buildPaymentRequest } from '../../../utils/stripePaymentRequest';
 import { useAppConfig } from '../../../contexts/AppConfigContext';
 import { STRIPE_TEST_PAYMENT_METHOD } from '../utils/testModeDefaults';
 
-// Test mode: auto-charge using Stripe's test Visa payment method (no manual card entry)
 const TestModeCardForm = forwardRef(({ clientSecret, onConfirmed }, ref) => {
   const stripe = useStripe();
   const [processing, setProcessing] = useState(false);
@@ -82,15 +81,14 @@ const TestModeCardForm = forwardRef(({ clientSecret, onConfirmed }, ref) => {
   );
 });
 
-// Card form component that uses Stripe Elements and Payment Request (Apple/Google Pay)
-const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
+const CardForm = forwardRef(({ clientSecret, onConfirmed, totalAmount, currency = 'ils', onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [paymentRequest, setPaymentRequest] = useState(null);
+  const [elementReady, setElementReady] = useState(false);
   const { t } = useTranslation();
 
-  // Keep latest mutable values in refs so the wallet effect doesn't restart on every parent re-render
   const clientSecretRef = useRef(clientSecret);
   const validateRef = useRef(validateBeforeWalletPay);
   const onWalletSuccessRef = useRef(onWalletPaymentSuccess);
@@ -103,27 +101,16 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
   useEffect(() => { onConfirmedRef.current = onConfirmed; }, [onConfirmed]);
   useEffect(() => { tRef.current = t; }, [t]);
 
-  // Debug logging
-  console.log('[DEBUG] CardForm - stripe:', !!stripe, 'elements:', !!elements);
-
-  // Build payment request as soon as stripe + amount are ready.
-  // clientSecret is NOT needed for canMakePayment(); it is only needed when confirming the payment.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        console.log('[DEBUG] Payment Request - stripe:', !!stripe, 'totalAmount:', totalAmount);
-        if (!stripe || !totalAmount) {
-          console.log('[DEBUG] Payment Request - missing requirements, skipping');
-          return;
-        }
-        console.log('[DEBUG] Building payment request with amount:', totalAmount, 'currency:', currency);
+        if (!stripe || !totalAmount) return;
         const pr = await buildPaymentRequest(stripe, {
           amount: totalAmount,
           currency,
           label: 'Fan Munch Order',
         });
-        console.log('[DEBUG] Payment Request result:', !!pr);
         if (!active || !pr) return;
         pr.on('paymentmethod', async (ev) => {
           try {
@@ -133,7 +120,6 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
             const currentOnConfirmed = onConfirmedRef.current;
             const currentT = tRef.current;
 
-            // Optional pre-validation hook from parent (e.g., seat info required)
             if (typeof currentValidate === 'function') {
               const ok = await currentValidate();
               if (!ok) {
@@ -148,57 +134,28 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               return;
             }
 
-            console.log('[STRIPE WALLET] Payment method selected:', {
-              type: ev.paymentMethod.type,
-              id: ev.paymentMethod.id,
-              card: ev.paymentMethod.card
-            });
             const { error, paymentIntent } = await stripe.confirmCardPayment(currentClientSecret, {
               payment_method: ev.paymentMethod.id,
             });
-            console.log('[STRIPE WALLET] Payment confirmation response:', {
-              error: error ? {
-                type: error.type,
-                code: error.code,
-                message: error.message,
-                decline_code: error.decline_code
-              } : null,
-              paymentIntent: paymentIntent ? {
-                id: paymentIntent.id,
-                status: paymentIntent.status,
-                amount: paymentIntent.amount,
-                currency: paymentIntent.currency,
-              } : null
-            });
+
             if (error) {
               ev.complete('fail');
-              showToast(`${currentT('order.payment_failed_generic')} ${error.message || ''}`.trim(), 'error', 4000);
+              showToast(error.message || currentT('order.payment_failed'), 'error', 5000);
             } else if (paymentIntent?.status === 'succeeded') {
               ev.complete('success');
-              showToast(currentT('order.processing_full'), 'success', 2500);
-              if (currentOnWalletSuccess) {
+              if (typeof currentOnWalletSuccess === 'function') {
                 try {
-                  await currentOnWalletSuccess();
-                } catch (orderError) {
-                  const errorMsg = orderError?.message || currentT('order.unknown_error');
-                  // If it's a validation error from the screen, show only that message without the wallet prefix
-                  if (orderError && orderError.code === 'VALIDATION') {
-                    showToast(errorMsg, 'error', 8000);
-                  } else {
-                    showToast(`${currentT('order.wallet_payment_succeeded_order_failed_prefix')} ${errorMsg}. ${currentT('order.contact_support')}`, 'error', 8000);
-                  }
+                  await currentOnWalletSuccess({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
+                } catch (orderErr) {
+                  showToast(`${currentT('order.wallet_payment_succeeded_order_failed_prefix')} ${orderErr.message}. ${currentT('order.contact_support')}`, 'error', 8000);
                 }
               }
               currentOnConfirmed && currentOnConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
-            } else if (paymentIntent?.status === 'requires_action') {
-              ev.complete('success');
-              showToast(currentT('order.additional_auth_required'), 'info', 3500);
             } else {
               ev.complete('fail');
               showToast(`${currentT('order.payment_status')}: ${paymentIntent?.status || currentT('order.unknown')}`, 'warning', 3000);
             }
           } catch (err) {
-            console.error('[STRIPE WALLET] Payment error:', err);
             ev.complete('fail');
             showToast(`${tRef.current('order.payment_error')}: ${err.message}`, 'error', 4000);
           }
@@ -216,61 +173,35 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
     }
 
     setProcessing(true);
-
     try {
-      const cardElement = elements.getElement(CardElement);
-      
-      console.log('[STRIPE CARD] Attempting payment confirmation with clientSecret:', clientSecret?.substring(0, 20) + '...');
-      
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-        }
-      });
-      
-      console.log('[STRIPE CARD] Payment confirmation response:', {
-        error: error ? {
-          type: error.type,
-          code: error.code,
-          message: error.message,
-          decline_code: error.decline_code
-        } : null,
-        paymentIntent: paymentIntent ? {
-          id: paymentIntent.id,
-          status: paymentIntent.status,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-          charges: paymentIntent.charges?.data?.map(charge => ({
-            id: charge.id,
-            amount: charge.amount,
-            currency: charge.currency,
-            status: charge.status,
-            outcome: charge.outcome,
-            fee_details: charge.fee_details
-          }))
-        } : null
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/order/confirm`,
+        },
+        redirect: 'if_required',
       });
 
       if (error) {
-        console.error('[Stripe] Payment confirmation error:', error);
         showToast(`Payment failed: ${error.message}`, 'error', 4000);
         return { ok: false, error: error.message, status: 'FAILED' };
       }
 
-      if (paymentIntent.status === 'succeeded') {
+      if (paymentIntent?.status === 'succeeded') {
         showToast('Payment successful!', 'success', 2500);
         onConfirmed && onConfirmed({ intentId: paymentIntent.id, status: 'SUCCEEDED' });
         return { ok: true, status: 'SUCCEEDED', intentId: paymentIntent.id };
-      } else if (paymentIntent.status === 'requires_action') {
-        showToast('Additional authentication required', 'info', 3500);
-        return { ok: false, status: 'REQUIRES_ACTION', intentId: paymentIntent.id };
-      } else {
-        showToast(`Payment status: ${paymentIntent.status}`, 'warning', 3000);
-        return { ok: false, status: paymentIntent.status, intentId: paymentIntent.id };
       }
 
+      if (paymentIntent?.status === 'requires_action') {
+        showToast('Additional authentication required', 'info', 3500);
+        return { ok: false, status: 'REQUIRES_ACTION', intentId: paymentIntent.id };
+      }
+
+      showToast(`Payment status: ${paymentIntent?.status || 'unknown'}`, 'warning', 3000);
+      return { ok: false, status: paymentIntent?.status, intentId: paymentIntent?.id };
     } catch (err) {
-      console.error('[Stripe] Confirmation error:', err);
       showToast(`Payment error: ${err.message}`, 'error', 4000);
       return { ok: false, error: err.message, status: 'ERROR' };
     } finally {
@@ -278,38 +209,14 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
     }
   };
 
-  // Expose confirm method to parent
   useImperativeHandle(ref, () => ({
     async confirm() {
       return await handleConfirm();
     },
     isReady() {
-      return Boolean(stripe && elements && clientSecret);
+      return Boolean(stripe && elements && clientSecret && elementReady);
     }
   }));
-
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#424770',
-        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-        fontSmoothing: 'antialiased',
-        '::placeholder': {
-          color: '#aab7c4',
-        },
-      },
-      invalid: {
-        color: '#9e2146',
-      },
-      complete: {
-        color: '#424770',
-      },
-    },
-    hidePostalCode: false,
-    // Explicitly enable browser autofill so Chrome/Safari suggest saved cards
-    autocomplete: 'cc-number',
-  };
 
   if (!stripe || !elements) {
     return (
@@ -339,28 +246,34 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
               },
             }}
           />
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>Or pay with card</div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6, fontWeight: 'bold' }}>
+            Or pay with card / Link
+          </div>
         </div>
       )}
-      
-      <div style={{ 
-        padding: '16px', 
-        border: '2px solid #e5e7eb', 
-        borderRadius: '8px', 
+
+      <div style={{
+        padding: '12px 14px',
+        border: '2px solid #e5e7eb',
+        borderRadius: '8px',
         backgroundColor: '#ffffff',
         marginBottom: '8px',
-        minHeight: '44px',
-        display: 'flex',
-        alignItems: 'center',
         width: '100%'
       }}>
-        <div style={{ width: '100%' }}>
-          <CardElement options={cardElementOptions} />
-        </div>
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+            wallets: {
+              applePay: 'auto',
+              googlePay: 'auto',
+            },
+          }}
+          onReady={() => setElementReady(true)}
+        />
       </div>
-      
+
       <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
-        Enter your card details above. All payments are processed securely through Stripe.
+        Cards, Link, Apple Pay and Google Pay are supported when available on your device.
       </div>
 
       {processing && (
@@ -372,13 +285,11 @@ const CardForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount,
   );
 });
 
-// Main component wrapper with Stripe Elements provider
-const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfirmButton = false, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
+const StripePaymentForm = forwardRef(({ intentId, clientSecret, onConfirmed, totalAmount, currency = 'ils', isFormValid = true, onWalletPaymentSuccess, validateBeforeWalletPay }, ref) => {
   const cardFormRef = useRef();
   const { t } = useTranslation();
   const { loading, stripePromise, paymentMode, useTestApis, keysConfigured, configMessage } = useAppConfig();
 
-  // Forward ref methods to the inner CardForm
   useImperativeHandle(ref, () => ({
     async confirm() {
       return cardFormRef.current?.confirm();
@@ -411,8 +322,22 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
     );
   }
 
+  if (!clientSecret && !useTestApis) {
+    return (
+      <div style={{ padding: 16, margin: '16px 0', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', padding: '20px' }}>
+          Preparing secure payment...
+        </div>
+      </div>
+    );
+  }
+
+  const elementsOptions = clientSecret
+    ? { clientSecret, appearance: { theme: 'stripe' } }
+    : undefined;
+
   return (
-    <Elements stripe={stripePromise} key={paymentMode}>
+    <Elements stripe={stripePromise} options={elementsOptions} key={`${paymentMode}-${clientSecret || 'none'}`}>
       {useTestApis ? (
         <TestModeCardForm
           ref={cardFormRef}
@@ -420,7 +345,7 @@ const StripePaymentForm = forwardRef(({ intentId, clientSecret, mode, showConfir
           onConfirmed={onConfirmed}
         />
       ) : (
-        <CardForm 
+        <CardForm
           ref={cardFormRef}
           intentId={intentId}
           clientSecret={clientSecret}

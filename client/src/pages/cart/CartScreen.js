@@ -15,9 +15,11 @@ import PriceInfoWidget from './components/PriceInfoWidget';
 import AuthRequiredModal from './components/AuthRequiredModal';
 import './CartScreen.css';
 import { convertPrice } from '../../utils/currencyConverter';
+import { useTranslation } from '../../i18n/i18n';
 
 const CartScreen = ({ isFromHome = false }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -238,6 +240,23 @@ const CartScreen = ({ isFromHome = false }) => {
     }
   };
 
+  const handleClearCart = () => {
+    if (!cartItems.length) return;
+    if (!window.confirm(t('cart.clear_cart_confirm'))) return;
+    try {
+      cartUtils.clearCart();
+      showToast(t('cart.empty'), 'success', 2500);
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      showToast('Failed to clear cart', 'error', 3000);
+    }
+  };
+
+  const getCartShopFallback = () => {
+    const shopId = cartItems[0]?.shopId;
+    return shopId ? `/shop-menu/${shopId}` : '/home';
+  };
+
   if (loading) {
     return <CartLoadingState isFromHome={isFromHome} />;
   }
@@ -246,7 +265,12 @@ const CartScreen = ({ isFromHome = false }) => {
     <div className="cart-screen">
       <div className="cart-container">
         {/* Header Component */}
-        <CartHeader isFromHome={isFromHome} />
+        <CartHeader
+          isFromHome={isFromHome}
+          fallbackTo={getCartShopFallback()}
+          showClearCart={cartItems.length > 0}
+          onClearCart={handleClearCart}
+        />
 
         {/* Empty cart state or Cart Items List */}
         {cartItems.length === 0 ? (

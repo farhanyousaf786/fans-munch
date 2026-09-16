@@ -9,6 +9,7 @@ import { useTranslation } from '../../../../i18n/i18n';
 import { useCombo } from '../../../../contexts/ComboContext';
 import { formatPriceWithCurrency } from '../../../../utils/currencyConverter';
 import AlertModal from '../../../../components/common/AlertModal';
+import { getLocalizedName } from '../../../../utils/localization';
 
 // Local asset images to use as random placeholders for food items
 const assetPlaceholders = [
@@ -65,7 +66,8 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
             const data = doc.data();
             shopsData.push({
               id: doc.id,
-              name: data.name || 'Unknown Shop',
+              name: data.name || data?.nameMap?.en || 'Unknown Shop',
+              nameMap: data.nameMap || {},
               availability: data.shopAvailability !== undefined ? data.shopAvailability : true
             });
           });
@@ -86,7 +88,8 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
   const getShopName = (shopId) => {
     if (!shopId) return 'Shop';
     const shop = shops.find(s => s.id === shopId);
-    return shop ? shop.name : 'Shop';
+    if (!shop) return 'Shop';
+    return getLocalizedName(shop, lang, shop.name || 'Shop');
   };
 
   // Check if shop is available
@@ -258,7 +261,7 @@ function MenuList({ menuItems = [], loading = false, error = null, searchTerm = 
               {/* Food Details - matching Flutter app padding */}
               <div className="menu-content-grid">
                 {(() => {
-                  const displayName = (food.nameMap && (food.nameMap[lang] || food.nameMap.en)) || food.name;
+                  const displayName = getLocalizedName(food, lang, food.name || '');
                   return (
                     <h3 className="menu-name-grid">{displayName}</h3>
                   );

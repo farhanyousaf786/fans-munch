@@ -32,14 +32,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.food-detail-header .back-button:hover,
 .back-button:hover {
   background: white;
   transform: scale(1.05);
 }
 
-.back-button svg {
+.food-detail-header .back-button svg,
+.loading-container ~ .back-button svg {
   font-size: 20px;
-  color: white;
+  color: #0f172a;
+}
+
+/* Keep white icons ONLY on dark food-detail hero headers */
+.food-detail-header .fd-back-button svg {
+  color: #ffffff !important;
 }
 
 .loading-container {

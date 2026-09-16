@@ -52,7 +52,15 @@
     "place_order": "בצע הזמנה",
     "mixed_shops_error": "פריטים בעגלה שלך מחנויות שונות. אנא הזמן מחנות אחת בכל פעם.",
     "mixed_shops_detected": "זוהו פריטים מחנויות שונות",
-    "price": "מחיר"
+    "replace_cart_title": "להחליף את פריטי העגלה?",
+    "replace_cart_message": "בעגלה שלך יש פריטים מחנות אחרת. לנקות את העגלה ולהוסיף את הפריט הזה במקומם?",
+    "replace_cart_confirm": "החלף עגלה",
+    "replace_cart_cancel": "שמור עגלה נוכחית",
+    "added_suffix": "נוסף לעגלה!",
+    "add_failed": "הוספת הפריט לעגלה נכשלה",
+    "price": "מחיר",
+    "clear_cart": "נקה עגלה",
+    "clear_cart_confirm": "להסיר את כל הפריטים מהעגלה?"
   },
   "food": {
     "description": "תיאור",

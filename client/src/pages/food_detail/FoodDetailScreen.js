@@ -8,6 +8,8 @@ import { showToast } from '../../components/toast/ToastContainer';
 import foodRepository from '../../repositories/foodRepository';
 import { useTranslation } from '../../i18n/i18n';
 import { formatPriceWithCurrency } from '../../utils/currencyConverter';
+import { getLocalizedName } from '../../utils/localization';
+import AlertModal from '../../components/common/AlertModal';
 
 // Import components
 import FoodHeader from './components/FoodHeader';
@@ -25,6 +27,7 @@ import './FoodDetailScreen.css';
 const FoodDetailScreen = () => {
   const { foodId } = useParams();
   const navigate = useNavigate();
+  const { t, lang } = useTranslation();
   
   // State matching Flutter app
   const [food, setFood] = useState(null);
@@ -37,8 +40,8 @@ const FoodDetailScreen = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSauces, setSelectedSauces] = useState([]);
   const [comboSelections, setComboSelections] = useState({}); // { itemId: [selectedOptions] }
-  
-  const { t } = useTranslation();
+  const [replaceCartOpen, setReplaceCartOpen] = useState(false);
+  const [pendingAddQty, setPendingAddQty] = useState(1);
 
   useEffect(() => {
     if (foodId) {
@@ -267,60 +270,90 @@ const FoodDetailScreen = () => {
   };
 
   // Add to cart (enhanced with popup notifications)
+  const buildFoodWithSelections = () => {
+    const comboItemInfo = {};
+    if (food.isCombo && comboItems) {
+      food.comboItemIds.forEach((id, index) => {
+        const item = comboItems.find(ci => ci.id === id);
+        if (item) {
+          comboItemInfo[`${id}_${index}`] = getLocalizedName(item, lang, item.name);
+        }
+      });
+    }
+
+    return {
+      ...food,
+      name: getLocalizedName(food, lang, food.name),
+      nameMap: food.nameMap || undefined,
+      selectedSauces: Array.isArray(selectedSauces) ? selectedSauces : [],
+      comboSelections: comboSelections || {},
+      comboItemInfo,
+    };
+  };
+
+  const completeAddToCart = async (quantity = 1, { clearFirst = false } = {}) => {
+    if (clearFirst) {
+      cartUtils.clearCart();
+    }
+
+    const result = await cartUtils.addToCart(buildFoodWithSelections(), quantity);
+    if (result.success) {
+      const displayName = getLocalizedName(food, lang, food.name);
+      showToast(
+        `${displayName} ${t('cart.added_suffix') || 'added to cart!'} (${result.totalItems})`,
+        'success',
+        3000
+      );
+      setTimeout(() => {
+        navigate('/precart', { replace: true });
+      }, 800);
+      return true;
+    }
+
+    if (result.mixedShops) {
+      setPendingAddQty(quantity);
+      setReplaceCartOpen(true);
+      return false;
+    }
+
+    const translatedMessage = t(result.message);
+    showToast(translatedMessage, 'error', 4000);
+    return false;
+  };
+
   const handleAddToCart = async (quantity = 1) => {
     try {
-      console.log('🛒 Adding to cart:', food.name);
-      
-      // Build info for combo items (names for breakdown)
-      const comboItemInfo = {};
-      if (food.isCombo && comboItems) {
-        food.comboItemIds.forEach((id, index) => {
-          const item = comboItems.find(ci => ci.id === id);
-          if (item) {
-            comboItemInfo[`${id}_${index}`] = item.name;
-          }
-        });
-      }
-
-      // Use enhanced cart utility, including selected sauces and combo selections
-      const foodWithSelections = {
-        ...food,
-        selectedSauces: Array.isArray(selectedSauces) ? selectedSauces : [],
-        comboSelections: comboSelections || {},
-        comboItemInfo: comboItemInfo,
-      };
-
-      const result = await cartUtils.addToCart(foodWithSelections, quantity);
-      
-      if (result.success) {
-        // Show success popup/toast
-        showToast(
-          `${food.name} added to cart! (${result.totalItems} items)`,
-          'success',
-          3000
-        );
-        
-        console.log('✅ Added to cart successfully:', result.message);
-        
-        // Navigate to PreCart page
-        setTimeout(() => {
-          navigate('/precart');
-        }, 800);
-      } else {
-        // Show error popup with translation
-        const translatedMessage = t(result.message);
-        showToast(translatedMessage, 'error', 4000);
-        console.error('❌ Failed to add to cart:', result.message);
-      }
+      await completeAddToCart(quantity);
     } catch (error) {
       console.error('❌ Error adding to cart:', error);
-      showToast('Failed to add item to cart', 'error', 4000);
+      showToast(t('cart.add_failed') || 'Failed to add item to cart', 'error', 4000);
     }
   };
 
-  // Handle back navigation
+  const handleReplaceCartConfirm = async () => {
+    setReplaceCartOpen(false);
+    try {
+      await completeAddToCart(pendingAddQty, { clearFirst: true });
+    } catch (error) {
+      console.error('❌ Error replacing cart:', error);
+      showToast(t('cart.add_failed') || 'Failed to add item to cart', 'error', 4000);
+    }
+  };
+
+  // Handle back navigation — prefer shop menu over history stack
   const handleBack = () => {
-    navigate(-1);
+    const shopId = food?.shopId || (Array.isArray(food?.shopIds) ? food.shopIds[0] : null);
+    if (shopId) {
+      navigate(`/shop-menu/${shopId}`, { replace: true });
+      return;
+    }
+    try {
+      if (window.history.length > 1) {
+        navigate(-1);
+        return;
+      }
+    } catch (_) {}
+    navigate('/home');
   };
 
   // Loading state
@@ -342,7 +375,13 @@ const FoodDetailScreen = () => {
   return (
     <div className="food-detail-screen">
       {/* Header Component */}
-      <FoodHeader food={food} onBack={handleBack} isFavorite={isFavorite} onToggleFavorite={handleToggleFavorite} />
+      <FoodHeader
+        food={food}
+        comboItems={comboItems}
+        onBack={handleBack}
+        isFavorite={isFavorite}
+        onToggleFavorite={handleToggleFavorite}
+      />
 
       {/* Content */}
       <div className="food-detail-content">
@@ -356,7 +395,7 @@ const FoodDetailScreen = () => {
         />
 
         {/* Description Component */}
-        <FoodDescription description={food.description} />
+        <FoodDescription food={food} />
 
         {/* Customization options (from customization.options) */}
         {Array.isArray(food?.customization?.options) && food.customization.options.length > 0 && (
@@ -412,6 +451,17 @@ const FoodDetailScreen = () => {
       {/* Bottom Bar Component */}
       <FoodBottomBar 
         onAddToCart={handleAddToCart}
+      />
+
+      <AlertModal
+        isOpen={replaceCartOpen}
+        title={t('cart.replace_cart_title')}
+        message={t('cart.replace_cart_message')}
+        type="warning"
+        confirmText={t('cart.replace_cart_confirm')}
+        cancelText={t('cart.replace_cart_cancel')}
+        onConfirm={handleReplaceCartConfirm}
+        onClose={() => setReplaceCartOpen(false)}
       />
     </div>
   );

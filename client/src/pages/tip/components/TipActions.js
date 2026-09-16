@@ -9,10 +9,10 @@ const TipActions = ({ onAddTip, onSkipTip, tipAmount = 0 }) => {
   
   return (
     <div className="tip-actions">
-      <button className="add-tip-button" onClick={onAddTip}>
+      <button type="button" className="add-tip-button" onClick={onAddTip}>
         {t('tip.add_tip')} ({formatPriceWithCurrency(tipAmount, preferredCurrency)})
       </button>
-      <button className="skip-tip-button" onClick={onSkipTip}>
+      <button type="button" className="skip-tip-button" onClick={onSkipTip}>
         {t('tip.skip')}
       </button>
     </div>

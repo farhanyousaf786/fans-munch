@@ -4,6 +4,7 @@ import { MdShoppingCart, MdKeyboardArrowRight, MdKeyboardArrowLeft, MdLocationOn
 import { userStorage } from '../../../../utils/storage';
 import useSelectedStadium from '../../../../hooks/useSelectedStadium';
 import { hasVenueBranding } from '../../../../utils/stadiumTheme';
+import { cartUtils } from '../../../../utils/cartUtils';
 import SearchFilterWidget from '../search_filter/SearchFilterWidget';
 import './TopSection.css';
 import { useTranslation } from '../../../../i18n/i18n';
@@ -12,6 +13,7 @@ const TopSection = (props) => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
   const [ready, setReady] = useState(false);
+  const [cartCount, setCartCount] = useState(() => cartUtils.getTotalItems());
   const { stadium: selectedStadium, displayName, logoUrl } = useSelectedStadium();
   const { t, lang } = useTranslation();
   const isBranded = hasVenueBranding(selectedStadium);
@@ -28,6 +30,16 @@ const TopSection = (props) => {
     setUserData(userStorage.getUserData());
     const id = requestAnimationFrame(() => setReady(true));
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  useEffect(() => {
+    const syncCart = (event) => {
+      const totalItems = event?.detail?.totalItems ?? cartUtils.getTotalItems();
+      setCartCount(totalItems || 0);
+    };
+    syncCart();
+    window.addEventListener('cartUpdated', syncCart);
+    return () => window.removeEventListener('cartUpdated', syncCart);
   }, []);
 
   const handleCartClick = () => navigate('/cart');
@@ -81,6 +93,9 @@ const TopSection = (props) => {
           aria-label="Cart"
         >
           <MdShoppingCart size={22} />
+          {cartCount > 0 && (
+            <span className="cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
+          )}
         </button>
       </div>
 
